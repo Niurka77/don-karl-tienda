@@ -1,3 +1,4 @@
+import WhatsAppButton from '../ui/WhatsAppButton'
 import { Outlet, Link, useNavigate } from 'react-router-dom'
 import CartDrawer from '../carrito/CartDrawer'
 import useCartStore from '../../store/cartStore'
@@ -52,7 +53,7 @@ const Layout = () => {
 
       {/* Carrito Drawer */}
       <CartDrawer />
-
+<WhatsAppButton phoneNumber="51906877812" />
       {/* Footer */}
       <footer className="bg-white border-t mt-16">
         <div className="max-w-7xl mx-auto px-4 py-6 text-center text-gray-500 text-sm">

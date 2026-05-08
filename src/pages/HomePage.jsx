@@ -1,4 +1,5 @@
 import ProductGrid from '../components/producto/ProductGrid'
+import BotonPDF from '../components/producto/BotonPDF'
 
 const HomePage = () => {
   return (
@@ -20,9 +21,12 @@ const HomePage = () => {
 
       {/* Productos */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <h3 className="text-xl font-semibold text-gray-800 mb-6">
-          Todos los productos
-        </h3>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-semibold text-gray-800">
+            Todos los productos
+          </h3>
+          <BotonPDF />
+        </div>
         <ProductGrid />
       </div>
     </div>

@@ -10,9 +10,12 @@ const DashboardPage = () => {
     ventasRecientes: 0,
   })
   const [cargando, setCargando] = useState(true)
+  const [productosEstancados, setProductosEstancados] = useState([])
+  const [aplicandoDescuento, setAplicandoDescuento] = useState(null)
 
   useEffect(() => {
     cargarStats()
+    cargarEstancados()
   }, [])
 
   const cargarStats = async () => {
@@ -40,6 +43,57 @@ const DashboardPage = () => {
       console.error('Error al cargar estadísticas:', err)
     } finally {
       setCargando(false)
+    }
+  }
+
+  const cargarEstancados = async () => {
+    try {
+      const fechaLimite = new Date()
+      fechaLimite.setDate(fechaLimite.getDate() - 15)
+
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .gt('stock', 0)
+        .or(
+          `last_sale_date.lt.${fechaLimite.toISOString()},last_sale_date.is.null`
+        )
+        .order('created_at', { ascending: true })
+        .limit(10)
+
+      if (error) throw error
+      setProductosEstancados(data || [])
+    } catch (err) {
+      console.error('Error al cargar estancados:', err)
+    }
+  }
+
+  const aplicarDescuento = async (producto) => {
+    setAplicandoDescuento(producto.id)
+    try {
+      const nuevoDescuento = Math.min(
+        (producto.discount_percent || 0) + 10,
+        50
+      )
+
+      const { error } = await supabase
+        .from('products')
+        .update({
+          discount_percent: nuevoDescuento,
+          is_new: false,
+        })
+        .eq('id', producto.id)
+
+      if (error) throw error
+
+      setProductosEstancados(
+        productosEstancados.filter((p) => p.id !== producto.id)
+      )
+    } catch (err) {
+      console.error('Error al aplicar descuento:', err)
+      alert('Error al aplicar el descuento')
+    } finally {
+      setAplicandoDescuento(null)
     }
   }
 
@@ -83,49 +137,113 @@ const DashboardPage = () => {
           <div className="w-8 h-8 border-4 border-gray-200 border-t-black rounded-full animate-spin"></div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {cards.map((card) => (
-            <Link
-              key={card.title}
-              to={card.link}
-              className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-2xl">{card.icon}</span>
-              </div>
-              <p className="text-sm text-gray-500 mb-1">{card.title}</p>
-              <p className="text-3xl font-bold text-gray-800">{card.value}</p>
-            </Link>
-          ))}
-        </div>
-      )}
+        <>
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {cards.map((card) => (
+              <Link
+                key={card.title}
+                to={card.link}
+                className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-2xl">{card.icon}</span>
+                </div>
+                <p className="text-sm text-gray-500 mb-1">{card.title}</p>
+                <p className="text-3xl font-bold text-gray-800">{card.value}</p>
+              </Link>
+            ))}
+          </div>
 
-      <div className="mt-8 bg-white rounded-xl shadow-sm p-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">
-          Acciones rápidas
-        </h2>
-        <div className="flex flex-wrap gap-3">
-          <Link
-            to="/admin/productos"
-            className="px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-          >
-            + Nuevo producto
-          </Link>
-          <Link
-            to="/admin/pedidos"
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
-          >
-            Ver pedidos
-          </Link>
-          <Link
-            to="/"
-            target="_blank"
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
-          >
-            Ver tienda →
-          </Link>
-        </div>
-      </div>
+          {/* Productos estancados */}
+          {productosEstancados.length > 0 && (
+            <div className="mt-8 bg-white rounded-xl shadow-sm p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-800">
+                  📦 Productos con baja rotación
+                </h2>
+                <span className="text-sm text-gray-500">
+                  {productosEstancados.length} producto{productosEstancados.length !== 1 ? 's' : ''}
+                </span>
+              </div>
+              <p className="text-sm text-gray-500 mb-4">
+                Productos con stock sin ventas hace más de 15 días. Aplica un descuento para acelerar su salida.
+              </p>
+              <div className="space-y-3">
+                {productosEstancados.map((producto) => (
+                  <div
+                    key={producto.id}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-amber-50 rounded-lg border border-amber-200"
+                  >
+                    <div className="flex items-center gap-4">
+                      <img
+                        src={producto.image_url || 'https://via.placeholder.com/48'}
+                        alt={producto.name}
+                        className="w-12 h-12 rounded object-cover bg-gray-100 flex-shrink-0"
+                      />
+                      <div>
+                        <p className="font-medium text-gray-800 text-sm">
+                          {producto.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Stock: {producto.stock} | Precio: ${producto.price_original?.toFixed(2)}
+                          {producto.discount_percent > 0 && (
+                            <span className="text-red-500 ml-2">
+                              (-{producto.discount_percent}% actual)
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => aplicarDescuento(producto)}
+                      disabled={aplicandoDescuento === producto.id}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-all disabled:bg-gray-300 disabled:cursor-not-allowed whitespace-nowrap"
+                    >
+                      {aplicandoDescuento === producto.id ? (
+                        <span className="flex items-center gap-2">
+                          <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                          Aplicando...
+                        </span>
+                      ) : (
+                        `Aplicar -${Math.min((producto.discount_percent || 0) + 10, 50)}%`
+                      )}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Acciones rápidas */}
+          <div className="mt-8 bg-white rounded-xl shadow-sm p-6">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">
+              Acciones rápidas
+            </h2>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                to="/admin/productos"
+                className="px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+              >
+                + Nuevo producto
+              </Link>
+              <Link
+                to="/admin/pedidos"
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+              >
+                Ver pedidos
+              </Link>
+              <Link
+                to="/"
+                target="_blank"
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+              >
+                Ver tienda →
+              </Link>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
