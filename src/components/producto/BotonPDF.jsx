@@ -9,11 +9,13 @@ const BotonPDF = () => {
     setGenerando(true)
 
     try {
-      // Obtener productos disponibles
+      // ✅ CORRECCIÓN: Filtramos productos CON STOCK (gt = greater than)
+      // Antes: .eq('stock', 0) → traía productos AGOTADOS ❌
+      // Ahora: .gt('stock', 0) → trae productos DISPONIBLES ✅
       const { data: productos, error } = await supabase
         .from('products')
         .select('*')
-        .eq('stock', 0)
+        .gt('stock', 0)
         .order('category')
         .order('name')
 

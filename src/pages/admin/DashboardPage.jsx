@@ -51,12 +51,16 @@ const DashboardPage = () => {
       const fechaLimite = new Date()
       fechaLimite.setDate(fechaLimite.getDate() - 15)
 
+      // ✅ CORRECCIÓN: Un producto es "estancado" SOLO si:
+      // 1. Tiene stock > 0, Y
+      // 2. (Nunca se vendió Y fue creado hace +15 días) O (última venta fue hace +15 días)
+      // Esto evita que productos NUEVOS aparezcan como estancados por no tener last_sale_date
       const { data, error } = await supabase
         .from('products')
         .select('*')
         .gt('stock', 0)
         .or(
-          `last_sale_date.lt.${fechaLimite.toISOString()},last_sale_date.is.null`
+          `and(last_sale_date.is.null,created_at.lt.${fechaLimite.toISOString()}),last_sale_date.lt.${fechaLimite.toISOString()}`
         )
         .order('created_at', { ascending: true })
         .limit(10)
