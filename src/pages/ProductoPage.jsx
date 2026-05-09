@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import ProductCard from '../components/producto/ProductCard'
-
+import ReviewsSection from '../components/producto/ReviewsSection'
 const ProductoPage = () => {
   const { id } = useParams()
   const addItem = useCartStore((state) => state.addItem)
@@ -299,6 +299,7 @@ const ProductoPage = () => {
           ← Volver a la tienda
         </Link>
       </div>
+      <ReviewsSection productId={producto.id} />
     </div>
   )
 }

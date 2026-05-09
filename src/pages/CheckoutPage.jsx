@@ -177,6 +177,8 @@ const CheckoutPage = () => {
         `💳 *Pago:* ${pedido.payment_method === 'yape' ? 'Yape' : pedido.payment_method === 'plin' ? 'Plin' : 'Tarjeta'}\n\n` +
         `📦 *Productos:*\n${productosTexto}\n\n` +
         `💰 *TOTAL: $${pedido.total.toFixed(2)}*`
+        // En la función generarMensajeWhatsApp, agrega al final del mensaje:
+`\n\n🔐 *Nota de seguridad:* Este pedido se confirmará solo al recibir la notificación oficial de pago en nuestro celular.`
     )
   }
 
@@ -394,21 +396,33 @@ const CheckoutPage = () => {
               ))}
             </div>
 
-            {/* Instrucciones de pago */}
-            {formData.metodoPago === 'yape' && (
-              <div className="mt-4 p-4 bg-purple-50 rounded-lg">
-                <p className="text-sm text-purple-800">
-                  📱 Al confirmar, verás los datos para realizar el Yape.
-                </p>
-              </div>
-            )}
-            {formData.metodoPago === 'plin' && (
-              <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  📱 Al confirmar, verás los datos para realizar el Plin.
-                </p>
-              </div>
-            )}
+ {/* Reemplaza la sección de instrucciones de Yape/Plin por esto */}
+{formData.metodoPago === 'yape' && (
+  <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+    <p className="text-sm text-purple-800 font-medium mb-2">📱 Datos para Yape:</p>
+    <p className="text-xs text-purple-700">
+      <strong>Número:</strong> 999 999 999<br/>
+      <strong>Nombre:</strong> KB Dresses and More
+    </p>
+    <p className="text-xs text-purple-600 mt-2 italic">
+      ⚠️ Importante: El pago se confirma SOLO cuando recibas el mensaje de Yape en tu celular. 
+      No aceptes capturas de pantalla como comprobante.
+    </p>
+  </div>
+)}
+{formData.metodoPago === 'plin' && (
+  <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+    <p className="text-sm text-blue-800 font-medium mb-2">📱 Datos para Plin:</p>
+    <p className="text-xs text-blue-700">
+      <strong>Celular:</strong> 999 999 999<br/>
+      <strong>Titular:</strong> KB Dresses and More
+    </p>
+    <p className="text-xs text-blue-600 mt-2 italic">
+      ⚠️ Importante: Verifica siempre la notificación oficial de Plin. 
+      Las capturas pueden ser editadas.
+    </p>
+  </div>
+)}
             {formData.metodoPago === 'tarjeta' && (
               <div className="mt-4 p-4 bg-gray-100 rounded-lg">
                 <p className="text-sm text-gray-700">

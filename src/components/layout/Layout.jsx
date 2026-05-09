@@ -13,9 +13,15 @@ const Layout = () => {
       {/* Header */}
       <header className="bg-white shadow-sm sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link to="/" className="text-2xl font-bold text-gray-800 tracking-tight hover:text-gray-600 transition-colors">
-            DON KARL
-          </Link>
+         {/* Reemplaza el logo por esto */}
+<Link to="/" className="flex flex-col items-center">
+  <span className="text-3xl font-black tracking-wider text-kb-black">
+    KB
+  </span>
+  <span className="text-xs text-kb-pink-dark font-medium tracking-[0.2em] uppercase">
+    Dresses and More
+  </span>
+</Link>
           <nav className="flex items-center gap-4">
             <button
               onClick={() => navigate('/?genero=mujer')}

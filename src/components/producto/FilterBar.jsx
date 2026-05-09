@@ -1,10 +1,11 @@
 import { useState } from 'react'
 
+// Reemplaza el array 'categorias' por este:
 const categorias = [
   { value: '', label: 'Todas las categorías' },
-  { value: 'vestidos', label: 'Vestidos' },
-  { value: 'bolsos', label: 'Bolsos' },
-  { value: 'zapatos', label: 'Zapatos' },
+  { value: 'vestidos', label: '👗 Vestidos' },
+  { value: 'bolsos', label: '👜 Bolsos' },
+  { value: 'zapatos', label: '👠 Zapatos' },
 ]
 
 const generos = [

@@ -1,1 +1,35 @@
 @import "tailwindcss";
+
+/* 🎨 Paleta KB - Dresses and More */
+@theme {
+  --color-kb-pink: #FF69B4;
+  --color-kb-pink-dark: #C71585;
+  --color-kb-gold: #D4AF37;
+  --color-kb-gold-light: #F4E4C1;
+  --color-kb-black: #0a0a0a;
+  --color-kb-gray: #f8f5f2;
+}
+
+/* Estilos base */
+body {
+  @apply bg-kb-gray text-kb-black font-sans;
+}
+
+/* Botones KB */
+.btn-kb-primary {
+  @apply bg-kb-black text-white font-semibold px-6 py-3 rounded-lg 
+         hover:bg-gray-800 transition-all active:scale-[0.98];
+}
+
+.btn-kb-accent {
+  @apply bg-kb-gold text-kb-black font-semibold px-6 py-3 rounded-lg 
+         hover:bg-yellow-600 transition-all active:scale-[0.98];
+}
+
+/* Etiquetas */
+.badge-new {
+  @apply bg-kb-pink text-white text-xs font-bold px-3 py-1 rounded;
+}
+.badge-sale {
+  @apply bg-kb-gold text-kb-black text-xs font-bold px-3 py-1 rounded;
+}

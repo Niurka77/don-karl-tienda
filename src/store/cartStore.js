@@ -1,6 +1,9 @@
+import { persist, createJSONStorage } from 'zustand/middleware'
 import { create } from 'zustand'
 
-const useCartStore = create((set, get) => ({
+const useCartStore = create(
+  persist(
+  (set, get) => ({
   // Estado
   items: [],
   isOpen: false,
@@ -80,6 +83,12 @@ const useCartStore = create((set, get) => ({
 
   // Limpiar carrito
   clearCart: () => set({ items: [], isOpen: false }),
-}))
+}),
+{
+      name: 'don-karl-cart', // nombre en localStorage
+      storage: createJSONStorage(() => localStorage),
+    }
+  )
+)
 
 export default useCartStore
