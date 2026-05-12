@@ -161,6 +161,11 @@ const CheckoutPage = () => {
 
   // Función para generar mensaje de WhatsApp
   const generarMensajeWhatsApp = (pedido) => {
+    // Convertir total a número (Supabase lo retorna como string)
+    const totalNumero = typeof pedido.total === 'string' 
+      ? parseFloat(pedido.total) 
+      : Number(pedido.total)
+
     const productosTexto = pedido.products
       .map(
         (p, i) =>
@@ -176,14 +181,18 @@ const CheckoutPage = () => {
         `🏙️ *Ciudad:* ${pedido.customer_city}\n` +
         `💳 *Pago:* ${pedido.payment_method === 'yape' ? 'Yape' : pedido.payment_method === 'plin' ? 'Plin' : 'Tarjeta'}\n\n` +
         `📦 *Productos:*\n${productosTexto}\n\n` +
-        `💰 *TOTAL: $${pedido.total.toFixed(2)}*`
-        // En la función generarMensajeWhatsApp, agrega al final del mensaje:
-`\n\n🔐 *Nota de seguridad:* Este pedido se confirmará solo al recibir la notificación oficial de pago en nuestro celular.`
+        `💰 *TOTAL: $${totalNumero.toFixed(2)}*\n\n` +
+        `🔐 *Nota de seguridad:* Este pedido se confirmará solo al recibir la notificación oficial de pago en nuestro celular.`
     )
   }
 
   // Si el pedido fue exitoso, mostrar confirmación
   if (pedidoExitoso) {
+    // Convertir total a número para la UI de confirmación
+    const totalNumero = typeof pedidoExitoso.total === 'string' 
+      ? parseFloat(pedidoExitoso.total) 
+      : Number(pedidoExitoso.total)
+
     return (
       <div className="max-w-2xl mx-auto px-4 py-12">
         <div className="bg-white rounded-xl shadow-sm p-8 text-center">
@@ -205,7 +214,7 @@ const CheckoutPage = () => {
             <p className="text-sm"><span className="font-semibold">Dirección:</span> {pedidoExitoso.customer_address}, {pedidoExitoso.customer_city}</p>
             <p className="text-sm"><span className="font-semibold">Pago:</span> {pedidoExitoso.payment_method === 'yape' ? 'Yape' : pedidoExitoso.payment_method === 'plin' ? 'Plin' : 'Tarjeta'}</p>
             <p className="text-sm font-bold text-lg pt-2 border-t border-gray-200">
-              Total: ${pedidoExitoso.total.toFixed(2)}
+              Total: ${totalNumero.toFixed(2)}
             </p>
           </div>
 
@@ -396,33 +405,37 @@ const CheckoutPage = () => {
               ))}
             </div>
 
- {/* Reemplaza la sección de instrucciones de Yape/Plin por esto */}
-{formData.metodoPago === 'yape' && (
-  <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
-    <p className="text-sm text-purple-800 font-medium mb-2">📱 Datos para Yape:</p>
-    <p className="text-xs text-purple-700">
-      <strong>Número:</strong> 999 999 999<br/>
-      <strong>Nombre:</strong> KB Dresses and More
-    </p>
-    <p className="text-xs text-purple-600 mt-2 italic">
-      ⚠️ Importante: El pago se confirma SOLO cuando recibas el mensaje de Yape en tu celular. 
-      No aceptes capturas de pantalla como comprobante.
-    </p>
-  </div>
-)}
-{formData.metodoPago === 'plin' && (
-  <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-    <p className="text-sm text-blue-800 font-medium mb-2">📱 Datos para Plin:</p>
-    <p className="text-xs text-blue-700">
-      <strong>Celular:</strong> 999 999 999<br/>
-      <strong>Titular:</strong> KB Dresses and More
-    </p>
-    <p className="text-xs text-blue-600 mt-2 italic">
-      ⚠️ Importante: Verifica siempre la notificación oficial de Plin. 
-      Las capturas pueden ser editadas.
-    </p>
-  </div>
-)}
+            {/* Instrucciones de Yape */}
+            {formData.metodoPago === 'yape' && (
+              <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                <p className="text-sm text-purple-800 font-medium mb-2">📱 Datos para Yape:</p>
+                <p className="text-xs text-purple-700">
+                  <strong>Número:</strong> 999 999 999<br/>
+                  <strong>Nombre:</strong> KB Dresses and More
+                </p>
+                <p className="text-xs text-purple-600 mt-2 italic">
+                  ⚠️ Importante: El pago se confirma SOLO cuando recibas el mensaje de Yape en tu celular. 
+                  No aceptes capturas de pantalla como comprobante.
+                </p>
+              </div>
+            )}
+
+            {/* Instrucciones de Plin */}
+            {formData.metodoPago === 'plin' && (
+              <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-sm text-blue-800 font-medium mb-2"> Datos para Plin:</p>
+                <p className="text-xs text-blue-700">
+                  <strong>Celular:</strong> 999 999 999<br/>
+                  <strong>Titular:</strong> KB Dresses and More
+                </p>
+                <p className="text-xs text-blue-600 mt-2 italic">
+                  ⚠️ Importante: Verifica siempre la notificación oficial de Plin. 
+                  Las capturas pueden ser editadas.
+                </p>
+              </div>
+            )}
+
+            {/* Instrucciones de Tarjeta */}
             {formData.metodoPago === 'tarjeta' && (
               <div className="mt-4 p-4 bg-gray-100 rounded-lg">
                 <p className="text-sm text-gray-700">
