@@ -188,12 +188,12 @@ const Layout = () => {
             {/* Brand */}
             <div className="md:col-span-2">
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-3xl font-black bg-gradient-to-r from-kb-pink-dark to-kb-pink bg-clip-text text-transparent">
-                  KB
-                </span>
-                <span className="text-xs text-kb-pink-dark font-medium tracking-[0.2em]">
-                  DRESSES AND MORE
-                </span>
+               <img
+  src={logoKB}
+  alt="KB Dresses and More"
+  className="w-16 object-contain"
+/>
+                
               </div>
               <p className="text-gray-600 text-sm leading-relaxed mb-4 max-w-md">
                 Importamos directamente desde EE.UU. las mejores tendencias en moda para ti. 
