@@ -40,10 +40,21 @@ const ProductCard = ({ product }) => {
     price_final,
     image_url,
     is_new,
+    sku,
+    brand,
+    color,
   } = product
 
   const tieneDescuento = discount_percent > 0
   const precioMostrar = tieneDescuento ? price_final : price_original
+
+  // Función para obtener colores válidos
+  const getColorArray = () => {
+    if (!color) return []
+    return color.split(',').map(c => c.trim()).filter(c => c)
+  }
+
+  const colores = getColorArray()
 
   // Componente mini de estrellas
   const MiniStars = ({ rating }) => (
@@ -62,9 +73,9 @@ const ProductCard = ({ product }) => {
 
   return (
     <Link to={`/producto/${id}`} className="group block">
-      <div className="bg-white rounded-xl overflow-hidden border border-gray-100 hover:border-gray-300 hover:shadow-lg transition-all duration-300">
+      <div className="bg-white rounded-xl overflow-hidden border border-gray-100 hover:border-kb-pink/30 hover:shadow-xl transition-all duration-300">
         {/* Imagen */}
-        <div className="relative aspect-[4/5] bg-gray-100 overflow-hidden">
+        <div className="relative aspect-[4/5] bg-gray-50 overflow-hidden">
           <img
             src={image_url || 'https://via.placeholder.com/300x375?text=Producto'}
             alt={name}
@@ -75,7 +86,7 @@ const ProductCard = ({ product }) => {
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-1.5">
             {is_new && (
-              <span className="bg-black/90 text-white text-[10px] font-semibold px-2 py-1 rounded-full backdrop-blur-sm">
+              <span className="bg-kb-pink-dark text-white text-[10px] font-semibold px-2 py-1 rounded-full backdrop-blur-sm">
                 Nuevo
               </span>
             )}
@@ -85,10 +96,24 @@ const ProductCard = ({ product }) => {
               </span>
             )}
           </div>
+
+          {/* SKU/CÓDIGO */}
+          {sku && (
+            <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-gray-800 text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
+              {sku}
+            </div>
+          )}
         </div>
 
         {/* Info */}
         <div className="p-4">
+          {/* Marca */}
+          {brand && (
+            <p className="text-xs text-kb-pink-dark font-semibold uppercase tracking-wide mb-1">
+              {brand}
+            </p>
+          )}
+
           {/* Rating - SOLO si hay reseñas */}
           {!loadingReviews && avgRating && reviewCount > 0 && (
             <div className="flex items-center gap-1.5 mb-2">
@@ -100,13 +125,32 @@ const ProductCard = ({ product }) => {
           )}
 
           {/* Nombre */}
-          <h3 className="text-sm font-medium text-gray-900 mb-2 line-clamp-2 leading-snug group-hover:text-kb-gold transition-colors">
+          <h3 className="text-sm font-medium text-gray-900 mb-2 line-clamp-2 leading-snug group-hover:text-kb-pink-dark transition-colors">
             {name}
           </h3>
 
+          {/* Colores disponibles */}
+          {colores.length > 0 && (
+            <div className="flex items-center gap-1 mb-2">
+              {colores.slice(0, 4).map((colorItem, index) => (
+                <div
+                  key={index}
+                  className="w-4 h-4 rounded-full border border-gray-300 shadow-sm"
+                  style={{ backgroundColor: colorItem.toLowerCase() }}
+                  title={colorItem}
+                />
+              ))}
+              {colores.length > 4 && (
+                <span className="text-[10px] text-gray-500 ml-1">
+                  +{colores.length - 4}
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Precio */}
           <div className="flex items-baseline gap-2">
-            <span className="text-base font-bold text-gray-900">
+            <span className="text-base font-bold text-kb-pink-dark">
               ${precioMostrar?.toFixed(2)}
             </span>
             {tieneDescuento && (

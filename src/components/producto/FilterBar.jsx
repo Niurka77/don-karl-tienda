@@ -1,11 +1,21 @@
 import { useState } from 'react'
 
-// Reemplaza el array 'categorias' por este:
 const categorias = [
   { value: '', label: 'Todas las categorías' },
-  { value: 'vestidos', label: '👗 Vestidos' },
-  { value: 'bolsos', label: '👜 Bolsos' },
-  { value: 'zapatos', label: '👠 Zapatos' },
+  { value: 'carteras', label: 'Carteras' },
+  { value: 'vestidos', label: 'Vestidos' },
+  { value: 'billeteras', label: 'Billeteras' },
+  { value: 'zapatos', label: 'Zapatos' },
+  { value: 'bolsos', label: 'Bolsos' },
+]
+
+const marcas = [
+  { value: '', label: 'Todas las marcas' },
+  { value: 'guess', label: 'Guess' },
+  { value: 'tommy hilfiger', label: 'Tommy Hilfiger' },
+  { value: 'calvin klein', label: 'Calvin Klein' },
+  { value: 'michael kors', label: 'Michael Kors' },
+  { value: 'victoria secret', label: 'Victoria Secret' },
 ]
 
 const generos = [
@@ -31,6 +41,7 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
   const limpiarFiltros = () => {
     onChangeFiltros({
       categoria: '',
+      marca: '',
       genero: '',
       precioMin: '',
       precioMax: '',
@@ -38,12 +49,12 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
     })
   }
 
-  const filtrosActivos = filtros.categoria || filtros.genero || filtros.precioMin || filtros.precioMax
+  const filtrosActivos = filtros.categoria || filtros.marca || filtros.genero || filtros.precioMin || filtros.precioMax
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
       {/* Header de filtros (mobile toggle) */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-4">
         <button
           onClick={() => setMostrarFiltros(!mostrarFiltros)}
           className="flex items-center gap-2 text-gray-700 font-medium md:hidden"
@@ -53,7 +64,7 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
           </svg>
           Filtros
           {filtrosActivos && (
-            <span className="bg-black text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+            <span className="bg-kb-pink-dark text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
               !
             </span>
           )}
@@ -62,11 +73,8 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
         {/* Ordenamiento (siempre visible) */}
         <select
           value={`${filtros.orden}`}
-          onChange={(e) => {
-            const [campo, direccion] = e.target.value.split('-')
-            handleChange('orden', e.target.value)
-          }}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+          onChange={(e) => handleChange('orden', e.target.value)}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-kb-pink focus:border-transparent"
         >
           {ordenamientos.map((op) => (
             <option key={op.value} value={op.value}>
@@ -77,8 +85,8 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
       </div>
 
       {/* Filtros (colapsables en mobile) */}
-      <div className={`${mostrarFiltros ? 'block' : 'hidden'} md:block mt-4`}>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className={`${mostrarFiltros ? 'block' : 'hidden'} md:block`}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Categoría */}
           <div>
             <label className="block text-xs font-semibold text-gray-500 uppercase mb-2">
@@ -87,11 +95,29 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
             <select
               value={filtros.categoria}
               onChange={(e) => handleChange('categoria', e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-kb-pink focus:border-transparent"
             >
               {categorias.map((cat) => (
                 <option key={cat.value} value={cat.value}>
                   {cat.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Marca */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase mb-2">
+              Marca
+            </label>
+            <select
+              value={filtros.marca}
+              onChange={(e) => handleChange('marca', e.target.value)}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-kb-pink focus:border-transparent"
+            >
+              {marcas.map((marca) => (
+                <option key={marca.value} value={marca.value}>
+                  {marca.label}
                 </option>
               ))}
             </select>
@@ -105,7 +131,7 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
             <select
               value={filtros.genero}
               onChange={(e) => handleChange('genero', e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-kb-pink focus:border-transparent"
             >
               {generos.map((gen) => (
                 <option key={gen.value} value={gen.value}>
@@ -125,7 +151,7 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
               placeholder="$0"
               value={filtros.precioMin}
               onChange={(e) => handleChange('precioMin', e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-kb-pink focus:border-transparent"
               min="0"
             />
           </div>
@@ -140,7 +166,7 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
               placeholder="$999"
               value={filtros.precioMax}
               onChange={(e) => handleChange('precioMax', e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-kb-pink focus:border-transparent"
               min="0"
             />
           </div>
@@ -150,9 +176,12 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
         {filtrosActivos && (
           <button
             onClick={limpiarFiltros}
-            className="mt-4 text-sm text-red-600 hover:text-red-800 font-medium transition-colors"
+            className="mt-4 text-sm text-kb-pink-dark hover:text-kb-pink font-medium transition-colors flex items-center gap-1"
           >
-            ✕ Limpiar filtros
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Limpiar filtros
           </button>
         )}
       </div>
