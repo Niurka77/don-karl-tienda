@@ -1,35 +1,124 @@
 @import "tailwindcss";
 
-/* 🎨 Paleta KB - Dresses and More */
+/* 🎨 PALETA KB - EDICIÓN PREMIUM (Soft Minimalism) */
 @theme {
+  /* Colores Base */
+  --color-background: #ffffff;
+  --color-foreground: #111111;
+  --color-muted: #f8f8f8;
+  --color-muted-foreground: #6b7280;
+  --color-border: #eaeaea;
+
+  /* Colores de Marca */
   --color-kb-pink: #FF69B4;
-  --color-kb-pink-dark: #C71585;
+  --color-kb-pink-dark: #D41B6C;
   --color-kb-gold: #D4AF37;
-  --color-kb-gold-light: #F4E4C1;
+  --color-kb-gold-light: #E9D48B;
   --color-kb-black: #0a0a0a;
-  --color-kb-gray: #f8f5f2;
+  --color-kb-gray: #f5f5f5;
+
+  /* Tipografía */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
 }
 
-/* Estilos base */
+/* Reset y Estilos Base */
+* {
+  border-color: var(--color-border);
+}
+
 body {
-  @apply bg-kb-gray text-kb-black font-sans;
+  @apply bg-background text-foreground font-sans antialiased;
 }
 
-/* Botones KB */
+h1, h2, h3, .font-heading {
+  font-family: var(--font-serif);
+  letter-spacing: -0.02em;
+}
+
+/* ============================================
+   ANIMACIONES EXPLÍCITAS (Compatibles con Tailwind v4)
+   ============================================ */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Utilidades de animación (puedes usarlas en cualquier componente) */
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Sombras personalizadas */
+.shadow-elegant {
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+}
+
+.shadow-elegant-hover {
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.1), 0 5px 10px -5px rgba(0, 0, 0, 0.02);
+}
+
+/* Botones base */
 .btn-kb-primary {
-  @apply bg-kb-black text-white font-semibold px-6 py-3 rounded-lg 
-         hover:bg-gray-800 transition-all active:scale-[0.98];
+  @apply bg-foreground text-background font-medium px-8 py-4 rounded-full transition-all duration-300 hover:bg-foreground/90 hover:-translate-y-0.5;
 }
 
 .btn-kb-accent {
-  @apply bg-kb-gold text-kb-black font-semibold px-6 py-3 rounded-lg 
-         hover:bg-yellow-600 transition-all active:scale-[0.98];
+  @apply border-2 border-foreground text-foreground font-medium px-8 py-4 rounded-full transition-all duration-300 hover:bg-foreground hover:text-background;
 }
 
-/* Etiquetas */
+/* Badges */
 .badge-new {
-  @apply bg-kb-pink text-white text-xs font-bold px-3 py-1 rounded;
+  @apply bg-kb-pink-dark text-white text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider;
 }
+
 .badge-sale {
-  @apply bg-kb-gold text-kb-black text-xs font-bold px-3 py-1 rounded;
+  @apply bg-foreground text-background text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider;
 }

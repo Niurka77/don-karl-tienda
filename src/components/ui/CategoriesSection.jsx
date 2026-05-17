@@ -1,87 +1,91 @@
 import { Link } from 'react-router-dom'
 
+// NOTA: Estas imágenes son estáticas (placeholder). 
+// En producción, deberían venir de tu bucket de Supabase.
+// Las mantengo como ejemplo visual de la estética "editorial".
 const categories = [
   {
-    title: "Carteras de Marca",
+    title: "Carteras",
     subtitle: "Guess • Tommy • Calvin Klein",
-    description: "Las mejores carteras importadas de EE.UU.",
-    image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&h=400&fit=crop",
+    description: "Importadas desde EE.UU.",
+    image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&h=1000&fit=crop",
     link: "/?categoria=carteras",
-    color: "from-kb-pink-dark to-kb-pink"
   },
   {
-    title: "Vestidos de Fiesta",
-    subtitle: "Elegancia y estilo",
-    description: "Para esa ocasión especial. Tallas S al XXL",
-    image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&h=400&fit=crop",
+    title: "Vestidos",
+    subtitle: "Elegancia atemporal",
+    description: "Para ocasiones especiales",
+    image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800&h=1000&fit=crop",
     link: "/?categoria=vestidos",
-    color: "from-kb-gold to-yellow-600"
   },
   {
-    title: "Billeteras Hombre",
+    title: "Billeteras",
     subtitle: "Michael Kors • Tommy • CK",
-    description: "Diseños exclusivos y calidad garantizada",
-    image: "https://images.unsplash.com/photo-1627123428493-eb5ae6dc65a3?w=600&h=400&fit=crop",
+    description: "Diseño y funcionalidad",
+    image: "https://images.unsplash.com/photo-1627123428493-eb5ae6dc65a3?w=800&h=1000&fit=crop",
     link: "/?categoria=billeteras",
-    color: "from-gray-700 to-gray-900"
   }
 ]
 
 const CategoriesSection = () => {
   return (
-    <div className="py-16 bg-white">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="text-center mb-12">
-          <span className="inline-block bg-kb-pink/10 text-kb-pink-dark px-4 py-2 rounded-full text-sm font-semibold mb-4">
-            CATEGORÍAS
+    <section className="py-24 bg-background">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8">
+        {/* Encabezado editorial */}
+        <div className="text-center mb-16">
+          <span className="text-[10px] font-mono tracking-[0.2em] text-muted-foreground uppercase">
+            Colecciones
           </span>
-          <h2 className="text-3xl md:text-4xl font-black text-gray-800 mb-3">
-            Explora Nuestros Productos
+          <h2 className="text-3xl md:text-4xl font-serif font-semibold text-foreground mt-3 mb-4">
+            Explora por categoría
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Encuentra lo que buscas entre nuestra amplia variedad de productos importados
+          <p className="text-muted-foreground text-sm max-w-md mx-auto">
+            Piezas seleccionadas para ti, importadas desde Estados Unidos.
           </p>
         </div>
 
+        {/* Grid de categorías */}
         <div className="grid md:grid-cols-3 gap-8">
           {categories.map((cat, idx) => (
             <Link
               key={idx}
               to={cat.link}
-              className="group relative overflow-hidden rounded-3xl shadow-xl aspect-[4/5]"
+              className="group relative overflow-hidden rounded-2xl aspect-[4/5] shadow-elegant transition-all duration-700 hover:shadow-elegant-hover"
             >
+              {/* Imagen con zoom elegante */}
               <img
                 src={cat.image}
                 alt={cat.title}
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
+                loading="lazy"
               />
               
-              <div className={`absolute inset-0 bg-gradient-to-t ${cat.color} opacity-80 group-hover:opacity-90 transition-opacity`} />
+              {/* Overlay negro sutil (reemplaza gradientes coloridos) */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-90 group-hover:opacity-95 transition-opacity duration-500" />
               
-              <div className="absolute inset-0 p-6 flex flex-col justify-end">
-                <p className="text-white/80 text-sm font-medium mb-1">{cat.subtitle}</p>
-                <h3 className="text-white text-2xl font-bold mb-2 group-hover:translate-y-0 transition-transform">
+              {/* Texto superpuesto */}
+              <div className="absolute inset-0 p-8 flex flex-col justify-end text-white">
+                <p className="text-[11px] font-mono tracking-wider uppercase mb-2 opacity-80 group-hover:opacity-100 transition">
+                  {cat.subtitle}
+                </p>
+                <h3 className="text-2xl font-serif font-semibold mb-2 group-hover:translate-y-0 transition-transform duration-300">
                   {cat.title}
                 </h3>
-                <p className="text-white/90 text-sm mb-4">{cat.description}</p>
-                <div className="flex items-center text-white font-semibold group-hover:gap-3 gap-2 transition-all">
+                <p className="text-sm text-white/80 mb-4">
+                  {cat.description}
+                </p>
+                <div className="inline-flex items-center text-sm font-medium group-hover:gap-3 gap-2 transition-all duration-300">
                   Ver colección 
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
                 </div>
-              </div>
-
-              <div className="absolute top-4 right-4 w-12 h-12 bg-white/20 backdrop-blur rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
               </div>
             </Link>
           ))}
         </div>
       </div>
-    </div>
+    </section>
   )
 }
 

@@ -11,7 +11,6 @@ const Layout = () => {
   const itemCount = getItemCount()
   const [scrolled, setScrolled] = useState(false)
 
-  // Efecto para cambiar el header al hacer scroll
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20)
@@ -21,107 +20,84 @@ const Layout = () => {
   }, [])
 
   return (
-    <div className="min-h-screen bg-kb-gray flex flex-col">
-      {/* Header Principal */}
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Header con Glassmorphism Premium */}
       <header 
-        className={`sticky top-0 z-40 transition-all duration-500 ${
+        className={`fixed top-0 w-full z-50 transition-all duration-500 ${
           scrolled 
-            ? 'bg-white/95 backdrop-blur-md shadow-lg shadow-pink-100/30' 
-            : 'bg-white'
+            ? 'bg-white/80 backdrop-blur-xl border-b border-border/50 shadow-glass' 
+            : 'bg-white border-b border-border/30'
         }`}
       >
-        {/* Barra superior con info */}
-        <div className="bg-gradient-to-r from-kb-pink-dark via-kb-pink to-kb-pink-dark text-white text-xs py-2 px-4">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="max-w-[90rem] mx-auto px-6 lg:px-8">
+          {/* Top Bar (Info) - Refinado */}
+          <div className="hidden lg:flex items-center justify-between py-2 text-[11px] tracking-wide text-muted-foreground border-b border-border/50">
             <div className="flex items-center gap-6">
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1.5">
                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"/>
                 </svg>
                 Envíos a todo el Perú
               </span>
-              
+              <span>Compra 100% segura</span>
             </div>
-            <span className="hidden md:inline font-medium tracking-wide">
-               Productos importados de EE.UU.
+            <span className="font-medium">
+              📦 Importado directamente de EE.UU.
             </span>
           </div>
-        </div>
 
-        {/* Navegación Principal */}
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between gap-8">
+          {/* Navegación Principal */}
+          <div className="flex items-center justify-between gap-6 lg:gap-12 py-4 lg:py-5">
             
-            {/* Navegación Izquierda */}
-            <nav className="hidden lg:flex items-center gap-1 flex-1">
-              <button
-                onClick={() => navigate('/?genero=mujer')}
-                className="group relative px-4 py-2 text-sm font-medium text-gray-700 hover:text-kb-pink-dark transition-colors duration-300"
-              >
-                <span className="relative z-10">MUJER</span>
-                <span className="absolute inset-0 bg-kb-pink/10 rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
-              </button>
-              <button
-                onClick={() => navigate('/?genero=hombre')}
-                className="group relative px-4 py-2 text-sm font-medium text-gray-700 hover:text-kb-pink-dark transition-colors duration-300"
-              >
-                <span className="relative z-10">HOMBRE</span>
-                <span className="absolute inset-0 bg-kb-pink/10 rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
-              </button>
-              <Link
-                to="/nosotros"
-                className="group relative px-4 py-2 text-sm font-medium text-gray-700 hover:text-kb-pink-dark transition-colors duration-300"
-              >
-                <span className="relative z-10">NOSOTROS</span>
-                <span className="absolute inset-0 bg-kb-pink/10 rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
-              </Link>
+            {/* Menú Izquierda */}
+            <nav className="hidden lg:flex items-center gap-1">
+              {['MUJER', 'HOMBRE', 'NOSOTROS'].map((item) => (
+                <button
+                  key={item}
+                  onClick={() => navigate(`/?genero=${item.toLowerCase()}`)}
+                  className="relative px-5 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors duration-300 group"
+                >
+                  {item}
+                  <span className="absolute bottom-0 left-1/2 w-0 h-[1.5px] bg-foreground group-hover:w-1/2 group-hover:left-1/4 transition-all duration-300"></span>
+                </button>
+              ))}
             </nav>
 
             {/* Logo Centrado */}
             <Link to="/" className="flex-shrink-0 group">
-              <div className="flex flex-col items-center">
-                <div className="relative">
-                  
-                <img
-  src={logoKB}
-  alt="KB Dresses and More"
-  className="w-24 md:w-32 object-contain group-hover:scale-105 transition-transform duration-300"
-/>
-                </div>
-                
-              </div>
+              <img
+                src={logoKB}
+                alt="KB Dresses and More"
+                className="w-28 md:w-32 object-contain transition-all duration-700 group-hover:opacity-80"
+              />
             </Link>
 
-            {/* Navegación Derecha + Carrito */}
-            <div className="flex items-center gap-1 flex-1 justify-end">
-              <Link
-                to="/ayuda"
-                className="hidden lg:block group relative px-4 py-2 text-sm font-medium text-gray-700 hover:text-kb-pink-dark transition-colors duration-300"
-              >
-                <span className="relative z-10">AYUDA</span>
-                <span className="absolute inset-0 bg-kb-pink/10 rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-right"></span>
-              </Link>
-              <Link
-                to="/contacto"
-                className="hidden lg:block group relative px-4 py-2 text-sm font-medium text-gray-700 hover:text-kb-pink-dark transition-colors duration-300"
-              >
-                <span className="relative z-10">CONTACTO</span>
-                <span className="absolute inset-0 bg-kb-pink/10 rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-right"></span>
-              </Link>
+            {/* Menú Derecha + Carrito */}
+            <div className="flex items-center gap-1 lg:gap-4">
+              <nav className="hidden lg:flex items-center gap-1">
+                {['AYUDA', 'CONTACTO'].map((item) => (
+                  <Link
+                    key={item}
+                    to={`/${item.toLowerCase()}`}
+                    className="px-5 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors duration-300"
+                  >
+                    {item}
+                  </Link>
+                ))}
+              </nav>
               
-              {/* Separador */}
-              <div className="hidden lg:block w-px h-6 bg-gray-300 mx-2"></div>
+              <div className="w-px h-5 bg-border hidden lg:block"></div>
               
-              {/* Botón Carrito */}
+              {/* Botón Carrito Rediseñado */}
               <button
                 onClick={toggleCart}
-                className="relative group p-3 rounded-full hover:bg-kb-pink/10 transition-all duration-300"
+                className="relative group p-2 rounded-full hover:bg-muted transition-all duration-300"
               >
-                <svg className="w-6 h-6 text-gray-700 group-hover:text-kb-pink-dark transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-foreground/80 group-hover:text-foreground transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
                 {itemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-gradient-to-br from-kb-pink to-kb-pink-dark text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-lg animate-pulse">
+                  <span className="absolute -top-1 -right-1 bg-foreground text-background text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
                     {itemCount}
                   </span>
                 )}
@@ -130,135 +106,86 @@ const Layout = () => {
           </div>
 
           {/* Navegación Móvil */}
-          <nav className="lg:hidden flex items-center justify-center gap-4 mt-4 pt-4 border-t border-gray-100">
-            <button
-              onClick={() => navigate('/?genero=mujer')}
-              className="px-3 py-1.5 text-xs font-medium text-gray-700 hover:text-kb-pink-dark hover:bg-kb-pink/5 rounded-full transition-all"
-            >
-              Mujer
-            </button>
-            <button
-              onClick={() => navigate('/?genero=hombre')}
-              className="px-3 py-1.5 text-xs font-medium text-gray-700 hover:text-kb-pink-dark hover:bg-kb-pink/5 rounded-full transition-all"
-            >
-              Hombre
-            </button>
-            <Link
-              to="/nosotros"
-              className="px-3 py-1.5 text-xs font-medium text-gray-700 hover:text-kb-pink-dark hover:bg-kb-pink/5 rounded-full transition-all"
-            >
-              Nosotros
-            </Link>
-            <Link
-              to="/ayuda"
-              className="px-3 py-1.5 text-xs font-medium text-gray-700 hover:text-kb-pink-dark hover:bg-kb-pink/5 rounded-full transition-all"
-            >
-              Ayuda
-            </Link>
-            <Link
-              to="/contacto"
-              className="px-3 py-1.5 text-xs font-medium text-gray-700 hover:text-kb-pink-dark hover:bg-kb-pink/5 rounded-full transition-all"
-            >
-              Contacto
-            </Link>
+          <nav className="lg:hidden flex items-center justify-center gap-6 py-3 border-t border-border/50 text-xs font-medium">
+            <button onClick={() => navigate('/?genero=mujer')} className="text-foreground/70 hover:text-foreground">Mujer</button>
+            <button onClick={() => navigate('/?genero=hombre')} className="text-foreground/70 hover:text-foreground">Hombre</button>
+            <Link to="/nosotros" className="text-foreground/70 hover:text-foreground">Nosotros</Link>
+            <Link to="/ayuda" className="text-foreground/70 hover:text-foreground">Ayuda</Link>
           </nav>
         </div>
       </header>
 
-      {/* Contenido dinámico */}
-      <main className="flex-1">
+      {/* Contenido Principal (Añadimos padding-top para compensar el header fijo) */}
+      <main className="flex-1 pt-[88px] lg:pt-[104px]">
         <Outlet />
       </main>
 
-      {/* WhatsApp Button */}
+      {/* WhatsApp Button (Mantiene funcionalidad) */}
       <WhatsAppButton phoneNumber="51906877812" />
 
-      {/* Carrito Drawer */}
+      {/* Cart Drawer (Sin cambios) */}
       <CartDrawer />
 
-      {/* Footer Elegante */}
-      <footer className="bg-gradient-to-b from-white to-kb-gray border-t border-kb-pink/20 mt-16">
-        <div className="max-w-7xl mx-auto px-4 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+      {/* Footer Rediseñado - Editorial */}
+      <footer className="border-t border-border bg-muted/30 mt-24">
+        <div className="max-w-[90rem] mx-auto px-6 lg:px-8 py-16 lg:py-24">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-16">
+            
             {/* Brand */}
-            <div className="md:col-span-2">
-              <div className="flex items-center gap-2 mb-3">
-               <img
-  src={logoKB}
-  alt="KB Dresses and More"
-  className="w-16 object-contain"
-/>
-                
-              </div>
-              <p className="text-gray-600 text-sm leading-relaxed mb-4 max-w-md">
-                Importamos directamente desde EE.UU. las mejores tendencias en moda para ti. 
-                Calidad garantizada y envíos a todo el Perú.
+            <div className="lg:col-span-1">
+              <img src={logoKB} alt="KB Dresses and More" className="w-24 opacity-80 mb-6" />
+              <p className="text-muted-foreground text-sm leading-relaxed mb-6 max-w-xs">
+                Moda de autor importada desde Estados Unidos. Curada para quienes buscan piezas únicas con historia.
               </p>
-              <div className="flex items-center gap-4">
-                <a href="#" className="w-8 h-8 rounded-full bg-kb-pink/10 flex items-center justify-center text-kb-pink-dark hover:bg-kb-pink hover:text-white transition-all">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                  </svg>
-                </a>
-                <a href="#" className="w-8 h-8 rounded-full bg-kb-pink/10 flex items-center justify-center text-kb-pink-dark hover:bg-kb-pink hover:text-white transition-all">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073z"/>
-                  </svg>
-                </a>
-                <a href="#" className="w-8 h-8 rounded-full bg-kb-pink/10 flex items-center justify-center text-kb-pink-dark hover:bg-kb-pink hover:text-white transition-all">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z"/>
-                  </svg>
-                </a>
+              <div className="flex items-center gap-5">
+                {['facebook', 'instagram', 'pinterest'].map((social) => (
+                  <a key={social} href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+                    <span className="sr-only">{social}</span>
+                    <div className="w-5 h-5 bg-current rounded-full opacity-50 hover:opacity-100 transition"></div>
+                  </a>
+                ))}
               </div>
             </div>
 
-            {/* Links Rápidos */}
+            {/* Links */}
             <div>
-              <h4 className="font-semibold text-gray-800 mb-3 text-sm tracking-wide">ENLACES</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link to="/?genero=mujer" className="text-gray-600 hover:text-kb-pink-dark transition-colors">Mujer</Link></li>
-                <li><Link to="/?genero=hombre" className="text-gray-600 hover:text-kb-pink-dark transition-colors">Hombre</Link></li>
-                <li><Link to="/nosotros" className="text-gray-600 hover:text-kb-pink-dark transition-colors">Nosotros</Link></li>
-                <li><Link to="/ayuda" className="text-gray-600 hover:text-kb-pink-dark transition-colors">Ayuda</Link></li>
+              <h4 className="font-serif text-sm font-semibold tracking-wider mb-5">EXPLORA</h4>
+              <ul className="space-y-3 text-sm">
+                <li><Link to="/?genero=mujer" className="text-muted-foreground hover:text-foreground transition">Mujer</Link></li>
+                <li><Link to="/?genero=hombre" className="text-muted-foreground hover:text-foreground transition">Hombre</Link></li>
+                <li><Link to="/coleccion" className="text-muted-foreground hover:text-foreground transition">Colección Primavera</Link></li>
+                <li><Link to="/outlet" className="text-muted-foreground hover:text-foreground transition">Outlet</Link></li>
               </ul>
             </div>
 
-            {/* Contacto */}
             <div>
-              <h4 className="font-semibold text-gray-800 mb-3 text-sm tracking-wide">CONTACTO</h4>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li className="flex items-start gap-2">
-                  <svg className="w-4 h-4 mt-0.5 text-kb-pink-dark" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
-                  </svg>
-                  <span>WhatsApp: +51 906 877 812</span>
+              <h4 className="font-serif text-sm font-semibold tracking-wider mb-5">SOPORTE</h4>
+              <ul className="space-y-3 text-sm">
+                <li><Link to="/ayuda" className="text-muted-foreground hover:text-foreground transition">Preguntas Frecuentes</Link></li>
+                <li><Link to="/contacto" className="text-muted-foreground hover:text-foreground transition">Contacto</Link></li>
+                <li><Link to="/envios" className="text-muted-foreground hover:text-foreground transition">Política de Envíos</Link></li>
+                <li><Link to="/devoluciones" className="text-muted-foreground hover:text-foreground transition">Cambios y Devoluciones</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-serif text-sm font-semibold tracking-wider mb-5">CONTACTO DIRECTO</h4>
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li className="flex items-center gap-3">
+                  <span>📱</span> <span>+51 906 877 812</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <svg className="w-4 h-4 mt-0.5 text-kb-pink-dark" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
-                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
-                  </svg>
-                  <span>info@kbdresses.com</span>
+                <li className="flex items-center gap-3">
+                  <span>✉️</span> <span>info@kbdresses.com</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <svg className="w-4 h-4 mt-0.5 text-kb-pink-dark" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"/>
-                  </svg>
-                  <span>Envíos a todo el Perú</span>
+                <li className="flex items-center gap-3">
+                  <span>📍</span> <span>Galería Chiclayo - 2do Piso</span>
                 </li>
               </ul>
             </div>
           </div>
 
-          {/* Copyright */}
-          <div className="border-t border-kb-pink/20 pt-6 text-center">
-            <p className="text-gray-500 text-sm">
-              © 2024 KB Dresses and More - Todos los derechos reservados
-            </p>
-            <p className="text-gray-400 text-xs mt-2">
-              Importado directamente desde EE.UU. 💗
-            </p>
+          <div className="border-t border-border/50 mt-16 pt-8 text-center text-xs text-muted-foreground">
+            <p>© 2024 KB Dresses and More — Hecho con propósito en Perú.</p>
           </div>
         </div>
       </footer>

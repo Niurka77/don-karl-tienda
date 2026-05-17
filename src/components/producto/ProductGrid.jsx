@@ -16,14 +16,12 @@ const ProductGrid = () => {
     orden: 'created_at-desc',
   })
   
-  // Paginación
   const [paginaActual, setPaginaActual] = useState(1)
   const [totalProductos, setTotalProductos] = useState(0)
   const productosPorPagina = 8
 
   useEffect(() => {
     cargarProductos()
-    setPaginaActual(1) // Resetear a página 1 cuando cambian los filtros
   }, [filtros, paginaActual])
 
   const cargarProductos = async () => {
@@ -33,35 +31,17 @@ const ProductGrid = () => {
 
       let query = supabase.from('products').select('*', { count: 'exact' })
 
-      // Aplicar filtros
-      if (filtros.categoria) {
-        query = query.eq('category', filtros.categoria)
-      }
+      if (filtros.categoria) query = query.eq('category', filtros.categoria)
+      if (filtros.marca) query = query.ilike('brand', `%${filtros.marca}%`)
+      if (filtros.genero) query = query.eq('gender', filtros.genero)
+      if (filtros.precioMin) query = query.gte('price_original', parseFloat(filtros.precioMin))
+      if (filtros.precioMax) query = query.lte('price_original', parseFloat(filtros.precioMax))
 
-      if (filtros.marca) {
-        query = query.ilike('brand', `%${filtros.marca}%`)
-      }
-
-      if (filtros.genero) {
-        query = query.eq('gender', filtros.genero)
-      }
-
-      if (filtros.precioMin) {
-        query = query.gte('price_original', parseFloat(filtros.precioMin))
-      }
-
-      if (filtros.precioMax) {
-        query = query.lte('price_original', parseFloat(filtros.precioMax))
-      }
-
-      // Solo productos con stock
       query = query.gt('stock', 0)
 
-      // Aplicar ordenamiento
       const [campo, direccion] = filtros.orden.split('-')
       query = query.order(campo, { ascending: direccion === 'asc' })
 
-      // Paginación
       const inicio = (paginaActual - 1) * productosPorPagina
       const fin = inicio + productosPorPagina - 1
       query = query.range(inicio, fin)
@@ -82,18 +62,18 @@ const ProductGrid = () => {
 
   const handleChangeFiltros = (nuevosFiltros) => {
     setFiltros(nuevosFiltros)
+    setPaginaActual(1)
   }
 
   const totalPages = Math.ceil(totalProductos / productosPorPagina)
 
-  // Estados de carga, error y vacío
   if (cargando) {
     return (
       <div>
         <FilterBar filtros={filtros} onChangeFiltros={handleChangeFiltros} />
-        <div className="flex flex-col items-center justify-center py-20">
-          <div className="w-12 h-12 border-4 border-kb-pink/20 border-t-kb-pink-dark rounded-full animate-spin"></div>
-          <p className="mt-4 text-gray-500 font-medium">Cargando productos...</p>
+        <div className="flex flex-col items-center justify-center py-32">
+          <div className="w-8 h-8 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin"></div>
+          <p className="mt-4 text-sm text-muted-foreground font-mono">Cargando colección...</p>
         </div>
       </div>
     )
@@ -103,16 +83,9 @@ const ProductGrid = () => {
     return (
       <div>
         <FilterBar filtros={filtros} onChangeFiltros={handleChangeFiltros} />
-        <div className="flex flex-col items-center justify-center py-20">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center max-w-md">
-            <svg className="w-12 h-12 text-red-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-            <p className="text-red-700 font-medium">{error}</p>
-            <button onClick={cargarProductos} className="mt-4 px-4 py-2 bg-kb-pink-dark text-white rounded-lg hover:bg-kb-pink transition-colors text-sm">
-              Reintentar
-            </button>
-          </div>
+        <div className="text-center py-32">
+          <p className="text-red-500 font-mono text-sm">{error}</p>
+          <button onClick={cargarProductos} className="mt-4 underline text-sm">Reintentar</button>
         </div>
       </div>
     )
@@ -123,58 +96,62 @@ const ProductGrid = () => {
       <FilterBar filtros={filtros} onChangeFiltros={handleChangeFiltros} />
 
       {productos.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20">
-          <svg className="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <p className="text-gray-500 text-lg font-medium">Sin resultados</p>
-          <p className="text-gray-400 text-sm mt-1">Prueba con otros filtros</p>
+        <div className="text-center py-32">
+          <p className="text-muted-foreground font-mono text-sm">No se encontraron productos.</p>
+          <p className="text-xs text-muted-foreground mt-1">Prueba ajustando los filtros.</p>
         </div>
       ) : (
         <>
-          <p className="text-sm text-gray-500 mb-4">
-            {totalProductos} producto{totalProductos !== 1 ? 's' : ''} encontrado{totalProductos !== 1 ? 's' : ''}
-          </p>
+          <div className="mb-6 text-right">
+            <p className="text-xs text-muted-foreground font-mono tracking-wide">
+              {totalProductos} piezas encontradas
+            </p>
+          </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {productos.map((producto) => (
-              <ProductCard key={producto.id} product={producto} />
+          {/* Grid con espaciado editorial */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
+            {productos.map((producto, idx) => (
+              <div 
+                key={producto.id} 
+                className="animate-fade-in-up"
+                style={{ animationDelay: `${idx * 50}ms`, animationFillMode: 'backwards' }}
+              >
+                <ProductCard product={producto} />
+              </div>
             ))}
           </div>
 
-          {/* Paginación */}
+          {/* Paginación refinada */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-8">
+            <div className="flex items-center justify-center gap-2 mt-16">
               <button
                 onClick={() => setPaginaActual(paginaActual - 1)}
                 disabled={paginaActual === 1}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-kb-pink/10 hover:border-kb-pink disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 text-xs font-mono text-foreground/60 hover:text-foreground border border-border rounded-full disabled:opacity-30 transition-all"
               >
-                Anterior
+                ← Anterior
               </button>
-
               <div className="flex gap-1">
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                   <button
                     key={page}
                     onClick={() => setPaginaActual(page)}
-                    className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
+                    className={`w-8 h-8 text-xs font-mono rounded-full transition-all ${
                       page === paginaActual
-                        ? 'bg-kb-pink-dark text-white'
-                        : 'border border-gray-300 text-gray-700 hover:bg-kb-pink/10 hover:border-kb-pink'
+                        ? 'bg-foreground text-background'
+                        : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     {page}
                   </button>
                 ))}
               </div>
-
               <button
                 onClick={() => setPaginaActual(paginaActual + 1)}
                 disabled={paginaActual === totalPages}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-kb-pink/10 hover:border-kb-pink disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 text-xs font-mono text-foreground/60 hover:text-foreground border border-border rounded-full disabled:opacity-30 transition-all"
               >
-                Siguiente
+                Siguiente →
               </button>
             </div>
           )}
