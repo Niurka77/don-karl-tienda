@@ -8,12 +8,17 @@ const ProductCard = ({ product }) => {
   const [loadingReviews, setLoadingReviews] = useState(true)
 
   useEffect(() => {
+    let cancelled = false
+    
     const fetchReviews = async () => {
       try {
         const { data, error } = await supabase
           .from('reviews')
           .select('rating')
           .eq('product_id', product.id)
+
+        // ✅ Si el componente se desmontó, no actualizar estado
+        if (cancelled) return
 
         if (!error && data) {
           setReviewCount(data.length)
@@ -23,13 +28,22 @@ const ProductCard = ({ product }) => {
           }
         }
       } catch (err) {
-        console.error('Error loading reviews for product card:', err)
+        if (!cancelled) {
+          console.error('Error loading reviews for product card:', err)
+        }
       } finally {
-        setLoadingReviews(false)
+        if (!cancelled) {
+          setLoadingReviews(false)
+        }
       }
     }
 
     fetchReviews()
+    
+    // ✅ Cleanup para evitar memory leaks y warnings
+    return () => {
+      cancelled = true
+    }
   }, [product.id])
 
   const {
@@ -57,12 +71,13 @@ const ProductCard = ({ product }) => {
 
   // Mini estrellas refinadas
   const MiniStars = ({ rating }) => (
-    <div className="flex gap-0.5">
+    <div className="flex gap-0.5" role="img" aria-label={`Calificación: ${rating} de 5 estrellas`}>
       {[1, 2, 3, 4, 5].map((star) => (
         <svg
           key={star}
           className={`w-3 h-3 ${star <= Math.round(rating) ? 'text-kb-gold fill-kb-gold' : 'text-border'}`}
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
         </svg>
@@ -71,10 +86,14 @@ const ProductCard = ({ product }) => {
   )
 
   return (
-    <Link to={`/producto/${id}`} className="group block">
+    <Link 
+      to={`/producto/${id}`} 
+      className="group block"
+      aria-label={`Ver detalles de ${name}`}
+    >
       <div className="relative bg-white transition-all duration-500 hover:shadow-elegant-hover rounded-2xl">
         
-        {/* Contenedor de Imagen (Énfasis en el producto) */}
+        {/* Contenedor de Imagen */}
         <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-muted">
           <img
             src={image_url || 'https://via.placeholder.com/600x750?text=KB+Dresses'}
@@ -97,18 +116,18 @@ const ProductCard = ({ product }) => {
             )}
           </div>
 
-          {/* SKU sútil */}
+          {/* SKU sutil */}
           {sku && (
             <div className="absolute bottom-3 left-3 bg-white/70 backdrop-blur-sm text-foreground/50 text-[9px] font-mono px-2 py-0.5 rounded-full">
               {sku}
             </div>
           )}
 
-          {/* Overlay de información en hover (opcional, pero elegante) */}
+          {/* Overlay de información en hover */}
           <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
         </div>
 
-        {/* Información del producto (espaciada y refinada) */}
+        {/* Información del producto */}
         <div className="p-4 space-y-2">
           {/* Marca y Rating */}
           <div className="flex items-center justify-between">
@@ -141,6 +160,7 @@ const ProductCard = ({ product }) => {
                   className="w-3.5 h-3.5 rounded-full border border-border shadow-sm transition-transform group-hover:scale-110"
                   style={{ backgroundColor: colorItem.toLowerCase() }}
                   title={colorItem}
+                  aria-label={`Color disponible: ${colorItem}`}
                 />
               ))}
               {colores.length > 3 && (
