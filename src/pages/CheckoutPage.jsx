@@ -22,6 +22,19 @@ const CheckoutPage = () => {
   const [errorServidor, setErrorServidor] = useState(null)
   const [pedidoExitoso, setPedidoExitoso] = useState(null)
 
+  // ✅ VALIDADORES
+  const validarEmail = (email) => {
+    if (!email) return true // Es opcional
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return re.test(email)
+  }
+
+  const validarTelefono = (telefono) => {
+    // Formato peruano: 9 dígitos empezando con 9
+    const re = /^9\d{8}$/
+    return re.test(telefono.replace(/\D/g, ''))
+  }
+
   if (items.length === 0 && !pedidoExitoso) {
     return (
       <div className="max-w-7xl mx-auto px-6 py-32 text-center">
@@ -42,15 +55,29 @@ const CheckoutPage = () => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
     if (errores[name]) setErrores((prev) => ({ ...prev, [name]: '' }))
+    // ✅ Limpiar error de servidor cuando el usuario modifica cualquier campo
+    if (errorServidor) setErrorServidor(null)
   }
 
   const validarFormulario = () => {
     const nuevosErrores = {}
     if (!formData.nombre.trim()) nuevosErrores.nombre = 'Requerido'
-    if (!formData.telefono.trim()) nuevosErrores.telefono = 'Requerido'
+    
+    if (!formData.telefono.trim()) {
+      nuevosErrores.telefono = 'Requerido'
+    } else if (!validarTelefono(formData.telefono)) {
+      nuevosErrores.telefono = 'Ingrese un número válido (ej: 999999999)'
+    }
+    
     if (!formData.direccion.trim()) nuevosErrores.direccion = 'Requerido'
     if (!formData.ciudad.trim()) nuevosErrores.ciudad = 'Requerido'
     if (!formData.metodoPago) nuevosErrores.metodoPago = 'Selecciona un método'
+    
+    // ✅ Validar email si está presente
+    if (formData.email && !validarEmail(formData.email)) {
+      nuevosErrores.email = 'Formato de email inválido'
+    }
+    
     setErrores(nuevosErrores)
     return Object.keys(nuevosErrores).length === 0
   }
@@ -168,8 +195,9 @@ const CheckoutPage = () => {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="Email (opcional)"
-                  className="w-full bg-transparent border-b border-border py-2 text-sm focus:outline-none focus:border-foreground transition-colors"
+                  className={`w-full bg-transparent border-b ${errores.email ? 'border-red-500' : 'border-border'} py-2 text-sm focus:outline-none focus:border-foreground transition-colors`}
                 />
+                {errores.email && <p className="text-[10px] text-red-500 mt-1">{errores.email}</p>}
               </div>
             </div>
           </div>
@@ -254,7 +282,13 @@ const CheckoutPage = () => {
               {items.map((item) => (
                 <div key={`${item.id}-${item.selectedSize}`} className="flex gap-3 text-sm">
                   <div className="w-12 h-14 flex-shrink-0 bg-muted rounded-lg overflow-hidden">
-                    <img src={item.image_url || 'https://via.placeholder.com/48x60'} alt="" className="w-full h-full object-cover" />
+                    {/* ✅ CORREGIDO: item.image en lugar de item.image_url */}
+                    <img 
+                      src={item.image || 'https://via.placeholder.com/48x60'} 
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
                   </div>
                   <div className="flex-1">
                     <p className="font-medium text-foreground line-clamp-1">{item.name}</p>

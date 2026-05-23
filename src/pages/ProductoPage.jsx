@@ -21,70 +21,91 @@ const ProductoPage = () => {
   const [reviews, setReviews] = useState([])
   const [avgRating, setAvgRating] = useState(null)
   
-  // Colores y tallas
   const [colores, setColores] = useState([])
   const [tallas, setTallas] = useState([])
 
   useEffect(() => {
+    let cancelled = false
+    
+    const cargarProducto = async () => {
+      try {
+        setCargando(true)
+        setError(null)
+
+        const { data: productData, error: productError } = await supabase
+          .from('products')
+          .select('*')
+          .eq('id', id)
+          .single()
+
+        // ✅ Si el componente se desmontó, no actualizar estado
+        if (cancelled) return
+        
+        if (productError) throw productError
+        setProducto(productData)
+
+        // Procesar colores
+        if (productData.color) {
+          setColores(productData.color.split(',').map(c => c.trim()).filter(c => c))
+        }
+
+        // ✅ CORREGIDO: Manejo robusto de sizes_available
+        if (productData.sizes_available) {
+          try {
+            let tallasData = []
+            
+            if (typeof productData.sizes_available === 'string') {
+              tallasData = JSON.parse(productData.sizes_available)
+            } else if (Array.isArray(productData.sizes_available)) {
+              tallasData = productData.sizes_available
+            }
+            
+            if (Array.isArray(tallasData)) {
+              setTallas(tallasData.filter(t => typeof t === 'string'))
+            } else {
+              console.warn('sizes_available no es un array válido:', tallasData)
+              setTallas([])
+            }
+          } catch (e) {
+            console.error('Error parsing sizes_available:', e)
+            setTallas([])
+          }
+        }
+
+        // Cargar reseñas
+        const { data: reviewsData, error: reviewsError } = await supabase
+          .from('reviews')
+          .select('*')
+          .eq('product_id', id)
+          .order('created_at', { ascending: false })
+
+        if (cancelled) return
+        
+        if (!reviewsError && reviewsData) {
+          setReviews(reviewsData)
+          if (reviewsData.length > 0) {
+            const avg = reviewsData.reduce((acc, r) => acc + r.rating, 0) / reviewsData.length
+            setAvgRating(avg.toFixed(1))
+          }
+        }
+
+      } catch (err) {
+        if (cancelled) return
+        console.error('Error:', err)
+        setError('No se pudo cargar el producto')
+      } finally {
+        if (!cancelled) setCargando(false)
+      }
+    }
+
     cargarProducto()
     window.scrollTo(0, 0)
-  }, [id])
 
-  const cargarProducto = async () => {
-    try {
-      setCargando(true)
-      setError(null)
-
-      // Cargar producto
-      const { data: productData, error: productError } = await supabase
-        .from('products')
-        .select('*')
-        .eq('id', id)
-        .single()
-
-      if (productError) throw productError
-      setProducto(productData)
-
-      // Procesar colores
-      if (productData.color) {
-        setColores(productData.color.split(',').map(c => c.trim()).filter(c => c))
-      }
-
-      // ✅ CORREGIDO: Manejar sizes_available (jsonb)
-      if (productData.sizes_available) {
-        try {
-          const tallasData = Array.isArray(productData.sizes_available) 
-            ? productData.sizes_available 
-            : JSON.parse(productData.sizes_available)
-          setTallas(tallasData)
-        } catch (e) {
-          console.error('Error parsing sizes_available:', e)
-          setTallas([])
-        }
-      }
-
-      // Cargar reseñas
-      const { data: reviewsData, error: reviewsError } = await supabase
-        .from('reviews')
-        .select('*')
-        .eq('product_id', id)
-        .order('created_at', { ascending: false })
-
-      if (!reviewsError && reviewsData) {
-        setReviews(reviewsData)
-        if (reviewsData.length > 0) {
-          const avg = reviewsData.reduce((acc, r) => acc + r.rating, 0) / reviewsData.length
-          setAvgRating(avg.toFixed(1))
-        }
-      }
-
-    } catch (err) {
-      console.error('Error:', err)
-      setError('No se pudo cargar el producto')
-    } finally {
-      setCargando(false)
+    // ✅ Cleanup para evitar actualizaciones en componente desmontado
+    return () => {
+      cancelled = true
     }
-  }
+  }, [id])
 
   const handleAgregarCarrito = async () => {
     if (!selectedSize && tallas.length > 0) {
@@ -92,7 +113,6 @@ const ProductoPage = () => {
       return
     }
 
-    // ✅ CORREGIDO: Validar stock
     if (producto.stock && cantidad > producto.stock) {
       alert(`Solo quedan ${producto.stock} unidades disponibles`)
       return
@@ -163,12 +183,10 @@ const ProductoPage = () => {
   const tieneDescuento = producto.discount_percent > 0
   const precioFinal = tieneDescuento ? producto.price_final : producto.price_original
 
-  // Generar array de imágenes
   const imagenes = producto.images_urls 
     ? [producto.image_url, ...producto.images_urls].filter(Boolean)
     : [producto.image_url].filter(Boolean)
 
-  // Estrellas rating
   const renderStars = (rating) => {
     return (
       <div className="flex gap-1" role="img" aria-label={`Calificación: ${rating} de 5 estrellas`}>
@@ -188,7 +206,6 @@ const ProductoPage = () => {
 
   return (
     <div className="bg-kb-gray min-h-screen pb-12">
-      {/* Mensaje de éxito */}
       {mostrarMensaje && (
         <div className="fixed top-20 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-xl animate-bounce">
           <div className="flex items-center gap-2">
@@ -240,7 +257,6 @@ const ProductoPage = () => {
 
           {/* INFO PRODUCTO */}
           <div>
-            {/* SKU y Marca */}
             <div className="flex flex-wrap items-center gap-3 mb-3">
               {producto.sku && (
                 <span className="text-xs text-gray-600 bg-gray-100 px-3 py-1 rounded-full font-medium">
@@ -254,12 +270,10 @@ const ProductoPage = () => {
               )}
             </div>
 
-            {/* Nombre */}
             <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-3">
               {producto.name}
             </h1>
 
-            {/* Rating */}
             {avgRating && (
               <div className="flex items-center gap-2 mb-4">
                 {renderStars(parseFloat(avgRating))}
@@ -269,7 +283,6 @@ const ProductoPage = () => {
               </div>
             )}
 
-            {/* Precios */}
             <div className="mb-6 p-4 bg-white rounded-xl shadow-sm">
               <div className="flex items-baseline gap-3 flex-wrap">
                 <span className="text-3xl font-bold text-kb-pink-dark">
@@ -293,7 +306,6 @@ const ProductoPage = () => {
               )}
             </div>
 
-            {/* Descripción */}
             {producto.description && (
               <div className="mb-6">
                 <h3 className="font-semibold text-gray-800 mb-2">Descripción</h3>
@@ -306,7 +318,6 @@ const ProductoPage = () => {
               </div>
             )}
 
-            {/* Colores */}
             {colores.length > 0 && (
               <div className="mb-6">
                 <h3 className="font-semibold text-gray-800 mb-2">Colores disponibles</h3>
@@ -325,7 +336,6 @@ const ProductoPage = () => {
               </div>
             )}
 
-            {/* Tallas */}
             {tallas.length > 0 && (
               <div className="mb-6">
                 <h3 className="font-semibold text-gray-800 mb-2">Tallas disponibles</h3>
@@ -350,7 +360,6 @@ const ProductoPage = () => {
               </div>
             )}
 
-            {/* Cantidad */}
             <div className="mb-6">
               <h3 className="font-semibold text-gray-800 mb-2">Cantidad</h3>
               <div className="flex items-center gap-3">
@@ -364,8 +373,11 @@ const ProductoPage = () => {
                 </button>
                 <span className="w-16 text-center text-lg font-medium text-gray-800">{cantidad}</span>
                 <button
-                  onClick={() => setCantidad(cantidad + 1)}
-                  className="w-10 h-10 rounded-lg border border-gray-300 text-gray-700 hover:border-kb-pink hover:bg-kb-pink/5 transition font-medium focus:outline-none focus:ring-2 focus:ring-kb-pink"
+                  onClick={() => setCantidad(Math.min(producto.stock, cantidad + 1))}
+                  disabled={cantidad >= producto.stock}
+                  className={`w-10 h-10 rounded-lg border border-gray-300 text-gray-700 hover:border-kb-pink hover:bg-kb-pink/5 transition font-medium focus:outline-none focus:ring-2 focus:ring-kb-pink ${
+                    cantidad >= producto.stock ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                   aria-label="Aumentar cantidad"
                   type="button"
                 >
@@ -377,7 +389,6 @@ const ProductoPage = () => {
               </div>
             </div>
 
-            {/* Botones de acción */}
             <div className="flex flex-col sm:flex-row gap-3 mb-8">
               <button
                 onClick={handleAgregarCarrito}
@@ -397,11 +408,10 @@ const ProductoPage = () => {
               </button>
             </div>
 
-            {/* Métodos de pago */}
             <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
               <h4 className="font-semibold text-sm text-gray-700 mb-3">Métodos de pago aceptados:</h4>
               <div className="flex flex-wrap gap-2">
-                <span className="px-3 py-1.5 bg-white rounded-lg text-sm border border-gray-200">🇵 Yape</span>
+                <span className="px-3 py-1.5 bg-white rounded-lg text-sm border border-gray-200">🇵🇪 Yape</span>
                 <span className="px-3 py-1.5 bg-white rounded-lg text-sm border border-gray-200">🇵🇪 Plin</span>
                 <span className="px-3 py-1.5 bg-white rounded-lg text-sm border border-gray-200">💳 Tarjetas</span>
                 <span className="px-3 py-1.5 bg-white rounded-lg text-sm border border-gray-200">🏦 Transferencia</span>
@@ -426,8 +436,8 @@ const ProductoPage = () => {
             </div>
           ) : (
             <div className="grid gap-4">
-              {reviews.map((review) => (
-                <div key={review.id} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+              {reviews.map((review, index) => (
+                <div key={`${review.id}-${index}`} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-gradient-to-br from-kb-pink to-kb-pink-dark rounded-full flex items-center justify-center text-white font-bold">
