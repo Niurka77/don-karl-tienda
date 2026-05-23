@@ -22,6 +22,13 @@ const CartDrawer = () => {
     setTimeout(() => navigate('/checkout'), 200)
   }
 
+  // ✅ Confirmación antes de vaciar carrito
+  const handleClearCart = () => {
+    if (window.confirm('¿Estás seguro de que deseas vaciar tu bolsa? Esta acción no se puede deshacer.')) {
+      clearCart()
+    }
+  }
+
   if (!isCartOpen) return null
 
   return (
@@ -87,7 +94,7 @@ const CartDrawer = () => {
                   key={`${item.id}-${item.selectedSize}-${index}`} 
                   className="flex gap-4 group"
                 >
-                  {/* Imagen - CORREGIDO: uso item.image, no image_url */}
+                  {/* Imagen */}
                   <div className="flex-shrink-0">
                     <img
                       src={item.image || 'https://via.placeholder.com/80x100?text=KB'}
@@ -109,7 +116,6 @@ const CartDrawer = () => {
                         <h3 className="font-medium text-foreground text-sm line-clamp-2 leading-tight mt-0.5">
                           {item.name}
                         </h3>
-                        {/* CORREGIDO: uso selectedSize, no talla */}
                         {item.selectedSize && (
                           <p className="text-[10px] text-muted-foreground mt-1">
                             Talla: <span className="text-foreground/80">{item.selectedSize}</span>
@@ -119,7 +125,7 @@ const CartDrawer = () => {
                       <button
                         onClick={() => removeItem(item.id, item.selectedSize)}
                         className="text-muted-foreground/40 hover:text-red-500 transition p-1"
-                        aria-label="Eliminar"
+                        aria-label={`Eliminar ${item.name} del carrito`}
                       >
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -137,7 +143,7 @@ const CartDrawer = () => {
                         <button
                           onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1), item.selectedSize)}
                           className="w-6 h-6 rounded-full border border-border flex items-center justify-center text-foreground/60 hover:border-foreground/30 hover:text-foreground transition-all"
-                          aria-label="Disminuir"
+                          aria-label={`Disminuir cantidad de ${item.name}`}
                         >
                           -
                         </button>
@@ -145,9 +151,10 @@ const CartDrawer = () => {
                           {item.quantity}
                         </span>
                         <button
-                          onClick={() => updateQuantity(item.id, item.quantity + 1, item.selectedSize)}
-                          className="w-6 h-6 rounded-full border border-border flex items-center justify-center text-foreground/60 hover:border-foreground/30 hover:text-foreground transition-all"
-                          aria-label="Aumentar"
+                          onClick={() => updateQuantity(item.id, Math.min(item.stock || 99, item.quantity + 1), item.selectedSize)}
+                          className="w-6 h-6 rounded-full border border-border flex items-center justify-center text-foreground/60 hover:border-foreground/30 hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          aria-label={`Aumentar cantidad de ${item.name}`}
+                          disabled={item.stock && item.quantity >= item.stock}
                         >
                           +
                         </button>
@@ -178,13 +185,15 @@ const CartDrawer = () => {
               <button
                 onClick={handleCheckout}
                 className="w-full bg-foreground text-background py-3.5 rounded-full text-sm font-medium tracking-wide hover:bg-foreground/90 transition-all transform hover:-translate-y-0.5 shadow-md"
+                disabled={items.length === 0}
               >
                 Finalizar compra →
               </button>
               
               <button
-                onClick={clearCart}
-                className="w-full text-[11px] font-mono text-muted-foreground hover:text-foreground/60 transition-colors py-1"
+                onClick={handleClearCart}
+                className="w-full text-[11px] font-mono text-muted-foreground hover:text-red-500 transition-colors py-1"
+                aria-label="Vaciar bolsa de compras"
               >
                 Vaciar bolsa
               </button>
