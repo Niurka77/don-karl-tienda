@@ -2,10 +2,8 @@
 
 /* ============================================
    PALETA DE COLORES KB DRESSES & MORE
-   Extraída del logo kb.png
    ============================================ */
 @theme {
-  /* Colores principales de marca */
   --color-kb-rose: #E09DAA;
   --color-kb-blush: #FAEDF1;
   --color-kb-soft-pink: #EECBD4;
@@ -14,26 +12,18 @@
   --color-kb-cream: #FFF9FA;
   --color-kb-gold: #D4AF37;
   
-  /* Colores base del sistema */
   --color-background: #FFFFFF;
   --color-foreground: #2D2A32;
   --color-muted: #FAEDF1;
   --color-muted-foreground: #B99DA4;
   --color-border: #EAEAEA;
   
-  /* Tipografías */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-serif: 'Playfair Display', Georgia, serif;
 }
 
-/* ============================================
-   IMPORTAR FUENTES
-   ============================================ */
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* ============================================
-   ESTILOS BASE
-   ============================================ */
 * {
   border-color: var(--color-border);
 }
@@ -48,9 +38,7 @@ h1, h2, h3, h4, .font-heading {
   letter-spacing: -0.02em;
 }
 
-/* ============================================
-   SCROLLBAR PERSONALIZADA
-   ============================================ */
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -68,87 +56,52 @@ h1, h2, h3, h4, .font-heading {
   @apply bg-kb-soft-pink;
 }
 
-/* ============================================
-   ANIMACIONES
-   ============================================ */
+/* Animations */
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(24px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 @keyframes slideInRight {
-  from {
-    transform: translateX(100%);
-  }
-  to {
-    transform: translateX(0);
-  }
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
 }
 
-/* Clases de utilidad para animaciones */
-.animate-fade-in-up {
-  animation: fadeInUp 0.6s cubic-bezier(0.2, 0.9, 0.4, 1) forwards;
-}
-
-.animate-scale-in {
-  animation: scaleIn 0.5s cubic-bezier(0.2, 0.9, 0.4, 1) forwards;
-}
-
-.animate-slide-in {
-  animation: slideInRight 0.4s cubic-bezier(0.2, 0.9, 0.4, 1);
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-out forwards;
-}
-
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}
+.animate-fade-in-up { animation: fadeInUp 0.6s cubic-bezier(0.2, 0.9, 0.4, 1) forwards; }
+.animate-scale-in { animation: scaleIn 0.5s cubic-bezier(0.2, 0.9, 0.4, 1) forwards; }
+.animate-slide-in { animation: slideInRight 0.4s cubic-bezier(0.2, 0.9, 0.4, 1); }
+.animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+.animate-float { animation: float 6s ease-in-out infinite; }
 
 /* ============================================
-   SOMBRAS PERSONALIZADAS
+   SOMBRAS PERSONALIZADAS - CORREGIDO PARA V4
    ============================================ */
 .shadow-elegant {
   box-shadow: 0 4px 20px -4px rgba(45, 42, 50, 0.08), 0 2px 6px -2px rgba(45, 42, 50, 0.04);
 }
 
+/* ✅ CORREGIDO: Usar :hover en lugar de hover: prefix */
 .shadow-elegant-hover {
+  box-shadow: 0 4px 20px -4px rgba(45, 42, 50, 0.08), 0 2px 6px -2px rgba(45, 42, 50, 0.04);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.shadow-elegant-hover:hover {
   box-shadow: 0 12px 40px -8px rgba(45, 42, 50, 0.12), 0 4px 12px -4px rgba(45, 42, 50, 0.06);
 }
 
@@ -156,11 +109,9 @@ h1, h2, h3, h4, .font-heading {
   box-shadow: 0 2px 12px -2px rgba(45, 42, 50, 0.06);
 }
 
-/* ============================================
-   UTILIDADES DE BOTONES
-   ============================================ */
+/* Buttons */
 .btn-kb-primary {
-  @apply bg-kb-charcoal text-white font-semibold px-8 py-4 rounded-full transition-all duration-300 hover:bg-kb-rose hover:-translate-y-0.5 hover:shadow-lg;
+  @apply bg-kb-charcoal text-white font-semibold px-8 py-4 rounded-full transition-all duration-300 hover:bg-kb-rose hover:-translate-y-0.5;
 }
 
 .btn-kb-secondary {
@@ -171,9 +122,7 @@ h1, h2, h3, h4, .font-heading {
   @apply bg-kb-rose text-white font-semibold px-6 py-3 rounded-full transition-all duration-300 hover:bg-kb-soft-pink hover:-translate-y-0.5;
 }
 
-/* ============================================
-   UTILIDADES DE BADGES
-   ============================================ */
+/* Badges */
 .badge-new {
   @apply bg-kb-charcoal text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider;
 }
@@ -186,9 +135,7 @@ h1, h2, h3, h4, .font-heading {
   @apply bg-kb-gold text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider;
 }
 
-/* ============================================
-   UTILIDADES DE TEXTO
-   ============================================ */
+/* Text utilities */
 .text-gradient-rose {
   @apply bg-gradient-to-r from-kb-rose to-kb-soft-pink bg-clip-text text-transparent;
 }
@@ -197,9 +144,7 @@ h1, h2, h3, h4, .font-heading {
   @apply font-serif font-semibold tracking-tight;
 }
 
-/* ============================================
-   UTILIDADES DE HOVER
-   ============================================ */
+/* Hover utilities */
 .hover-lift {
   @apply transition-transform duration-300 hover:-translate-y-1;
 }
@@ -208,27 +153,27 @@ h1, h2, h3, h4, .font-heading {
   @apply transition-transform duration-500 hover:scale-105;
 }
 
-/* ============================================
-   UTILIDADES DE OVERLAY
-   ============================================ */
+/* Overlay */
 .overlay-hover {
   @apply absolute inset-0 bg-white/10 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300;
 }
 
-/* ============================================
-   UTILIDADES DE GRID PRODUCTOS
-   ============================================ */
+/* Grid */
 .product-grid {
   @apply grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6;
 }
 
+/* ✅ CORREGIDO: product-card con hover en CSS */
 .product-card {
-  @apply bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-elegant-hover transition-all duration-300 border border-border/50;
+  @apply bg-white rounded-2xl overflow-hidden shadow-sm border border-border/50 transition-all duration-300;
 }
 
-/* ============================================
-   UTILIDADES DE FORMULARIOS
-   ============================================ */
+.product-card:hover {
+  box-shadow: 0 12px 40px -8px rgba(45, 42, 50, 0.12), 0 4px 12px -4px rgba(45, 42, 50, 0.06);
+  transform: translateY(-8px);
+}
+
+/* Forms */
 .input-kb {
   @apply w-full border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-kb-rose/30 focus:border-kb-rose transition-colors bg-background;
 }
@@ -237,9 +182,7 @@ h1, h2, h3, h4, .font-heading {
   @apply w-full border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-kb-rose/30 focus:border-kb-rose transition-colors bg-background appearance-none;
 }
 
-/* ============================================
-   UTILIDADES DE TOAST/NOTIFICACIONES
-   ============================================ */
+/* Toast */
 .toast-container {
   @apply fixed top-4 right-4 z-50 flex flex-col gap-2;
 }
@@ -256,17 +199,11 @@ h1, h2, h3, h4, .font-heading {
   @apply bg-red-500;
 }
 
-/* ============================================
-   MEDIA QUERIES UTILITARIAS
-   ============================================ */
+/* Responsive utilities */
 @media (max-width: 768px) {
-  .hide-mobile {
-    @apply hidden;
-  }
+  .hide-mobile { @apply hidden; }
 }
 
 @media (min-width: 769px) {
-  .hide-desktop {
-    @apply hidden;
-  }
+  .hide-desktop { @apply hidden; }
 }

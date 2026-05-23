@@ -113,7 +113,8 @@ const ProductCard = ({ product }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-elegant-hover transition-all duration-500 border border-border/50 hover:-translate-y-2">
+      {/* ✅ CORREGIDO: Usar shadow-elegant-hover sin prefix hover: */}
+      <div className="relative bg-white rounded-2xl overflow-hidden shadow-elegant-hover border border-border/50">
         
         {/* Badge Numerado */}
         {sku && (
@@ -164,7 +165,7 @@ const ProductCard = ({ product }) => {
             </button>
           </div>
 
-          {/* Iconos Flotantes (Quick View & Wishlist) */}
+          {/* Iconos Flotantes */}
           <div className={`absolute bottom-4 left-0 right-0 flex justify-center gap-2 transition-all duration-300 ${isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
             <button 
               className="w-10 h-10 rounded-full bg-white hover:bg-kb-rose hover:text-white text-kb-charcoal shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110"
@@ -187,7 +188,7 @@ const ProductCard = ({ product }) => {
             </button>
           </div>
 
-          {/* Badge de Precio Flotante (solo en hover) */}
+          {/* Badge de Precio Flotante */}
           <div className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/95 backdrop-blur-sm rounded-2xl px-6 py-3 shadow-xl transition-all duration-300 ${isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
             <p className="text-2xl font-bold text-kb-rose">
               S/ {precioMostrar?.toFixed(2)}
@@ -197,19 +198,16 @@ const ProductCard = ({ product }) => {
 
         {/* Información del Producto */}
         <div className="p-5 space-y-3">
-          {/* Marca */}
           {brand && (
             <p className="text-xs font-bold text-kb-mauve uppercase tracking-wider">
               {brand}
             </p>
           )}
 
-          {/* Nombre */}
           <h3 className="font-serif font-semibold text-kb-charcoal text-base leading-tight line-clamp-2 group-hover:text-kb-rose transition-colors duration-300">
             {name}
           </h3>
 
-          {/* Colores Disponibles */}
           {colores.length > 0 && (
             <div className="flex items-center gap-2 pt-1">
               <span className="text-xs text-kb-mauve font-medium">Colores:</span>
@@ -235,7 +233,6 @@ const ProductCard = ({ product }) => {
             </div>
           )}
 
-          {/* Rating */}
           {!loadingReviews && avgRating && reviewCount > 0 && (
             <div className="flex items-center gap-2">
               <MiniStars rating={parseFloat(avgRating)} />
@@ -245,7 +242,6 @@ const ProductCard = ({ product }) => {
             </div>
           )}
 
-          {/* Precio */}
           <div className="flex items-baseline gap-2 pt-2 border-t border-border/50">
             <span className="text-xl font-bold text-kb-rose">
               S/ {precioMostrar?.toFixed(2)}
