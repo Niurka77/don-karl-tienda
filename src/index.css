@@ -24,39 +24,51 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
 
+/* ============================================
+   ESTILOS BASE
+   ============================================ */
 * {
   border-color: var(--color-border);
 }
 
 body {
-  @apply bg-background text-foreground font-sans antialiased;
-  font-family: 'Inter', sans-serif;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
 
 h1, h2, h3, h4, .font-heading {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-serif);
   letter-spacing: -0.02em;
 }
 
-/* Scrollbar */
+/* ============================================
+   SCROLLBAR PERSONALIZADO
+   ============================================ */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-kb-blush;
+  background-color: var(--color-kb-blush);
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-kb-rose rounded-full;
+  background-color: var(--color-kb-rose);
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-kb-soft-pink;
+  background-color: var(--color-kb-soft-pink);
 }
 
-/* Animations */
+/* ============================================
+   ANIMACIONES - CSS PURO (SIN @apply)
+   ============================================ */
+
+/* Keyframes */
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(24px); }
   to { opacity: 1; transform: translateY(0); }
@@ -82,20 +94,34 @@ h1, h2, h3, h4, .font-heading {
   50% { transform: translateY(-8px); }
 }
 
-.animate-fade-in-up { animation: fadeInUp 0.6s cubic-bezier(0.2, 0.9, 0.4, 1) forwards; }
-.animate-scale-in { animation: scaleIn 0.5s cubic-bezier(0.2, 0.9, 0.4, 1) forwards; }
-.animate-slide-in { animation: slideInRight 0.4s cubic-bezier(0.2, 0.9, 0.4, 1); }
-.animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
-.animate-float { animation: float 6s ease-in-out infinite; }
+/* Clases de animación - CSS PURO, sin @apply */
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s cubic-bezier(0.2, 0.9, 0.4, 1) forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.5s cubic-bezier(0.2, 0.9, 0.4, 1) forwards;
+}
+
+.animate-slide-in {
+  animation: slideInRight 0.4s cubic-bezier(0.2, 0.9, 0.4, 1);
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
 
 /* ============================================
-   SOMBRAS PERSONALIZADAS - CORREGIDO PARA V4
+   SOMBRAS PERSONALIZADAS - CSS PURO
    ============================================ */
 .shadow-elegant {
   box-shadow: 0 4px 20px -4px rgba(45, 42, 50, 0.08), 0 2px 6px -2px rgba(45, 42, 50, 0.04);
 }
 
-/* ✅ CORREGIDO: Usar :hover en lugar de hover: prefix */
 .shadow-elegant-hover {
   box-shadow: 0 4px 20px -4px rgba(45, 42, 50, 0.08), 0 2px 6px -2px rgba(45, 42, 50, 0.04);
   transition: box-shadow 0.3s ease, transform 0.3s ease;
@@ -103,13 +129,16 @@ h1, h2, h3, h4, .font-heading {
 
 .shadow-elegant-hover:hover {
   box-shadow: 0 12px 40px -8px rgba(45, 42, 50, 0.12), 0 4px 12px -4px rgba(45, 42, 50, 0.06);
+  transform: translateY(-8px);
 }
 
 .shadow-soft {
   box-shadow: 0 2px 12px -2px rgba(45, 42, 50, 0.06);
 }
 
-/* Buttons */
+/* ============================================
+   UTILIDADES CON @apply (SOLO TAILWIND NATIVO)
+   ============================================ */
 .btn-kb-primary {
   @apply bg-kb-charcoal text-white font-semibold px-8 py-4 rounded-full transition-all duration-300 hover:bg-kb-rose hover:-translate-y-0.5;
 }
@@ -122,7 +151,6 @@ h1, h2, h3, h4, .font-heading {
   @apply bg-kb-rose text-white font-semibold px-6 py-3 rounded-full transition-all duration-300 hover:bg-kb-soft-pink hover:-translate-y-0.5;
 }
 
-/* Badges */
 .badge-new {
   @apply bg-kb-charcoal text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider;
 }
@@ -135,7 +163,6 @@ h1, h2, h3, h4, .font-heading {
   @apply bg-kb-gold text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider;
 }
 
-/* Text utilities */
 .text-gradient-rose {
   @apply bg-gradient-to-r from-kb-rose to-kb-soft-pink bg-clip-text text-transparent;
 }
@@ -144,7 +171,6 @@ h1, h2, h3, h4, .font-heading {
   @apply font-serif font-semibold tracking-tight;
 }
 
-/* Hover utilities */
 .hover-lift {
   @apply transition-transform duration-300 hover:-translate-y-1;
 }
@@ -153,27 +179,14 @@ h1, h2, h3, h4, .font-heading {
   @apply transition-transform duration-500 hover:scale-105;
 }
 
-/* Overlay */
 .overlay-hover {
   @apply absolute inset-0 bg-white/10 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300;
 }
 
-/* Grid */
 .product-grid {
   @apply grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6;
 }
 
-/* ✅ CORREGIDO: product-card con hover en CSS */
-.product-card {
-  @apply bg-white rounded-2xl overflow-hidden shadow-sm border border-border/50 transition-all duration-300;
-}
-
-.product-card:hover {
-  box-shadow: 0 12px 40px -8px rgba(45, 42, 50, 0.12), 0 4px 12px -4px rgba(45, 42, 50, 0.06);
-  transform: translateY(-8px);
-}
-
-/* Forms */
 .input-kb {
   @apply w-full border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-kb-rose/30 focus:border-kb-rose transition-colors bg-background;
 }
@@ -182,13 +195,18 @@ h1, h2, h3, h4, .font-heading {
   @apply w-full border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-kb-rose/30 focus:border-kb-rose transition-colors bg-background appearance-none;
 }
 
-/* Toast */
 .toast-container {
   @apply fixed top-4 right-4 z-50 flex flex-col gap-2;
 }
 
 .toast {
-  @apply bg-kb-charcoal text-white px-4 py-3 rounded-lg shadow-lg text-sm animate-slide-in;
+  background-color: var(--color-kb-charcoal);
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  font-size: 0.875rem;
+  animation: slideInRight 0.4s cubic-bezier(0.2, 0.9, 0.4, 1);
 }
 
 .toast-success {
@@ -199,11 +217,13 @@ h1, h2, h3, h4, .font-heading {
   @apply bg-red-500;
 }
 
-/* Responsive utilities */
+/* ============================================
+   MEDIA QUERIES
+   ============================================ */
 @media (max-width: 768px) {
-  .hide-mobile { @apply hidden; }
+  .hide-mobile { display: none; }
 }
 
 @media (min-width: 769px) {
-  .hide-desktop { @apply hidden; }
+  .hide-desktop { display: none; }
 }
