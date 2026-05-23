@@ -47,7 +47,7 @@ const Layout = () => {
               <span>Compra 100% segura</span>
             </div>
             <span className="font-medium">
-               Importado directamente de EE.UU.
+              📦 Importado directamente de EE.UU.
             </span>
           </div>
 
@@ -80,15 +80,23 @@ const Layout = () => {
             {/* Menú Derecha + Carrito */}
             <div className="flex items-center gap-1 lg:gap-4">
               <nav className="hidden lg:flex items-center gap-1">
-                {['AYUDA', 'CONTACTO'].map((item) => (
-                  <Link
-                    key={item}
-                    to={`/${item.toLowerCase()}`}
-                    className="px-5 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors duration-300"
-                  >
-                    {item}
-                  </Link>
-                ))}
+                {/* ✅ CORREGIDO: Enlaces que no tienen página → redirigen a WhatsApp */}
+                <a
+                  href="https://wa.me/51906877812?text=Hola,%20necesito%20ayuda%20con%20mi%20pedido"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-5 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors duration-300"
+                >
+                  AYUDA
+                </a>
+                <a
+                  href="https://wa.me/51906877812?text=Hola,%20quiero%20contactar%20contigo"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-5 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors duration-300"
+                >
+                  CONTACTO
+                </a>
               </nav>
               
               <div className="w-px h-5 bg-border hidden lg:block"></div>
@@ -116,7 +124,15 @@ const Layout = () => {
             <button onClick={() => navigate('/?genero=mujer')} className="text-foreground/70 hover:text-foreground">Mujer</button>
             <button onClick={() => navigate('/?genero=hombre')} className="text-foreground/70 hover:text-foreground">Hombre</button>
             <Link to="/nosotros" className="text-foreground/70 hover:text-foreground">Nosotros</Link>
-            <Link to="/ayuda" className="text-foreground/70 hover:text-foreground">Ayuda</Link>
+            {/* ✅ CORREGIDO: Ayuda → WhatsApp */}
+            <a
+              href="https://wa.me/51906877812?text=Hola,%20necesito%20ayuda"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-foreground/70 hover:text-foreground"
+            >
+              Ayuda
+            </a>
           </nav>
         </div>
       </header>
@@ -163,18 +179,43 @@ const Layout = () => {
               <ul className="space-y-3 text-sm">
                 <li><Link to="/?genero=mujer" className="text-muted-foreground hover:text-foreground transition">Mujer</Link></li>
                 <li><Link to="/?genero=hombre" className="text-muted-foreground hover:text-foreground transition">Hombre</Link></li>
-                <li><Link to="/coleccion" className="text-muted-foreground hover:text-foreground transition">Colección Primavera</Link></li>
-                <li><Link to="/outlet" className="text-muted-foreground hover:text-foreground transition">Outlet</Link></li>
+                {/* ✅ CORREGIDO: /coleccion → filtro de categoría */}
+                <li><Link to="/?categoria=vestidos" className="text-muted-foreground hover:text-foreground transition">Colección Primavera</Link></li>
+                {/* ✅ CORREGIDO: /outlet → filtro de precio */}
+                <li><Link to="/?orden=price_original-asc" className="text-muted-foreground hover:text-foreground transition">Outlet</Link></li>
               </ul>
             </div>
 
             <div>
               <h4 className="font-serif text-sm font-semibold tracking-wider mb-5">SOPORTE</h4>
               <ul className="space-y-3 text-sm">
-                <li><Link to="/ayuda" className="text-muted-foreground hover:text-foreground transition">Preguntas Frecuentes</Link></li>
-                <li><Link to="/contacto" className="text-muted-foreground hover:text-foreground transition">Contacto</Link></li>
-                <li><Link to="/envios" className="text-muted-foreground hover:text-foreground transition">Política de Envíos</Link></li>
-                <li><Link to="/devoluciones" className="text-muted-foreground hover:text-foreground transition">Cambios y Devoluciones</Link></li>
+                {/* ✅ CORREGIDO: Enlaces sin página → WhatsApp o texto estático */}
+                <li>
+                  <a
+                    href="https://wa.me/51906877812?text=Hola,%20tengo%20una%20pregunta"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-foreground transition"
+                  >
+                    Preguntas Frecuentes
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://wa.me/51906877812"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-foreground transition"
+                  >
+                    Contacto
+                  </a>
+                </li>
+                <li>
+                  <span className="text-muted-foreground cursor-default">Política de Envíos</span>
+                </li>
+                <li>
+                  <span className="text-muted-foreground cursor-default">Cambios y Devoluciones</span>
+                </li>
               </ul>
             </div>
 
@@ -182,13 +223,13 @@ const Layout = () => {
               <h4 className="font-serif text-sm font-semibold tracking-wider mb-5">CONTACTO DIRECTO</h4>
               <ul className="space-y-3 text-sm text-muted-foreground">
                 <li className="flex items-center gap-3">
-                  <span></span> <span>+51 906 877 812</span>
+                  <span>📱</span> <span>+51 906 877 812</span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <span></span> <span>info@kbdresses.com</span>
+                  <span>✉️</span> <span>info@kbdresses.com</span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <span></span> <span>Galería Chiclayo - 2do Piso</span>
+                  <span>📍</span> <span>Galería Chiclayo - 2do Piso</span>
                 </li>
               </ul>
             </div>
