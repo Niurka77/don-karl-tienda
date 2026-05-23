@@ -12,6 +12,7 @@ const DashboardPage = () => {
   const [cargando, setCargando] = useState(true)
   const [productosEstancados, setProductosEstancados] = useState([])
   const [aplicandoDescuento, setAplicandoDescuento] = useState(null)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     cargarStats()
@@ -20,18 +21,25 @@ const DashboardPage = () => {
 
   const cargarStats = async () => {
     try {
-      const { count: totalProductos } = await supabase
+      setError(null)
+      const { count: totalProductos, error: errorProductos } = await supabase
         .from('products')
         .select('*', { count: 'exact', head: true })
 
-      const { count: totalPedidos } = await supabase
+      if (errorProductos) throw errorProductos
+
+      const { count: totalPedidos, error: errorPedidos } = await supabase
         .from('orders')
         .select('*', { count: 'exact', head: true })
 
-      const { count: productosAgotados } = await supabase
+      if (errorPedidos) throw errorPedidos
+
+      const { count: productosAgotados, error: errorAgotados } = await supabase
         .from('products')
         .select('*', { count: 'exact', head: true })
         .eq('stock', 0)
+
+      if (errorAgotados) throw errorAgotados
 
       setStats({
         totalProductos: totalProductos || 0,
@@ -41,6 +49,7 @@ const DashboardPage = () => {
       })
     } catch (err) {
       console.error('Error al cargar estadísticas:', err)
+      setError('No se pudieron cargar las estadísticas')
     } finally {
       setCargando(false)
     }
@@ -51,10 +60,6 @@ const DashboardPage = () => {
       const fechaLimite = new Date()
       fechaLimite.setDate(fechaLimite.getDate() - 15)
 
-      // ✅ CORRECCIÓN: Un producto es "estancado" SOLO si:
-      // 1. Tiene stock > 0, Y
-      // 2. (Nunca se vendió Y fue creado hace +15 días) O (última venta fue hace +15 días)
-      // Esto evita que productos NUEVOS aparezcan como estancados por no tener last_sale_date
       const { data, error } = await supabase
         .from('products')
         .select('*')
@@ -73,6 +78,13 @@ const DashboardPage = () => {
   }
 
   const aplicarDescuento = async (producto) => {
+    // ✅ CONFIRMACIÓN: Preguntar antes de aplicar
+    const confirmacion = window.confirm(
+      `¿Aplicar descuento del ${Math.min((producto.discount_percent || 0) + 10, 50)}% a "${producto.name}"?`
+    )
+    
+    if (!confirmacion) return
+
     setAplicandoDescuento(producto.id)
     try {
       const nuevoDescuento = Math.min(
@@ -90,12 +102,19 @@ const DashboardPage = () => {
 
       if (error) throw error
 
+      // ✅ ACTUALIZAR UI: Remover de la lista inmediatamente
       setProductosEstancados(
-        productosEstancados.filter((p) => p.id !== producto.id)
+        productosEstancados.map((p) =>
+          p.id === producto.id 
+            ? { ...p, discount_percent: nuevoDescuento, is_new: false }
+            : p
+        )
       )
+      
+      alert(`✅ Descuento del ${nuevoDescuento}% aplicado correctamente`)
     } catch (err) {
       console.error('Error al aplicar descuento:', err)
-      alert('Error al aplicar el descuento')
+      alert('❌ Error al aplicar el descuento. Intenta nuevamente.')
     } finally {
       setAplicandoDescuento(null)
     }
@@ -135,6 +154,12 @@ const DashboardPage = () => {
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-800 mb-6">Dashboard</h1>
+
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg mb-6">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      )}
 
       {cargando ? (
         <div className="flex justify-center py-12">
@@ -240,6 +265,7 @@ const DashboardPage = () => {
               <Link
                 to="/"
                 target="_blank"
+                rel="noopener noreferrer"
                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
               >
                 Ver tienda →

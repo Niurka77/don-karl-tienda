@@ -15,8 +15,13 @@ const Layout = () => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20)
     }
+    
     window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
+    
+    // ✅ CLEANUP: Remover event listener al desmontar
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+    }
   }, [])
 
   return (
@@ -42,7 +47,7 @@ const Layout = () => {
               <span>Compra 100% segura</span>
             </div>
             <span className="font-medium">
-              📦 Importado directamente de EE.UU.
+               Importado directamente de EE.UU.
             </span>
           </div>
 
@@ -92,6 +97,7 @@ const Layout = () => {
               <button
                 onClick={toggleCart}
                 className="relative group p-2 rounded-full hover:bg-muted transition-all duration-300"
+                aria-label={`Carrito de compras (${itemCount} artículos)`}
               >
                 <svg className="w-5 h-5 text-foreground/80 group-hover:text-foreground transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -115,15 +121,15 @@ const Layout = () => {
         </div>
       </header>
 
-      {/* Contenido Principal (Añadimos padding-top para compensar el header fijo) */}
+      {/* Contenido Principal */}
       <main className="flex-1 pt-[88px] lg:pt-[104px]">
         <Outlet />
       </main>
 
-      {/* WhatsApp Button (Mantiene funcionalidad) */}
+      {/* WhatsApp Button */}
       <WhatsAppButton phoneNumber="51906877812" />
 
-      {/* Cart Drawer (Sin cambios) */}
+      {/* Cart Drawer */}
       <CartDrawer />
 
       {/* Footer Rediseñado - Editorial */}
@@ -139,8 +145,12 @@ const Layout = () => {
               </p>
               <div className="flex items-center gap-5">
                 {['facebook', 'instagram', 'pinterest'].map((social) => (
-                  <a key={social} href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                    <span className="sr-only">{social}</span>
+                  <a 
+                    key={social} 
+                    href="#" 
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label={social}
+                  >
                     <div className="w-5 h-5 bg-current rounded-full opacity-50 hover:opacity-100 transition"></div>
                   </a>
                 ))}
@@ -172,13 +182,13 @@ const Layout = () => {
               <h4 className="font-serif text-sm font-semibold tracking-wider mb-5">CONTACTO DIRECTO</h4>
               <ul className="space-y-3 text-sm text-muted-foreground">
                 <li className="flex items-center gap-3">
-                  <span>📱</span> <span>+51 906 877 812</span>
+                  <span></span> <span>+51 906 877 812</span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <span>✉️</span> <span>info@kbdresses.com</span>
+                  <span></span> <span>info@kbdresses.com</span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <span>📍</span> <span>Galería Chiclayo - 2do Piso</span>
+                  <span></span> <span>Galería Chiclayo - 2do Piso</span>
                 </li>
               </ul>
             </div>
