@@ -2,7 +2,7 @@ import logoKB from '/kb.png'
 
 const TrustSection = () => {
   return (
-    <div className="bg-gradient-to-b from-kb-gray to-white py-16">
+    <div id="nosotros" className="bg-gradient-to-b from-kb-gray to-white py-16">
       <div className="max-w-7xl mx-auto px-4">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="relative">

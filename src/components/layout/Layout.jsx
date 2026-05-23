@@ -18,7 +18,6 @@ const Layout = () => {
     
     window.addEventListener('scroll', handleScroll)
     
-    // ✅ CLEANUP: Remover event listener al desmontar
     return () => {
       window.removeEventListener('scroll', handleScroll)
     }
@@ -57,14 +56,26 @@ const Layout = () => {
             {/* Menú Izquierda */}
             <nav className="hidden lg:flex items-center gap-1">
               {['MUJER', 'HOMBRE', 'NOSOTROS'].map((item) => (
-                <button
-                  key={item}
-                  onClick={() => navigate(`/?genero=${item.toLowerCase()}`)}
-                  className="relative px-5 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors duration-300 group"
-                >
-                  {item}
-                  <span className="absolute bottom-0 left-1/2 w-0 h-[1.5px] bg-foreground group-hover:w-1/2 group-hover:left-1/4 transition-all duration-300"></span>
-                </button>
+                item === 'NOSOTROS' ? (
+                  // ✅ CORREGIDO: Usar <a> con hash para scroll a sección
+                  <a
+                    key={item}
+                    href="/#nosotros"
+                    className="relative px-5 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors duration-300 group"
+                  >
+                    {item}
+                    <span className="absolute bottom-0 left-1/2 w-0 h-[1.5px] bg-foreground group-hover:w-1/2 group-hover:left-1/4 transition-all duration-300"></span>
+                  </a>
+                ) : (
+                  <button
+                    key={item}
+                    onClick={() => navigate(`/?genero=${item.toLowerCase()}`)}
+                    className="relative px-5 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors duration-300 group"
+                  >
+                    {item}
+                    <span className="absolute bottom-0 left-1/2 w-0 h-[1.5px] bg-foreground group-hover:w-1/2 group-hover:left-1/4 transition-all duration-300"></span>
+                  </button>
+                )
               ))}
             </nav>
 
@@ -80,7 +91,6 @@ const Layout = () => {
             {/* Menú Derecha + Carrito */}
             <div className="flex items-center gap-1 lg:gap-4">
               <nav className="hidden lg:flex items-center gap-1">
-                {/* ✅ CORREGIDO: Enlaces que no tienen página → redirigen a WhatsApp */}
                 <a
                   href="https://wa.me/51906877812?text=Hola,%20necesito%20ayuda%20con%20mi%20pedido"
                   target="_blank"
@@ -123,8 +133,8 @@ const Layout = () => {
           <nav className="lg:hidden flex items-center justify-center gap-6 py-3 border-t border-border/50 text-xs font-medium">
             <button onClick={() => navigate('/?genero=mujer')} className="text-foreground/70 hover:text-foreground">Mujer</button>
             <button onClick={() => navigate('/?genero=hombre')} className="text-foreground/70 hover:text-foreground">Hombre</button>
-            <Link to="/nosotros" className="text-foreground/70 hover:text-foreground">Nosotros</Link>
-            {/* ✅ CORREGIDO: Ayuda → WhatsApp */}
+            {/* ✅ CORREGIDO: NOSOTROS con hash para scroll */}
+            <a href="/#nosotros" className="text-foreground/70 hover:text-foreground">Nosotros</a>
             <a
               href="https://wa.me/51906877812?text=Hola,%20necesito%20ayuda"
               target="_blank"
@@ -179,9 +189,7 @@ const Layout = () => {
               <ul className="space-y-3 text-sm">
                 <li><Link to="/?genero=mujer" className="text-muted-foreground hover:text-foreground transition">Mujer</Link></li>
                 <li><Link to="/?genero=hombre" className="text-muted-foreground hover:text-foreground transition">Hombre</Link></li>
-                {/* ✅ CORREGIDO: /coleccion → filtro de categoría */}
                 <li><Link to="/?categoria=vestidos" className="text-muted-foreground hover:text-foreground transition">Colección Primavera</Link></li>
-                {/* ✅ CORREGIDO: /outlet → filtro de precio */}
                 <li><Link to="/?orden=price_original-asc" className="text-muted-foreground hover:text-foreground transition">Outlet</Link></li>
               </ul>
             </div>
@@ -189,7 +197,6 @@ const Layout = () => {
             <div>
               <h4 className="font-serif text-sm font-semibold tracking-wider mb-5">SOPORTE</h4>
               <ul className="space-y-3 text-sm">
-                {/* ✅ CORREGIDO: Enlaces sin página → WhatsApp o texto estático */}
                 <li>
                   <a
                     href="https://wa.me/51906877812?text=Hola,%20tengo%20una%20pregunta"

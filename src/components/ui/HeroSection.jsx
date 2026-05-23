@@ -39,13 +39,11 @@ const HeroSection = () => {
       setCurrentSlide((prev) => (prev + 1) % slides.length)
     }, 6000)
     
-    // ✅ Cleanup explícito del intervalo
     return () => {
       clearInterval(timer)
     }
   }, [])
 
-  // ✅ Función para navegación con teclado
   const handleKeyDown = (e) => {
     if (e.key === 'ArrowLeft') {
       setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)
@@ -55,8 +53,9 @@ const HeroSection = () => {
   }
 
   return (
+    // ✅ CORREGIDO: Agregamos pt-[88px] lg:pt-[104px] para compensar el header fixed
     <div 
-      className="relative bg-background overflow-hidden"
+      className="relative bg-background overflow-hidden pt-[88px] lg:pt-[104px]"
       onKeyDown={handleKeyDown}
       tabIndex={0}
       role="region"
