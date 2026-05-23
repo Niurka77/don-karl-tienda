@@ -1,26 +1,42 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import ProductCard from './ProductCard'
 import FilterBar from './FilterBar'
 
 const ProductGrid = () => {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [productos, setProductos] = useState([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
-  const [filtros, setFiltros] = useState({
-    categoria: '',
-    marca: '',
-    genero: '',
-    precioMin: '',
-    precioMax: '',
-    orden: 'created_at-desc',
-  })
-  
   const [paginaActual, setPaginaActual] = useState(1)
   const [totalProductos, setTotalProductos] = useState(0)
   const productosPorPagina = 8
 
-  // ✅ useCallback para evitar recrear función en cada render
+  // ✅ Leer parámetros de URL y sincronizar con filtros
+  const [filtros, setFiltros] = useState(() => ({
+    categoria: searchParams.get('categoria') || '',
+    marca: searchParams.get('marca') || '',
+    genero: searchParams.get('genero') || '',
+    precioMin: searchParams.get('precioMin') || '',
+    precioMax: searchParams.get('precioMax') || '',
+    orden: searchParams.get('orden') || 'created_at-desc',
+  }))
+
+  // ✅ Actualizar URL cuando cambien los filtros
+  useEffect(() => {
+    const params = new URLSearchParams()
+    if (filtros.categoria) params.set('categoria', filtros.categoria)
+    if (filtros.marca) params.set('marca', filtros.marca)
+    if (filtros.genero) params.set('genero', filtros.genero)
+    if (filtros.precioMin) params.set('precioMin', filtros.precioMin)
+    if (filtros.precioMax) params.set('precioMax', filtros.precioMax)
+    if (filtros.orden !== 'created_at-desc') params.set('orden', filtros.orden)
+    
+    setSearchParams(params)
+  }, [filtros, setSearchParams])
+
+  // ✅ Cargar productos cuando cambien filtros o página
   const cargarProductos = useCallback(async () => {
     let cancelled = false
     
@@ -36,7 +52,7 @@ const ProductGrid = () => {
       if (filtros.precioMin) query = query.gte('price_original', parseFloat(filtros.precioMin))
       if (filtros.precioMax) query = query.lte('price_original', parseFloat(filtros.precioMax))
 
-      // ✅ Solo mostrar productos con stock disponible
+      // Solo mostrar productos con stock disponible
       query = query.gt('stock', 0)
 
       const [campo, direccion] = filtros.orden.split('-')
@@ -48,7 +64,6 @@ const ProductGrid = () => {
 
       const { data, error: queryError, count } = await query
 
-      // ✅ Si el componente se desmontó, no actualizar estado
       if (cancelled) return
 
       if (queryError) throw queryError
@@ -63,7 +78,6 @@ const ProductGrid = () => {
       if (!cancelled) setCargando(false)
     }
     
-    // ✅ Cleanup function para evitar memory leaks
     return () => {
       cancelled = true
     }
@@ -75,7 +89,7 @@ const ProductGrid = () => {
 
   const handleChangeFiltros = (nuevosFiltros) => {
     setFiltros(nuevosFiltros)
-    setPaginaActual(1) // ✅ Resetear página al cambiar filtros
+    setPaginaActual(1)
   }
 
   const totalPages = Math.ceil(totalProductos / productosPorPagina)
@@ -126,7 +140,6 @@ const ProductGrid = () => {
             </p>
           </div>
           
-          {/* Grid con espaciado editorial */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
             {productos.map((producto, idx) => (
               <div 
@@ -139,7 +152,6 @@ const ProductGrid = () => {
             ))}
           </div>
 
-          {/* Paginación refinada */}
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2 mt-16" role="navigation" aria-label="Paginación de productos">
               <button
@@ -152,7 +164,6 @@ const ProductGrid = () => {
               </button>
               <div className="flex gap-1" role="group" aria-label="Número de página">
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  // Mostrar páginas cercanas a la actual
                   let page
                   if (totalPages <= 5) {
                     page = i + 1

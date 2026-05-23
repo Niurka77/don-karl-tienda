@@ -5,6 +5,24 @@ const categorias = ['vestidos', 'bolsos', 'zapatos']
 const generos = ['mujer', 'hombre', 'unisex']
 const tallasDisponibles = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Único']
 
+// ✅ NUEVO: Colores predefinidos para evitar errores humanos
+const coloresPredefinidos = [
+  { nombre: 'Negro', hex: '#000000' },
+  { nombre: 'Blanco', hex: '#FFFFFF' },
+  { nombre: 'Rojo', hex: '#DC143C' },
+  { nombre: 'Rosa', hex: '#FF69B4' },
+  { nombre: 'Dorado', hex: '#D4AF37' },
+  { nombre: 'Plateado', hex: '#C0C0C0' },
+  { nombre: 'Azul', hex: '#0000FF' },
+  { nombre: 'Verde', hex: '#008000' },
+  { nombre: 'Beige', hex: '#F5F5DC' },
+  { nombre: 'Marrón', hex: '#8B4513' },
+  { nombre: 'Gris', hex: '#808080' },
+  { nombre: 'Amarillo', hex: '#FFD700' },
+  { nombre: 'Naranja', hex: '#FFA500' },
+  { nombre: 'Morado', hex: '#800080' },
+]
+
 const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
   const esEdicion = !!producto
 
@@ -29,6 +47,9 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
   const [errores, setErrores] = useState({})
   const [errorGeneral, setErrorGeneral] = useState('')
   const [exito, setExito] = useState('')
+  
+  // ✅ NUEVO: Estado para color personalizado
+  const [colorPersonalizado, setColorPersonalizado] = useState('')
 
   useEffect(() => {
     if (producto) {
@@ -72,11 +93,42 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     })
   }
 
+  // ✅ NUEVO: Agregar color predefinido
+  const handleColorClick = (colorNombre) => {
+    const coloresActuales = formData.color ? formData.color.split(',').map(c => c.trim()) : []
+    
+    if (coloresActuales.includes(colorNombre)) {
+      // Remover color
+      const nuevosColores = coloresActuales.filter(c => c !== colorNombre)
+      setFormData((prev) => ({ ...prev, color: nuevosColores.join(', ') }))
+    } else {
+      // Agregar color
+      setFormData((prev) => ({ 
+        ...prev, 
+        color: [...coloresActuales, colorNombre].join(', ') 
+      }))
+    }
+  }
+
+  // ✅ NUEVO: Agregar color personalizado
+  const handleAgregarColorPersonalizado = () => {
+    if (!colorPersonalizado.trim()) return
+    
+    const coloresActuales = formData.color ? formData.color.split(',').map(c => c.trim()) : []
+    
+    if (!coloresActuales.includes(colorPersonalizado.trim())) {
+      setFormData((prev) => ({ 
+        ...prev, 
+        color: [...coloresActuales, colorPersonalizado.trim()].join(', ') 
+      }))
+      setColorPersonalizado('')
+    }
+  }
+
   const handleImagen = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Validar tipo
     const tiposPermitidos = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg']
     if (!tiposPermitidos.includes(file.type)) {
       setErrores((prev) => ({
@@ -86,7 +138,6 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
       return
     }
 
-    // Validar tamaño (5MB máximo)
     if (file.size > 5 * 1024 * 1024) {
       setErrores((prev) => ({
         ...prev,
@@ -147,7 +198,6 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     try {
       let imageUrl = producto?.image_url || ''
 
-      // Subir imagen si hay una nueva
       if (imagen) {
         setSubiendo(true)
         const fileName = `${Date.now()}_${imagen.name.replace(/\s+/g, '_')}`
@@ -188,7 +238,6 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
       let resultado
 
       if (esEdicion) {
-        // Actualizar producto existente
         const { data, error } = await supabase
           .from('products')
           .update(datosProducto)
@@ -199,7 +248,6 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
         if (error) throw error
         resultado = data
       } else {
-        // Crear nuevo producto
         const { data, error } = await supabase
           .from('products')
           .insert([datosProducto])
@@ -230,13 +278,18 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     }
   }
 
+  // ✅ NUEVA: Función para obtener el hex de un color
+  const getColorHex = (colorNombre) => {
+    const color = coloresPredefinidos.find(c => c.nombre.toLowerCase() === colorNombre.toLowerCase())
+    return color ? color.hex : '#FFFFFF'
+  }
+
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm p-6">
       <h2 className="text-lg font-semibold text-gray-800 mb-6">
         {esEdicion ? 'Editar producto' : 'Nuevo producto'}
       </h2>
 
-      {/* Mensajes */}
       {errorGeneral && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-sm text-red-600">{errorGeneral}</p>
@@ -427,19 +480,94 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
           )}
         </div>
 
-        {/* Color */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Color
+        {/* ✅ CORREGIDO: Colores con selector visual */}
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Colores disponibles
           </label>
-          <input
-            type="text"
-            name="color"
-            value={formData.color}
-            onChange={handleChange}
-            placeholder="Beige Arena"
-            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-          />
+          
+          {/* Colores predefinidos */}
+          <div className="flex flex-wrap gap-3 mb-4">
+            {coloresPredefinidos.map((color) => {
+              const coloresActuales = formData.color ? formData.color.split(',').map(c => c.trim()) : []
+              const estaSeleccionado = coloresActuales.includes(color.nombre)
+              
+              return (
+                <button
+                  key={color.nombre}
+                  type="button"
+                  onClick={() => handleColorClick(color.nombre)}
+                  className={`
+                    relative w-10 h-10 rounded-full border-2 transition-all transform hover:scale-110
+                    ${estaSeleccionado ? 'border-black ring-2 ring-black/20' : 'border-gray-300'}
+                  `}
+                  style={{ backgroundColor: color.hex }}
+                  title={color.nombre}
+                  aria-label={`Color ${color.nombre}`}
+                >
+                  {estaSeleccionado && (
+                    <svg 
+                      className="absolute inset-0 w-full h-full text-white" 
+                      fill="currentColor" 
+                      viewBox="0 0 20 20"
+                    >
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                    </svg>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Color personalizado */}
+          <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-200">
+            <input
+              type="text"
+              value={colorPersonalizado}
+              onChange={(e) => setColorPersonalizado(e.target.value)}
+              placeholder="Agregar otro color (ej: Vino, Turquesa)"
+              className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAgregarColorPersonalizado())}
+            />
+            <button
+              type="button"
+              onClick={handleAgregarColorPersonalizado}
+              disabled={!colorPersonalizado.trim()}
+              className="px-4 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+            >
+              Agregar
+            </button>
+          </div>
+
+          {/* Colores seleccionados */}
+          {formData.color && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {formData.color.split(',').map((colorNombre, index) => {
+                const color = colorNombre.trim()
+                const hex = getColorHex(color)
+                
+                return (
+                  <div
+                    key={index}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full text-sm"
+                  >
+                    <div 
+                      className="w-4 h-4 rounded-full border border-gray-300"
+                      style={{ backgroundColor: hex }}
+                    />
+                    <span>{color}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleColorClick(color)}
+                      className="text-gray-500 hover:text-red-500"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         {/* Tallas */}
