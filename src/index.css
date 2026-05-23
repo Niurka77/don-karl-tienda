@@ -1,48 +1,80 @@
 @import "tailwindcss";
 
-/* 🎨 PALETA KB - EDICIÓN PREMIUM (Soft Minimalism) */
+/* ============================================
+   PALETA DE COLORES KB DRESSES & MORE
+   Extraída del logo kb.png
+   ============================================ */
 @theme {
-  /* Colores Base */
-  --color-background: #ffffff;
-  --color-foreground: #111111;
-  --color-muted: #f8f8f8;
-  --color-muted-foreground: #6b7280;
-  --color-border: #eaeaea;
-
-  /* Colores de Marca */
-  --color-kb-pink: #FF69B4;
-  --color-kb-pink-dark: #D41B6C;
+  /* Colores principales de marca */
+  --color-kb-rose: #E09DAA;
+  --color-kb-blush: #FAEDF1;
+  --color-kb-soft-pink: #EECBD4;
+  --color-kb-mauve: #B99DA4;
+  --color-kb-charcoal: #2D2A32;
+  --color-kb-cream: #FFF9FA;
   --color-kb-gold: #D4AF37;
-  --color-kb-gold-light: #E9D48B;
-  --color-kb-black: #0a0a0a;
-  --color-kb-gray: #f5f5f5;
-
-  /* Tipografía */
+  
+  /* Colores base del sistema */
+  --color-background: #FFFFFF;
+  --color-foreground: #2D2A32;
+  --color-muted: #FAEDF1;
+  --color-muted-foreground: #B99DA4;
+  --color-border: #EAEAEA;
+  
+  /* Tipografías */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-serif: 'Playfair Display', Georgia, serif;
 }
 
-/* Reset y Estilos Base */
+/* ============================================
+   IMPORTAR FUENTES
+   ============================================ */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ============================================
+   ESTILOS BASE
+   ============================================ */
 * {
   border-color: var(--color-border);
 }
 
 body {
   @apply bg-background text-foreground font-sans antialiased;
+  font-family: 'Inter', sans-serif;
 }
 
-h1, h2, h3, .font-heading {
-  font-family: var(--font-serif);
+h1, h2, h3, h4, .font-heading {
+  font-family: 'Playfair Display', serif;
   letter-spacing: -0.02em;
 }
 
 /* ============================================
-   ANIMACIONES EXPLÍCITAS (Compatibles con Tailwind v4)
+   SCROLLBAR PERSONALIZADA
+   ============================================ */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-kb-blush;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-kb-rose rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-kb-soft-pink;
+}
+
+/* ============================================
+   ANIMACIONES
    ============================================ */
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(24px);
   }
   to {
     opacity: 1;
@@ -53,7 +85,7 @@ h1, h2, h3, .font-heading {
 @keyframes scaleIn {
   from {
     opacity: 0;
-    transform: scale(0.95);
+    transform: scale(0.98);
   }
   to {
     opacity: 1;
@@ -61,7 +93,7 @@ h1, h2, h3, .font-heading {
   }
 }
 
-@keyframes slideIn {
+@keyframes slideInRight {
   from {
     transform: translateX(100%);
   }
@@ -79,46 +111,162 @@ h1, h2, h3, .font-heading {
   }
 }
 
-/* Utilidades de animación (puedes usarlas en cualquier componente) */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* Clases de utilidad para animaciones */
 .animate-fade-in-up {
-  animation: fadeInUp 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+  animation: fadeInUp 0.6s cubic-bezier(0.2, 0.9, 0.4, 1) forwards;
 }
 
 .animate-scale-in {
-  animation: scaleIn 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+  animation: scaleIn 0.5s cubic-bezier(0.2, 0.9, 0.4, 1) forwards;
 }
 
 .animate-slide-in {
-  animation: slideIn 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+  animation: slideInRight 0.4s cubic-bezier(0.2, 0.9, 0.4, 1);
 }
 
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out forwards;
 }
 
-/* Sombras personalizadas */
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* ============================================
+   SOMBRAS PERSONALIZADAS
+   ============================================ */
 .shadow-elegant {
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+  box-shadow: 0 4px 20px -4px rgba(45, 42, 50, 0.08), 0 2px 6px -2px rgba(45, 42, 50, 0.04);
 }
 
 .shadow-elegant-hover {
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.1), 0 5px 10px -5px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 12px 40px -8px rgba(45, 42, 50, 0.12), 0 4px 12px -4px rgba(45, 42, 50, 0.06);
 }
 
-/* Botones base */
+.shadow-soft {
+  box-shadow: 0 2px 12px -2px rgba(45, 42, 50, 0.06);
+}
+
+/* ============================================
+   UTILIDADES DE BOTONES
+   ============================================ */
 .btn-kb-primary {
-  @apply bg-foreground text-background font-medium px-8 py-4 rounded-full transition-all duration-300 hover:bg-foreground/90 hover:-translate-y-0.5;
+  @apply bg-kb-charcoal text-white font-semibold px-8 py-4 rounded-full transition-all duration-300 hover:bg-kb-rose hover:-translate-y-0.5 hover:shadow-lg;
+}
+
+.btn-kb-secondary {
+  @apply border-2 border-kb-charcoal text-kb-charcoal font-semibold px-8 py-4 rounded-full transition-all duration-300 hover:bg-kb-charcoal hover:text-white;
 }
 
 .btn-kb-accent {
-  @apply border-2 border-foreground text-foreground font-medium px-8 py-4 rounded-full transition-all duration-300 hover:bg-foreground hover:text-background;
+  @apply bg-kb-rose text-white font-semibold px-6 py-3 rounded-full transition-all duration-300 hover:bg-kb-soft-pink hover:-translate-y-0.5;
 }
 
-/* Badges */
+/* ============================================
+   UTILIDADES DE BADGES
+   ============================================ */
 .badge-new {
-  @apply bg-kb-pink-dark text-white text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider;
+  @apply bg-kb-charcoal text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider;
 }
 
 .badge-sale {
-  @apply bg-foreground text-background text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider;
+  @apply bg-red-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider;
+}
+
+.badge-premium {
+  @apply bg-kb-gold text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider;
+}
+
+/* ============================================
+   UTILIDADES DE TEXTO
+   ============================================ */
+.text-gradient-rose {
+  @apply bg-gradient-to-r from-kb-rose to-kb-soft-pink bg-clip-text text-transparent;
+}
+
+.text-elegant {
+  @apply font-serif font-semibold tracking-tight;
+}
+
+/* ============================================
+   UTILIDADES DE HOVER
+   ============================================ */
+.hover-lift {
+  @apply transition-transform duration-300 hover:-translate-y-1;
+}
+
+.hover-scale {
+  @apply transition-transform duration-500 hover:scale-105;
+}
+
+/* ============================================
+   UTILIDADES DE OVERLAY
+   ============================================ */
+.overlay-hover {
+  @apply absolute inset-0 bg-white/10 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300;
+}
+
+/* ============================================
+   UTILIDADES DE GRID PRODUCTOS
+   ============================================ */
+.product-grid {
+  @apply grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6;
+}
+
+.product-card {
+  @apply bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-elegant-hover transition-all duration-300 border border-border/50;
+}
+
+/* ============================================
+   UTILIDADES DE FORMULARIOS
+   ============================================ */
+.input-kb {
+  @apply w-full border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-kb-rose/30 focus:border-kb-rose transition-colors bg-background;
+}
+
+.select-kb {
+  @apply w-full border border-border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-kb-rose/30 focus:border-kb-rose transition-colors bg-background appearance-none;
+}
+
+/* ============================================
+   UTILIDADES DE TOAST/NOTIFICACIONES
+   ============================================ */
+.toast-container {
+  @apply fixed top-4 right-4 z-50 flex flex-col gap-2;
+}
+
+.toast {
+  @apply bg-kb-charcoal text-white px-4 py-3 rounded-lg shadow-lg text-sm animate-slide-in;
+}
+
+.toast-success {
+  @apply bg-green-600;
+}
+
+.toast-error {
+  @apply bg-red-500;
+}
+
+/* ============================================
+   MEDIA QUERIES UTILITARIAS
+   ============================================ */
+@media (max-width: 768px) {
+  .hide-mobile {
+    @apply hidden;
+  }
+}
+
+@media (min-width: 769px) {
+  .hide-desktop {
+    @apply hidden;
+  }
 }

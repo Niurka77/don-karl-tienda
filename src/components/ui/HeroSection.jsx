@@ -5,8 +5,8 @@ const slides = [
   {
     id: 1,
     title: "Carteras Importadas",
-    subtitle: "Guess • Tommy • Calvin Klein",
-    description: "Diseños exclusivos desde EE.UU. Calidad y estilo en cada pieza.",
+    subtitle: "Guess, Tommy, Calvin Klein",
+    description: "Diseños exclusivos desde Estados Unidos. Calidad y estilo en cada pieza.",
     image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=1200&h=800&fit=crop",
     link: "/?categoria=carteras",
     category: "carteras"
@@ -23,7 +23,7 @@ const slides = [
   {
     id: 3,
     title: "Billeteras Premium",
-    subtitle: "Michael Kors • Tommy • CK",
+    subtitle: "Michael Kors, Tommy, CK",
     description: "Piel de alta calidad. El accesorio perfecto para el día a día.",
     image: "https://images.unsplash.com/photo-1627123428493-eb5ae6dc65a3?w=1200&h=800&fit=crop",
     link: "/?categoria=billeteras",
@@ -53,16 +53,19 @@ const HeroSection = () => {
   }
 
   return (
-    // ✅ CORREGIDO: Agregamos pt-[88px] lg:pt-[104px] para compensar el header fixed
     <div 
-      className="relative bg-background overflow-hidden pt-[88px] lg:pt-[104px]"
+      className="relative bg-gradient-to-br from-kb-blush via-white to-kb-soft-pink/30 overflow-hidden"
       onKeyDown={handleKeyDown}
       tabIndex={0}
       role="region"
       aria-label="Carrusel de productos destacados"
     >
+      {/* Elementos decorativos flotantes */}
+      <div className="absolute top-20 left-10 w-32 h-32 bg-kb-rose/10 rounded-full blur-3xl animate-pulse"></div>
+      <div className="absolute bottom-20 right-10 w-40 h-40 bg-kb-mauve/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+
       {/* Slider */}
-      <div className="relative h-[80vh] min-h-[500px] md:h-[90vh] md:min-h-[600px]">
+      <div className="relative min-h-[600px] md:min-h-[700px] flex items-center">
         {slides.map((slide, index) => (
           <div
             key={slide.id}
@@ -71,50 +74,72 @@ const HeroSection = () => {
             }`}
             aria-hidden={index !== currentSlide}
           >
-            <div className="container mx-auto px-6 lg:px-8 h-full">
-              <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center h-full">
-                
-                {/* Texto */}
-                <div className="text-foreground space-y-4 md:space-y-6 animate-fade-in-up">
-                  <span className="inline-block text-[10px] font-mono tracking-[0.2em] text-muted-foreground uppercase bg-muted/50 px-3 py-1 rounded-full">
-                    {slide.category}
-                  </span>
-                  <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold leading-tight tracking-tight">
-                    {slide.title}
-                  </h1>
-                  <p className="text-xs md:text-sm tracking-wider text-muted-foreground uppercase">
-                    {slide.subtitle}
-                  </p>
-                  <p className="text-sm md:text-base text-muted-foreground max-w-md leading-relaxed">
-                    {slide.description}
-                  </p>
-                  <div className="flex flex-wrap gap-3 md:gap-4 pt-2 md:pt-4">
-                    <Link
-                      to={slide.link}
-                      className="bg-foreground text-background px-6 md:px-8 py-2.5 md:py-3 rounded-full text-xs md:text-sm font-medium tracking-wide hover:bg-foreground/90 transition-all transform hover:-translate-y-0.5 shadow-lg"
-                    >
-                      Comprar ahora →
-                    </Link>
-                    <Link
-                      to="/?genero=mujer"
-                      className="border border-foreground/20 text-foreground px-6 md:px-8 py-2.5 md:py-3 rounded-full text-xs md:text-sm font-medium tracking-wide hover:bg-foreground hover:text-background transition-all"
-                    >
-                      Ver catálogo
-                    </Link>
-                  </div>
+            <div className="max-w-7xl mx-auto px-4 py-12 grid md:grid-cols-2 gap-12 items-center">
+              
+              {/* Izquierda: Imagen Circular */}
+              <div className="relative flex justify-center order-2 md:order-1">
+                <div className="relative w-72 h-72 md:w-96 md:h-96 rounded-full overflow-hidden border-8 border-white shadow-2xl animate-scale-in">
+                  <img 
+                    src={slide.image}
+                    alt={slide.title}
+                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
+                    loading="eager"
+                  />
                 </div>
+                
+                {/* Badge flotante de precio */}
+                <div className="absolute -bottom-4 -right-4 bg-kb-rose text-white rounded-2xl p-4 shadow-xl animate-fade-in-up">
+                  <p className="text-xs font-bold uppercase tracking-wider mb-1">Desde</p>
+                  <p className="text-2xl font-bold">S/ 45.00</p>
+                </div>
+              </div>
 
-                {/* Imagen */}
-                <div className="relative animate-scale-in">
-                  <div className="relative aspect-[4/5] overflow-hidden rounded-2xl shadow-xl">
-                    <img
-                      src={slide.image}
-                      alt={slide.title}
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 ease-out hover:scale-105"
-                      loading="eager"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent"></div>
-                  </div>
+              {/* Derecha: Contenido */}
+              <div className="text-center md:text-left order-1 md:order-2 animate-fade-in-up">
+                
+                {/* Badge categoría */}
+                <span className="inline-block bg-kb-rose text-white rounded-full px-4 py-1.5 text-xs font-bold tracking-wider uppercase mb-4">
+                  Nueva Colección 2024
+                </span>
+                
+                {/* Título */}
+                <h1 className="font-serif text-4xl md:text-6xl font-bold text-kb-charcoal mb-4 leading-tight">
+                  {slide.title.split(' ')[0]} <span className="text-kb-rose italic">{slide.title.split(' ').slice(1).join(' ')}</span>
+                </h1>
+                
+                {/* Subtítulo */}
+                <p className="text-lg text-kb-mauve mb-3 font-medium">
+                  {slide.subtitle}
+                </p>
+                
+                {/* Descripción */}
+                <p className="text-kb-charcoal/80 mb-6 leading-relaxed max-w-lg mx-auto md:mx-0">
+                  {slide.description}
+                </p>
+                
+                {/* Tags */}
+                <div className="flex flex-wrap gap-3 justify-center md:justify-start mb-8">
+                  {['Elegancia', 'Calidad', 'Envíos Nacionales'].map((tag) => (
+                    <span key={tag} className="text-sm font-semibold text-kb-rose bg-kb-blush px-4 py-1.5 rounded-full">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+                
+                {/* Botones */}
+                <div className="flex flex-wrap gap-4 justify-center md:justify-start">
+                  <Link
+                    to={slide.link}
+                    className="bg-kb-charcoal hover:bg-kb-rose text-white font-bold py-4 px-10 rounded-full transition-all hover:shadow-xl hover:-translate-y-1 tracking-wide"
+                  >
+                    COMPRAR AHORA
+                  </Link>
+                  <Link
+                    to="/?genero=mujer"
+                    className="border-2 border-kb-charcoal text-kb-charcoal hover:bg-kb-charcoal hover:text-white font-bold py-4 px-10 rounded-full transition-all tracking-wide"
+                  >
+                    VER CATÁLOGO
+                  </Link>
                 </div>
               </div>
             </div>
@@ -122,15 +147,15 @@ const HeroSection = () => {
         ))}
 
         {/* Indicadores */}
-        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-20 flex gap-2" role="tablist" aria-label="Navegación de slides">
+        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-20 flex gap-3" role="tablist" aria-label="Navegación de slides">
           {slides.map((slide, index) => (
             <button
               key={slide.id}
               onClick={() => setCurrentSlide(index)}
               className={`transition-all duration-500 rounded-full ${
                 index === currentSlide
-                  ? 'bg-foreground w-10 md:w-12 h-1'
-                  : 'bg-foreground/30 w-5 md:w-6 h-1 hover:bg-foreground/50'
+                  ? 'bg-kb-rose w-12 h-1.5'
+                  : 'bg-kb-rose/30 w-6 h-1.5 hover:bg-kb-rose/50'
               }`}
               role="tab"
               aria-selected={index === currentSlide}
@@ -142,13 +167,34 @@ const HeroSection = () => {
       </div>
 
       {/* Banda de confianza */}
-      <div className="border-t border-border bg-background">
-        <div className="container mx-auto px-6 lg:px-8 py-3 md:py-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 text-center">
-            <div className="text-[10px] md:text-xs font-medium text-muted-foreground tracking-wide">100% ORIGINAL</div>
-            <div className="text-[10px] md:text-xs font-medium text-muted-foreground tracking-wide">ENVÍO RÁPIDO</div>
-            <div className="text-[10px] md:text-xs font-medium text-muted-foreground tracking-wide">PAGO SEGURO</div>
-            <div className="text-[10px] md:text-xs font-medium text-muted-foreground tracking-wide">ATENCIÓN 24/7</div>
+      <div className="bg-white border-t border-border">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+            <div className="flex flex-col items-center gap-2">
+              <svg className="w-6 h-6 text-kb-rose" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+              </svg>
+              <span className="text-xs font-semibold text-kb-charcoal">100% ORIGINAL</span>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <svg className="w-6 h-6 text-kb-rose" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
+                <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1v-5h2v5a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H17a1 1 0 001-1V5a1 1 0 00-1-1H3z"/>
+              </svg>
+              <span className="text-xs font-semibold text-kb-charcoal">ENVÍO RÁPIDO</span>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <svg className="w-6 h-6 text-kb-rose" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/>
+              </svg>
+              <span className="text-xs font-semibold text-kb-charcoal">PAGO SEGURO</span>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <svg className="w-6 h-6 text-kb-rose" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+              </svg>
+              <span className="text-xs font-semibold text-kb-charcoal">ATENCIÓN 24/7</span>
+            </div>
           </div>
         </div>
       </div>
