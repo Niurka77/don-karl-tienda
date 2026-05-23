@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 
-// Imágenes acordes a categorías REALES del sistema
-// Carteras, Vestidos, Billeteras (alineado con tu schema)
 const slides = [
   {
     id: 1,
@@ -40,11 +38,30 @@ const HeroSection = () => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length)
     }, 6000)
-    return () => clearInterval(timer)
+    
+    // ✅ Cleanup explícito del intervalo
+    return () => {
+      clearInterval(timer)
+    }
   }, [])
 
+  // ✅ Función para navegación con teclado
+  const handleKeyDown = (e) => {
+    if (e.key === 'ArrowLeft') {
+      setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)
+    } else if (e.key === 'ArrowRight') {
+      setCurrentSlide((prev) => (prev + 1) % slides.length)
+    }
+  }
+
   return (
-    <div className="relative bg-background overflow-hidden">
+    <div 
+      className="relative bg-background overflow-hidden"
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+      role="region"
+      aria-label="Carrusel de productos destacados"
+    >
       {/* Slider */}
       <div className="relative h-[80vh] min-h-[500px] md:h-[90vh] md:min-h-[600px]">
         {slides.map((slide, index) => (
@@ -53,6 +70,7 @@ const HeroSection = () => {
             className={`absolute inset-0 transition-all duration-1000 ease-out ${
               index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
             }`}
+            aria-hidden={index !== currentSlide}
           >
             <div className="container mx-auto px-6 lg:px-8 h-full">
               <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center h-full">
@@ -105,17 +123,20 @@ const HeroSection = () => {
         ))}
 
         {/* Indicadores */}
-        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-20 flex gap-2">
-          {slides.map((_, index) => (
+        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-20 flex gap-2" role="tablist" aria-label="Navegación de slides">
+          {slides.map((slide, index) => (
             <button
-              key={index}
+              key={slide.id}
               onClick={() => setCurrentSlide(index)}
               className={`transition-all duration-500 rounded-full ${
                 index === currentSlide
                   ? 'bg-foreground w-10 md:w-12 h-1'
                   : 'bg-foreground/30 w-5 md:w-6 h-1 hover:bg-foreground/50'
               }`}
-              aria-label={`Ir a slide ${index + 1}`}
+              role="tab"
+              aria-selected={index === currentSlide}
+              aria-label={`Ir a slide ${index + 1}: ${slide.title}`}
+              aria-controls={`slide-${slide.id}`}
             />
           ))}
         </div>

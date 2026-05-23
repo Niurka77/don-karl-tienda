@@ -6,12 +6,12 @@ const BotonPDF = () => {
   const [generando, setGenerando] = useState(false)
 
   const generarPDF = async () => {
+    // ✅ Prevenir múltiples clicks
+    if (generando) return
+    
     setGenerando(true)
 
     try {
-      // ✅ CORRECCIÓN: Filtramos productos CON STOCK (gt = greater than)
-      // Antes: .eq('stock', 0) → traía productos AGOTADOS ❌
-      // Ahora: .gt('stock', 0) → trae productos DISPONIBLES ✅
       const { data: productos, error } = await supabase
         .from('products')
         .select('*')
@@ -21,7 +21,13 @@ const BotonPDF = () => {
 
       if (error) throw error
 
+      // ✅ Validar que haya productos disponibles
       const disponibles = productos || []
+      
+      if (disponibles.length === 0) {
+        alert('No hay productos disponibles para generar el catálogo.')
+        return
+      }
 
       // Crear PDF
       const doc = new jsPDF({
@@ -59,13 +65,13 @@ const BotonPDF = () => {
       let yPos = margin + 30
       const maxY = pageHeight - margin - 10
 
-      if (disponibles.length === 0) {
+      // Agrupar por categoría
+      const categorias = [...new Set(disponibles.map((p) => p.category).filter(Boolean))]
+
+      if (categorias.length === 0) {
         doc.setFontSize(12)
         doc.text('No hay productos disponibles en este momento.', margin, yPos)
       } else {
-        // Agrupar por categoría
-        const categorias = [...new Set(disponibles.map((p) => p.category))]
-
         for (const categoria of categorias) {
           const productosCat = disponibles.filter(
             (p) => p.category === categoria
@@ -97,11 +103,15 @@ const BotonPDF = () => {
               yPos = margin + 5
             }
 
+            // ✅ Validar que el producto tenga datos requeridos
+            if (!producto.name || !producto.price_original) continue
+
             // Nombre + precio
             const precio =
               producto.discount_percent > 0
                 ? producto.price_final
                 : producto.price_original
+                
             const texto = `${producto.name} - $${precio?.toFixed(2)}`
 
             if (producto.discount_percent > 0) {
@@ -112,17 +122,33 @@ const BotonPDF = () => {
 
             doc.text(texto, margin, yPos)
 
-            // Tallas
+            // Tallas - ✅ Manejar caso donde sizes_available no es array
+            let tallasTexto = 'Único'
+            if (producto.sizes_available) {
+              try {
+                const tallas = Array.isArray(producto.sizes_available) 
+                  ? producto.sizes_available 
+                  : JSON.parse(producto.sizes_available)
+                if (Array.isArray(tallas) && tallas.length > 0) {
+                  tallasTexto = tallas.join(', ')
+                }
+              } catch (e) {
+                tallasTexto = 'Único'
+              }
+            }
+            
             doc.setTextColor(100, 100, 100)
             doc.setFontSize(7)
             doc.text(
-              `Tallas: ${producto.sizes_available?.join(', ') || 'Único'}`,
+              `Tallas: ${tallasTexto}`,
               margin,
               yPos + 3.5
             )
 
             // SKU a la derecha
-            doc.text(`SKU: ${producto.sku}`, pageWidth - margin - 30, yPos)
+            if (producto.sku) {
+              doc.text(`SKU: ${producto.sku}`, pageWidth - margin - 30, yPos)
+            }
 
             // Línea gris suave
             doc.setDrawColor(230, 230, 230)
@@ -152,10 +178,15 @@ const BotonPDF = () => {
       }
 
       // Descargar
-      doc.save(`Catalogo_Don_Karl_${new Date().toISOString().split('T')[0]}.pdf`)
+      const fecha = new Date().toISOString().split('T')[0]
+      doc.save(`Catalogo_Don_Karl_${fecha}.pdf`)
+      
+      // ✅ Feedback de éxito
+      alert('✅ Catálogo generado exitosamente')
+      
     } catch (err) {
       console.error('Error al generar PDF:', err)
-      alert('Error al generar el catálogo. Intenta de nuevo.')
+      alert('❌ Error al generar el catálogo. Intenta de nuevo.')
     } finally {
       setGenerando(false)
     }
@@ -166,6 +197,7 @@ const BotonPDF = () => {
       onClick={generarPDF}
       disabled={generando}
       className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-all disabled:bg-gray-300 disabled:cursor-not-allowed"
+      aria-label="Descargar catálogo de productos en PDF"
     >
       {generando ? (
         <>
@@ -179,6 +211,7 @@ const BotonPDF = () => {
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"
