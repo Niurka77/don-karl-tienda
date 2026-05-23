@@ -8,7 +8,8 @@ import DOMPurify from 'dompurify'
 const ProductoPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { addItem } = useCartStore()
+  // ✅ Importar openCart además de addItem
+  const { addItem, openCart } = useCartStore()
   
   const [producto, setProducto] = useState(null)
   const [cargando, setCargando] = useState(true)
@@ -38,32 +39,26 @@ const ProductoPage = () => {
           .eq('id', id)
           .single()
 
-        // ✅ Si el componente se desmontó, no actualizar estado
         if (cancelled) return
         
         if (productError) throw productError
         setProducto(productData)
 
-        // Procesar colores
         if (productData.color) {
           setColores(productData.color.split(',').map(c => c.trim()).filter(c => c))
         }
 
-        // ✅ CORREGIDO: Manejo robusto de sizes_available
         if (productData.sizes_available) {
           try {
             let tallasData = []
-            
             if (typeof productData.sizes_available === 'string') {
               tallasData = JSON.parse(productData.sizes_available)
             } else if (Array.isArray(productData.sizes_available)) {
               tallasData = productData.sizes_available
             }
-            
             if (Array.isArray(tallasData)) {
               setTallas(tallasData.filter(t => typeof t === 'string'))
             } else {
-              console.warn('sizes_available no es un array válido:', tallasData)
               setTallas([])
             }
           } catch (e) {
@@ -72,7 +67,6 @@ const ProductoPage = () => {
           }
         }
 
-        // Cargar reseñas
         const { data: reviewsData, error: reviewsError } = await supabase
           .from('reviews')
           .select('*')
@@ -101,7 +95,6 @@ const ProductoPage = () => {
     cargarProducto()
     window.scrollTo(0, 0)
 
-    // ✅ Cleanup para evitar actualizaciones en componente desmontado
     return () => {
       cancelled = true
     }
@@ -145,9 +138,11 @@ const ProductoPage = () => {
     }
   }
 
+  // ✅ CORREGIDO: En lugar de navegar a /carrito, abre el drawer
   const handleComprarAhora = () => {
     handleAgregarCarrito()
-    setTimeout(() => navigate('/carrito'), 500)
+    // ✅ Abre el cart drawer directamente
+    openCart()
   }
 
   if (cargando) {
