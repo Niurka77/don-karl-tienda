@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 const slides = [
   {
@@ -8,7 +8,6 @@ const slides = [
     subtitle: "Guess, Tommy, Calvin Klein",
     description: "Diseños exclusivos desde Estados Unidos. Calidad y estilo en cada pieza.",
     image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=1200&h=800&fit=crop",
-    link: "/?categoria=carteras",
     category: "carteras"
   },
   {
@@ -17,7 +16,6 @@ const slides = [
     subtitle: "Elegancia atemporal",
     description: "Para ocasiones especiales. Tallas S al XXL. Colección 2024.",
     image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=1200&h=800&fit=crop",
-    link: "/?categoria=vestidos",
     category: "vestidos"
   },
   {
@@ -26,22 +24,20 @@ const slides = [
     subtitle: "Michael Kors, Tommy, CK",
     description: "Piel de alta calidad. El accesorio perfecto para el día a día.",
     image: "https://images.unsplash.com/photo-1627123428493-eb5ae6dc65a3?w=1200&h=800&fit=crop",
-    link: "/?categoria=billeteras",
     category: "billeteras"
   }
 ]
 
 const HeroSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0)
+  const navigate = useNavigate()
 
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length)
     }, 6000)
     
-    return () => {
-      clearInterval(timer)
-    }
+    return () => clearInterval(timer)
   }, [])
 
   const handleKeyDown = (e) => {
@@ -50,6 +46,11 @@ const HeroSection = () => {
     } else if (e.key === 'ArrowRight') {
       setCurrentSlide((prev) => (prev + 1) % slides.length)
     }
+  }
+
+  // ✅ Función para navegar con filtro de categoría
+  const handleComprarAhora = (categoria) => {
+    navigate(`/?categoria=${categoria}`)
   }
 
   return (
@@ -126,20 +127,20 @@ const HeroSection = () => {
                   ))}
                 </div>
                 
-                {/* Botones */}
+                {/* ✅ Botones con navegación funcional */}
                 <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-                  <Link
-                    to={slide.link}
+                  <button
+                    onClick={() => handleComprarAhora(slide.category)}
                     className="bg-kb-charcoal hover:bg-kb-rose text-white font-bold py-4 px-10 rounded-full transition-all hover:shadow-xl hover:-translate-y-1 tracking-wide"
                   >
                     COMPRAR AHORA
-                  </Link>
-                  <Link
-                    to="/?genero=mujer"
+                  </button>
+                  <button
+                    onClick={() => navigate('/?genero=mujer')}
                     className="border-2 border-kb-charcoal text-kb-charcoal hover:bg-kb-charcoal hover:text-white font-bold py-4 px-10 rounded-full transition-all tracking-wide"
                   >
                     VER CATÁLOGO
-                  </Link>
+                  </button>
                 </div>
               </div>
             </div>
@@ -160,7 +161,6 @@ const HeroSection = () => {
               role="tab"
               aria-selected={index === currentSlide}
               aria-label={`Ir a slide ${index + 1}: ${slide.title}`}
-              aria-controls={`slide-${slide.id}`}
             />
           ))}
         </div>
