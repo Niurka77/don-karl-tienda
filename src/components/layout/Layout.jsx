@@ -23,6 +23,21 @@ const Layout = () => {
     }
   }, [])
 
+  // ✅ Función para navegar y hacer scroll a la sección de productos
+  const handleNavigateWithScroll = (url) => {
+    navigate(url)
+    // Pequeño timeout para asegurar que el cambio de ruta se procese primero
+    setTimeout(() => {
+      const mainContent = document.querySelector('main')
+      if (mainContent) {
+        mainContent.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      } else {
+        // Fallback: scroll al top de la página
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }
+    }, 100)
+  }
+
   return (
     <div className="min-h-screen bg-kb-cream flex flex-col">
       {/* Header Profesional */}
@@ -68,7 +83,7 @@ const Layout = () => {
               ) : (
                 <button
                   key={item}
-                  onClick={() => navigate(`/?genero=${item.toLowerCase()}`)}
+                  onClick={() => handleNavigateWithScroll(`/?genero=${item.toLowerCase()}`)}
                   className="text-sm font-semibold text-kb-charcoal hover:text-kb-rose transition-colors relative group"
                 >
                   {item}
@@ -147,8 +162,8 @@ const Layout = () => {
         {/* Mobile: Navegación inferior */}
         <nav className="lg:hidden border-t border-border py-3">
           <div className="max-w-7xl mx-auto px-4 flex items-center justify-center gap-6 text-xs font-semibold text-kb-charcoal">
-            <button onClick={() => navigate('/?genero=mujer')} className="hover:text-kb-rose transition-colors">MUJER</button>
-            <button onClick={() => navigate('/?genero=hombre')} className="hover:text-kb-rose transition-colors">HOMBRE</button>
+            <button onClick={() => handleNavigateWithScroll('/?genero=mujer')} className="hover:text-kb-rose transition-colors">MUJER</button>
+            <button onClick={() => handleNavigateWithScroll('/?genero=hombre')} className="hover:text-kb-rose transition-colors">HOMBRE</button>
             <a href="/#nosotros" className="hover:text-kb-rose transition-colors">NOSOTROS</a>
             <a 
               href="https://wa.me/51906877812?text=Hola,%20necesito%20ayuda"
@@ -163,7 +178,7 @@ const Layout = () => {
       </header>
 
       {/* Contenido Principal */}
-      <main className="flex-1">
+      <main className="flex-1" id="main-content">
         <Outlet />
       </main>
 
@@ -297,4 +312,4 @@ const Layout = () => {
   )
 }
 
-export default Layout;
+export default Layout
