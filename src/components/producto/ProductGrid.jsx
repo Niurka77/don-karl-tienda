@@ -6,14 +6,18 @@ import FilterBar from './FilterBar'
 
 const ProductGrid = () => {
   const [searchParams, setSearchParams] = useSearchParams()
+  
+  // Estados principales
   const [productos, setProductos] = useState([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
   const [paginaActual, setPaginaActual] = useState(1)
   const [totalProductos, setTotalProductos] = useState(0)
+  
   const productosPorPagina = 8
 
-  // ✅ Leer parámetros de URL y sincronizar con filtros
+  // 1. Inicializar estado de filtros DESDE la URL actual
+  // Usamos una función inicial para leer searchParams solo una vez al montar
   const [filtros, setFiltros] = useState(() => ({
     categoria: searchParams.get('categoria') || '',
     marca: searchParams.get('marca') || '',
@@ -23,20 +27,27 @@ const ProductGrid = () => {
     orden: searchParams.get('orden') || 'created_at-desc',
   }))
 
-  // ✅ Actualizar URL cuando cambien los filtros
+  // 2. Sincronizar URL -> Estado (Si el usuario usa botón Atrás/Adelante del navegador)
   useEffect(() => {
-    const params = new URLSearchParams()
-    if (filtros.categoria) params.set('categoria', filtros.categoria)
-    if (filtros.marca) params.set('marca', filtros.marca)
-    if (filtros.genero) params.set('genero', filtros.genero)
-    if (filtros.precioMin) params.set('precioMin', filtros.precioMin)
-    if (filtros.precioMax) params.set('precioMax', filtros.precioMax)
-    if (filtros.orden !== 'created_at-desc') params.set('orden', filtros.orden)
+    const nuevosFiltros = {
+      categoria: searchParams.get('categoria') || '',
+      marca: searchParams.get('marca') || '',
+      genero: searchParams.get('genero') || '',
+      precioMin: searchParams.get('precioMin') || '',
+      precioMax: searchParams.get('precioMax') || '',
+      orden: searchParams.get('orden') || 'created_at-desc',
+    }
     
-    setSearchParams(params)
-  }, [filtros, setSearchParams])
+    // Solo actualizamos si hay diferencias reales para evitar loops infinitos
+    setFiltros(prev => {
+      if (JSON.stringify(prev) === JSON.stringify(nuevosFiltros)) return prev
+      return nuevosFiltros
+    })
+    // Resetear página a 1 si cambian los filtros por URL
+    setPaginaActual(1)
+  }, [searchParams])
 
-  // ✅ Cargar productos cuando cambien filtros o página
+  // 3. Función de carga de datos (Memoizada)
   const cargarProductos = useCallback(async () => {
     let cancelled = false
     
@@ -46,6 +57,7 @@ const ProductGrid = () => {
 
       let query = supabase.from('products').select('*', { count: 'exact' })
 
+      // Aplicar filtros
       if (filtros.categoria) query = query.eq('category', filtros.categoria)
       if (filtros.marca) query = query.ilike('brand', `%${filtros.marca}%`)
       if (filtros.genero) query = query.eq('gender', filtros.genero)
@@ -55,9 +67,11 @@ const ProductGrid = () => {
       // Solo mostrar productos con stock disponible
       query = query.gt('stock', 0)
 
+      // Ordenamiento
       const [campo, direccion] = filtros.orden.split('-')
       query = query.order(campo, { ascending: direccion === 'asc' })
 
+      // Paginación
       const inicio = (paginaActual - 1) * productosPorPagina
       const fin = inicio + productosPorPagina - 1
       query = query.range(inicio, fin)
@@ -78,18 +92,32 @@ const ProductGrid = () => {
       if (!cancelled) setCargando(false)
     }
     
+    // Cleanup function para evitar race conditions
     return () => {
       cancelled = true
     }
-  }, [filtros, paginaActual])
+  }, [filtros, paginaActual]) // Dependencias correctas
 
+  // 4. Ejecutar carga cuando cambien filtros o página
   useEffect(() => {
     cargarProductos()
   }, [cargarProductos])
 
+  // 5. Manejador de cambios en FilterBar
   const handleChangeFiltros = (nuevosFiltros) => {
     setFiltros(nuevosFiltros)
-    setPaginaActual(1)
+    setPaginaActual(1) // Resetear paginación al filtrar
+    
+    // Actualizar URL explícitamente
+    const params = new URLSearchParams()
+    if (nuevosFiltros.categoria) params.set('categoria', nuevosFiltros.categoria)
+    if (nuevosFiltros.marca) params.set('marca', nuevosFiltros.marca)
+    if (nuevosFiltros.genero) params.set('genero', nuevosFiltros.genero)
+    if (nuevosFiltros.precioMin) params.set('precioMin', nuevosFiltros.precioMin)
+    if (nuevosFiltros.precioMax) params.set('precioMax', nuevosFiltros.precioMax)
+    if (nuevosFiltros.orden && nuevosFiltros.orden !== 'created_at-desc') params.set('orden', nuevosFiltros.orden)
+    
+    setSearchParams(params)
   }
 
   const totalPages = Math.ceil(totalProductos / productosPorPagina)
