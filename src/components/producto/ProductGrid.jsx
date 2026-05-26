@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import ProductCard from './ProductCard'
@@ -6,8 +6,8 @@ import FilterBar from './FilterBar'
 
 const ProductGrid = () => {
   const [searchParams, setSearchParams] = useSearchParams()
+  const gridRef = useRef(null)
   
-  // Estados principales
   const [productos, setProductos] = useState([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
@@ -16,8 +16,7 @@ const ProductGrid = () => {
   
   const productosPorPagina = 8
 
-  // 1. Inicializar estado de filtros DESDE la URL actual
-  // Usamos una función inicial para leer searchParams solo una vez al montar
+  // Inicializar filtros desde URL
   const [filtros, setFiltros] = useState(() => ({
     categoria: searchParams.get('categoria') || '',
     marca: searchParams.get('marca') || '',
@@ -27,7 +26,7 @@ const ProductGrid = () => {
     orden: searchParams.get('orden') || 'created_at-desc',
   }))
 
-  // 2. Sincronizar URL -> Estado (Si el usuario usa botón Atrás/Adelante del navegador)
+  // Sincronizar URL -> Estado (botones atrás/adelante)
   useEffect(() => {
     const nuevosFiltros = {
       categoria: searchParams.get('categoria') || '',
@@ -38,16 +37,14 @@ const ProductGrid = () => {
       orden: searchParams.get('orden') || 'created_at-desc',
     }
     
-    // Solo actualizamos si hay diferencias reales para evitar loops infinitos
     setFiltros(prev => {
       if (JSON.stringify(prev) === JSON.stringify(nuevosFiltros)) return prev
       return nuevosFiltros
     })
-    // Resetear página a 1 si cambian los filtros por URL
     setPaginaActual(1)
   }, [searchParams])
 
-  // 3. Función de carga de datos (Memoizada)
+  // Cargar productos desde Supabase
   const cargarProductos = useCallback(async () => {
     let cancelled = false
     
@@ -57,21 +54,17 @@ const ProductGrid = () => {
 
       let query = supabase.from('products').select('*', { count: 'exact' })
 
-      // Aplicar filtros
       if (filtros.categoria) query = query.eq('category', filtros.categoria)
       if (filtros.marca) query = query.ilike('brand', `%${filtros.marca}%`)
       if (filtros.genero) query = query.eq('gender', filtros.genero)
       if (filtros.precioMin) query = query.gte('price_original', parseFloat(filtros.precioMin))
       if (filtros.precioMax) query = query.lte('price_original', parseFloat(filtros.precioMax))
 
-      // Solo mostrar productos con stock disponible
       query = query.gt('stock', 0)
 
-      // Ordenamiento
       const [campo, direccion] = filtros.orden.split('-')
       query = query.order(campo, { ascending: direccion === 'asc' })
 
-      // Paginación
       const inicio = (paginaActual - 1) * productosPorPagina
       const fin = inicio + productosPorPagina - 1
       query = query.range(inicio, fin)
@@ -79,7 +72,6 @@ const ProductGrid = () => {
       const { data, error: queryError, count } = await query
 
       if (cancelled) return
-
       if (queryError) throw queryError
 
       setProductos(data || [])
@@ -92,23 +84,37 @@ const ProductGrid = () => {
       if (!cancelled) setCargando(false)
     }
     
-    // Cleanup function para evitar race conditions
-    return () => {
-      cancelled = true
-    }
-  }, [filtros, paginaActual]) // Dependencias correctas
+    return () => { cancelled = true }
+  }, [filtros, paginaActual])
 
-  // 4. Ejecutar carga cuando cambien filtros o página
   useEffect(() => {
     cargarProductos()
   }, [cargarProductos])
 
-  // 5. Manejador de cambios en FilterBar
+  // ✅ SCROLL AUTOMÁTICO cuando se cargan productos después de filtrar
+  useEffect(() => {
+    if (!cargando && (productos.length > 0 || error) && searchParams.toString()) {
+      const timer = setTimeout(() => {
+        if (gridRef.current) {
+          const headerOffset = 140
+          const elementPosition = gridRef.current.getBoundingClientRect().top
+          const offsetPosition = elementPosition + window.pageYOffset - headerOffset
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          })
+        }
+      }, 300)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [productos, cargando, error, searchParams])
+
   const handleChangeFiltros = (nuevosFiltros) => {
     setFiltros(nuevosFiltros)
-    setPaginaActual(1) // Resetear paginación al filtrar
+    setPaginaActual(1)
     
-    // Actualizar URL explícitamente
     const params = new URLSearchParams()
     if (nuevosFiltros.categoria) params.set('categoria', nuevosFiltros.categoria)
     if (nuevosFiltros.marca) params.set('marca', nuevosFiltros.marca)
@@ -124,7 +130,7 @@ const ProductGrid = () => {
 
   if (cargando) {
     return (
-      <div>
+      <div ref={gridRef} id="product-grid-section" className="scroll-mt-32">
         <FilterBar filtros={filtros} onChangeFiltros={handleChangeFiltros} />
         <div className="flex flex-col items-center justify-center py-32">
           <div className="w-8 h-8 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin"></div>
@@ -136,7 +142,7 @@ const ProductGrid = () => {
 
   if (error) {
     return (
-      <div>
+      <div ref={gridRef} id="product-grid-section" className="scroll-mt-32">
         <FilterBar filtros={filtros} onChangeFiltros={handleChangeFiltros} />
         <div className="text-center py-32">
           <p className="text-red-500 font-mono text-sm">{error}</p>
@@ -152,7 +158,7 @@ const ProductGrid = () => {
   }
 
   return (
-    <div>
+    <div ref={gridRef} id="product-grid-section" className="scroll-mt-32">
       <FilterBar filtros={filtros} onChangeFiltros={handleChangeFiltros} />
 
       {productos.length === 0 ? (
