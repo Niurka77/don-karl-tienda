@@ -5,7 +5,6 @@ const categorias = ['vestidos', 'bolsos', 'zapatos']
 const generos = ['mujer', 'hombre', 'unisex']
 const tallasDisponibles = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Unico']
 
-// Marcas predefinidas
 const marcasPredefinidas = [
   'Guess', 'Tommy Hilfiger', 'Calvin Klein', 'Michael Kors',
   'Victoria\'s Secret', 'Zara', 'H&M', 'Forever 21', 'Mango',
@@ -51,6 +50,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     stock: '',
     sizes_available: [],
     images_urls: [],
+    is_featured: false,
   })
 
   const [imagenes, setImagenes] = useState([])
@@ -61,9 +61,11 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
   const [errorGeneral, setErrorGeneral] = useState('')
   const [exito, setExito] = useState('')
   const [colorPersonalizado, setColorPersonalizado] = useState('')
-  
-  // Estado para controlar si el select de marca esta en modo "Otra"
   const [marcaSeleccion, setMarcaSeleccion] = useState('')
+  
+  // Estado para mostrar el dialogo de confirmacion al crear nuevo producto
+  const [mostrarDialogoSlider, setMostrarDialogoSlider] = useState(false)
+  const [dialogoCallback, setDialogoCallback] = useState(null)
 
   useEffect(() => {
     if (producto) {
@@ -88,6 +90,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
         images_urls: Array.isArray(producto.images_urls)
           ? producto.images_urls
           : (producto.image_url ? [producto.image_url] : []),
+        is_featured: producto.is_featured || false,
       })
       
       setMarcaSeleccion(esMarcaPredefinida ? brandValue : 'Otra')
@@ -101,8 +104,11 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
   }, [producto])
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    const { name, value, type, checked } = e.target
+    setFormData((prev) => ({ 
+      ...prev, 
+      [name]: type === 'checkbox' ? checked : value 
+    }))
     if (errores[name]) {
       setErrores((prev) => ({ ...prev, [name]: '' }))
     }
@@ -292,12 +298,36 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     return Object.keys(nuevosErrores).length === 0
   }
 
+  // Funcion para preguntar si quiere mostrar en slider (solo para nuevos productos)
+  const preguntarMostrarEnSlider = () => {
+    return new Promise((resolve) => {
+      setMostrarDialogoSlider(true)
+      setDialogoCallback(() => resolve)
+    })
+  }
+
+  const responderDialogoSlider = (respuesta) => {
+    if (dialogoCallback) {
+      dialogoCallback(respuesta)
+      setDialogoCallback(null)
+    }
+    setMostrarDialogoSlider(false)
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setErrorGeneral('')
     setExito('')
 
     if (!validar()) return
+
+    // Para productos nuevos, preguntar si mostrar en slider
+    let featuredValue = formData.is_featured
+    if (!esEdicion) {
+      const respuesta = await preguntarMostrarEnSlider()
+      featuredValue = respuesta
+      setFormData(prev => ({ ...prev, is_featured: respuesta }))
+    }
 
     setGuardando(true)
 
@@ -327,6 +357,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
         sizes_available: formData.sizes_available,
         image_url: imagenPrincipal,
         images_urls: imageUrls,
+        is_featured: esEdicion ? formData.is_featured : featuredValue,
       }
 
       let resultado
@@ -373,450 +404,503 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-[#FFF8F5] rounded-sm p-6">
-      <div className="border-b border-[rgba(212,120,138,0.2)] pb-4 mb-6">
-        <div className="w-6 h-px bg-[#D4788A] mb-3"></div>
-        <h2 className="font-['Cormorant_Garamond'] text-2xl font-light tracking-[-0.02em] text-[#1A1118]">
-          {esEdicion ? 'Editar producto' : 'Nuevo producto'}
-        </h2>
-      </div>
-
-      {errorGeneral && (
-        <div className="mb-6 p-4 border border-[#B85268] bg-[#FDF0F3] rounded-sm">
-          <p className="text-sm text-[#B85268] font-['DM_Sans']">{errorGeneral}</p>
+    <>
+      {/* Dialogo para preguntar si mostrar en slider */}
+      {mostrarDialogoSlider && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-[#FFF8F5] rounded-sm p-6 max-w-md w-full mx-4">
+            <div className="w-6 h-px bg-[#D4788A] mb-4"></div>
+            <h3 className="font-['Cormorant_Garamond'] text-xl font-light tracking-[-0.02em] text-[#1A1118] mb-3">
+              Mostrar en slider de nuevos productos
+            </h3>
+            <p className="text-sm font-['DM_Sans'] font-light text-[#2D2030] mb-6">
+              ¿Deseas que este producto aparezca en el slider de 
+              &quot;Recien Llegados&quot; en la pagina principal?
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => responderDialogoSlider(true)}
+                className="flex-1 py-2.5 bg-[#1A1118] text-white rounded-sm font-['DM_Sans'] font-medium tracking-wide hover:bg-gradient-to-r hover:from-[#D4788A] hover:to-[#B85268] transition-all duration-300"
+              >
+                Si, mostrar
+              </button>
+              <button
+                type="button"
+                onClick={() => responderDialogoSlider(false)}
+                className="flex-1 py-2.5 border border-[rgba(212,120,138,0.4)] text-[#2D2030] rounded-sm font-['DM_Sans'] font-medium hover:bg-[#FDF0F3] hover:border-[#D4788A] transition-all duration-300"
+              >
+                No mostrar
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
-      {exito && (
-        <div className="mb-6 p-4 border border-[#D4788A] bg-[#F2C4CE] bg-opacity-30 rounded-sm">
-          <p className="text-sm text-[#1A1118] font-['DM_Sans']">{exito}</p>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="md:col-span-2">
-          <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
-            Nombre del producto *
-          </label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Vestido Floral Primavera"
-            className={`w-full border rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
-              errores.name ? 'border-[#B85268] bg-[#FDF0F3]' : 'border-[rgba(212,120,138,0.25)]'
-            }`}
-          />
-          {errores.name && (
-            <p className="mt-1 text-xs text-[#B85268] font-['DM_Sans']">{errores.name}</p>
-          )}
+      <form onSubmit={handleSubmit} className="bg-[#FFF8F5] rounded-sm p-6">
+        <div className="border-b border-[rgba(212,120,138,0.2)] pb-4 mb-6">
+          <div className="w-6 h-px bg-[#D4788A] mb-3"></div>
+          <h2 className="font-['Cormorant_Garamond'] text-2xl font-light tracking-[-0.02em] text-[#1A1118]">
+            {esEdicion ? 'Editar producto' : 'Nuevo producto'}
+          </h2>
         </div>
 
-        <div>
-          <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
-            SKU / Codigo *
-          </label>
-          <input
-            type="text"
-            name="sku"
-            value={formData.sku}
-            onChange={handleChange}
-            placeholder="VES-001"
-            className={`w-full border rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
-              errores.sku ? 'border-[#B85268] bg-[#FDF0F3]' : 'border-[rgba(212,120,138,0.25)]'
-            }`}
-          />
-          {errores.sku && (
-            <p className="mt-1 text-xs text-[#B85268] font-['DM_Sans']">{errores.sku}</p>
-          )}
-        </div>
-
-        {/* MARCA - DROPDOWN MODIFICADO */}
-        <div>
-          <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
-            Marca
-          </label>
-          <select
-            value={marcaSeleccion}
-            onChange={handleMarcaChange}
-            className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
-          >
-            <option value="">Seleccionar marca</option>
-            {marcasPredefinidas.map((marca) => (
-              <option key={marca} value={marca}>{marca}</option>
-            ))}
-            <option value="Otra">Otra...</option>
-          </select>
-        </div>
-
-        {/* Input para marca personalizada (solo visible si selecciona 'Otra') */}
-        {marcaSeleccion === 'Otra' && (
-          <div>
-            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
-              Escribe la marca
-            </label>
-            <input
-              type="text"
-              value={formData.brandPersonalizada}
-              onChange={handleMarcaPersonalizadaChange}
-              placeholder="Ej: Mi Marca"
-              className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
-            />
+        {errorGeneral && (
+          <div className="mb-6 p-4 border border-[#B85268] bg-[#FDF0F3] rounded-sm">
+            <p className="text-sm text-[#B85268] font-['DM_Sans']">{errorGeneral}</p>
           </div>
         )}
 
-        <div>
-          <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
-            Categoria
-          </label>
-          <select
-            name="category"
-            value={formData.category}
-            onChange={handleChange}
-            className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
-          >
-            {categorias.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat.charAt(0).toUpperCase() + cat.slice(1)}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
-            Genero
-          </label>
-          <select
-            name="gender"
-            value={formData.gender}
-            onChange={handleChange}
-            className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
-          >
-            {generos.map((gen) => (
-              <option key={gen} value={gen}>
-                {gen.charAt(0).toUpperCase() + gen.slice(1)}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
-            Precio original *
-          </label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9A7480] text-sm font-['DM_Sans']">
-              $
-            </span>
-            <input
-              type="number"
-              name="price_original"
-              value={formData.price_original}
-              onChange={handleChange}
-              placeholder="120.00"
-              step="0.01"
-              min="0"
-              className={`w-full border rounded-sm pl-8 pr-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
-                errores.price_original ? 'border-[#B85268] bg-[#FDF0F3]' : 'border-[rgba(212,120,138,0.25)]'
-              }`}
-            />
+        {exito && (
+          <div className="mb-6 p-4 border border-[#D4788A] bg-[#F2C4CE] bg-opacity-30 rounded-sm">
+            <p className="text-sm text-[#1A1118] font-['DM_Sans']">{exito}</p>
           </div>
-          {errores.price_original && (
-            <p className="mt-1 text-xs text-[#B85268] font-['DM_Sans']">{errores.price_original}</p>
-          )}
-        </div>
+        )}
 
-        <div>
-          <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
-            Descuento (%)
-          </label>
-          <div className="relative">
-            <input
-              type="number"
-              name="discount_percent"
-              value={formData.discount_percent}
-              onChange={handleChange}
-              placeholder="0"
-              min="0"
-              max="99"
-              className={`w-full border rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
-                errores.discount_percent ? 'border-[#B85268] bg-[#FDF0F3]' : 'border-[rgba(212,120,138,0.25)]'
-              }`}
-            />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9A7480] text-sm font-['DM_Sans']">
-              %
-            </span>
-          </div>
-          {errores.discount_percent && (
-            <p className="mt-1 text-xs text-[#B85268] font-['DM_Sans']">{errores.discount_percent}</p>
-          )}
-          {formData.discount_percent > 0 && (
-            <p className="mt-1 text-xs text-[#D4788A] font-['DM_Sans']">
-              Precio final: ${(
-                parseFloat(formData.price_original || 0) *
-                (1 - parseInt(formData.discount_percent || 0) / 100)
-              ).toFixed(2)}
-            </p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
-            Stock *
-          </label>
-          <input
-            type="number"
-            name="stock"
-            value={formData.stock}
-            onChange={handleChange}
-            placeholder="5"
-            min="0"
-            className={`w-full border rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
-              errores.stock ? 'border-[#B85268] bg-[#FDF0F3]' : 'border-[rgba(212,120,138,0.25)]'
-            }`}
-          />
-          {errores.stock && (
-            <p className="mt-1 text-xs text-[#B85268] font-['DM_Sans']">{errores.stock}</p>
-          )}
-        </div>
-
-        <div className="md:col-span-2">
-          <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
-            Colores disponibles
-          </label>
-          
-          <div className="flex flex-wrap gap-3 mb-4">
-            {coloresPredefinidos.map((color) => {
-              const coloresActuales = formData.color ? formData.color.split(',').map(c => c.trim()) : []
-              const estaSeleccionado = coloresActuales.includes(color.nombre)
-              
-              return (
-                <button
-                  key={color.nombre}
-                  type="button"
-                  onClick={() => handleColorClick(color.nombre)}
-                  className={`
-                    relative w-10 h-10 rounded-sm border-2 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-105
-                    ${estaSeleccionado ? 'border-[#1A1118] ring-1 ring-[#D4788A]' : 'border-[rgba(212,120,138,0.25)]'}
-                  `}
-                  style={{ backgroundColor: color.hex }}
-                  title={color.nombre}
-                  aria-label={`Color ${color.nombre}`}
-                >
-                  {estaSeleccionado && (
-                    <svg 
-                      className="absolute inset-0 w-full h-full text-white drop-shadow-sm" 
-                      fill="currentColor" 
-                      viewBox="0 0 20 20"
-                    >
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                    </svg>
-                  )}
-                </button>
-              )
-            })}
-          </div>
-
-          <div className="flex items-center gap-3 mt-4 pt-4 border-t border-[rgba(212,120,138,0.15)]">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="md:col-span-2">
+            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+              Nombre del producto *
+            </label>
             <input
               type="text"
-              value={colorPersonalizado}
-              onChange={(e) => setColorPersonalizado(e.target.value)}
-              placeholder="Agregar otro color (ej: Vino, Turquesa)"
-              className="flex-1 border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
-              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAgregarColorPersonalizado())}
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              placeholder="Vestido Floral Primavera"
+              className={`w-full border rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
+                errores.name ? 'border-[#B85268] bg-[#FDF0F3]' : 'border-[rgba(212,120,138,0.25)]'
+              }`}
             />
-            <button
-              type="button"
-              onClick={handleAgregarColorPersonalizado}
-              disabled={!colorPersonalizado.trim()}
-              className="px-4 py-2 bg-[#1A1118] text-white rounded-sm text-sm font-['DM_Sans'] font-medium tracking-wide hover:bg-gradient-to-r hover:from-[#D4788A] hover:to-[#B85268] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] disabled:bg-[#9A7480] disabled:cursor-not-allowed"
-            >
-              Agregar
-            </button>
+            {errores.name && (
+              <p className="mt-1 text-xs text-[#B85268] font-['DM_Sans']">{errores.name}</p>
+            )}
           </div>
 
-          {formData.color && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {formData.color.split(',').map((colorNombre, index) => {
-                const color = colorNombre.trim()
-                const hex = getColorHex(color)
+          <div>
+            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+              SKU / Codigo *
+            </label>
+            <input
+              type="text"
+              name="sku"
+              value={formData.sku}
+              onChange={handleChange}
+              placeholder="VES-001"
+              className={`w-full border rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
+                errores.sku ? 'border-[#B85268] bg-[#FDF0F3]' : 'border-[rgba(212,120,138,0.25)]'
+              }`}
+            />
+            {errores.sku && (
+              <p className="mt-1 text-xs text-[#B85268] font-['DM_Sans']">{errores.sku}</p>
+            )}
+          </div>
+
+          {/* MARCA - DROPDOWN */}
+          <div>
+            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+              Marca
+            </label>
+            <select
+              value={marcaSeleccion}
+              onChange={handleMarcaChange}
+              className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
+            >
+              <option value="">Seleccionar marca</option>
+              {marcasPredefinidas.map((marca) => (
+                <option key={marca} value={marca}>{marca}</option>
+              ))}
+              <option value="Otra">Otra...</option>
+            </select>
+          </div>
+
+          {/* Input para marca personalizada */}
+          {marcaSeleccion === 'Otra' && (
+            <div>
+              <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+                Escribe la marca
+              </label>
+              <input
+                type="text"
+                value={formData.brandPersonalizada}
+                onChange={handleMarcaPersonalizadaChange}
+                placeholder="Ej: Mi Marca"
+                className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
+              />
+            </div>
+          )}
+
+          <div>
+            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+              Categoria
+            </label>
+            <select
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
+            >
+              {categorias.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+              Genero
+            </label>
+            <select
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
+            >
+              {generos.map((gen) => (
+                <option key={gen} value={gen}>
+                  {gen.charAt(0).toUpperCase() + gen.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+              Precio original *
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9A7480] text-sm font-['DM_Sans']">
+                $
+              </span>
+              <input
+                type="number"
+                name="price_original"
+                value={formData.price_original}
+                onChange={handleChange}
+                placeholder="120.00"
+                step="0.01"
+                min="0"
+                className={`w-full border rounded-sm pl-8 pr-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
+                  errores.price_original ? 'border-[#B85268] bg-[#FDF0F3]' : 'border-[rgba(212,120,138,0.25)]'
+                }`}
+              />
+            </div>
+            {errores.price_original && (
+              <p className="mt-1 text-xs text-[#B85268] font-['DM_Sans']">{errores.price_original}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+              Descuento (%)
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                name="discount_percent"
+                value={formData.discount_percent}
+                onChange={handleChange}
+                placeholder="0"
+                min="0"
+                max="99"
+                className={`w-full border rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
+                  errores.discount_percent ? 'border-[#B85268] bg-[#FDF0F3]' : 'border-[rgba(212,120,138,0.25)]'
+                }`}
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9A7480] text-sm font-['DM_Sans']">
+                %
+              </span>
+            </div>
+            {errores.discount_percent && (
+              <p className="mt-1 text-xs text-[#B85268] font-['DM_Sans']">{errores.discount_percent}</p>
+            )}
+            {formData.discount_percent > 0 && (
+              <p className="mt-1 text-xs text-[#D4788A] font-['DM_Sans']">
+                Precio final: ${(
+                  parseFloat(formData.price_original || 0) *
+                  (1 - parseInt(formData.discount_percent || 0) / 100)
+                ).toFixed(2)}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+              Stock *
+            </label>
+            <input
+              type="number"
+              name="stock"
+              value={formData.stock}
+              onChange={handleChange}
+              placeholder="5"
+              min="0"
+              className={`w-full border rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
+                errores.stock ? 'border-[#B85268] bg-[#FDF0F3]' : 'border-[rgba(212,120,138,0.25)]'
+              }`}
+            />
+            {errores.stock && (
+              <p className="mt-1 text-xs text-[#B85268] font-['DM_Sans']">{errores.stock}</p>
+            )}
+          </div>
+
+          {/* TOGGLE - Mostrar en slider de nuevos productos */}
+          <div className="md:col-span-2">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                name="is_featured"
+                checked={formData.is_featured}
+                onChange={handleChange}
+                className="w-5 h-5 rounded-sm border-[rgba(212,120,138,0.35)] text-[#D4788A] focus:ring-[#D4788A] focus:ring-1 focus:ring-offset-0 cursor-pointer"
+              />
+              <span className="text-sm font-['DM_Sans'] font-medium text-[#1A1118] tracking-wide">
+                Mostrar en slider de Productos Nuevos / Destacados
+              </span>
+            </label>
+            <p className="text-xs text-[#9A7480] font-['DM_Sans'] mt-1 ml-8">
+              Los productos marcados apareceran en el slider &quot;Recien Llegados&quot; de la pagina principal
+            </p>
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+              Colores disponibles
+            </label>
+            
+            <div className="flex flex-wrap gap-3 mb-4">
+              {coloresPredefinidos.map((color) => {
+                const coloresActuales = formData.color ? formData.color.split(',').map(c => c.trim()) : []
+                const estaSeleccionado = coloresActuales.includes(color.nombre)
                 
                 return (
-                  <div
-                    key={index}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#FDF0F3] rounded-sm text-sm font-['DM_Sans']"
+                  <button
+                    key={color.nombre}
+                    type="button"
+                    onClick={() => handleColorClick(color.nombre)}
+                    className={`
+                      relative w-10 h-10 rounded-sm border-2 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-105
+                      ${estaSeleccionado ? 'border-[#1A1118] ring-1 ring-[#D4788A]' : 'border-[rgba(212,120,138,0.25)]'}
+                    `}
+                    style={{ backgroundColor: color.hex }}
+                    title={color.nombre}
+                    aria-label={`Color ${color.nombre}`}
                   >
-                    <div 
-                      className="w-4 h-4 rounded-sm border border-[rgba(212,120,138,0.25)]"
-                      style={{ backgroundColor: hex }}
-                    />
-                    <span className="text-[#1A1118]">{color}</span>
+                    {estaSeleccionado && (
+                      <svg 
+                        className="absolute inset-0 w-full h-full text-white drop-shadow-sm" 
+                        fill="currentColor" 
+                        viewBox="0 0 20 20"
+                      >
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                      </svg>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="flex items-center gap-3 mt-4 pt-4 border-t border-[rgba(212,120,138,0.15)]">
+              <input
+                type="text"
+                value={colorPersonalizado}
+                onChange={(e) => setColorPersonalizado(e.target.value)}
+                placeholder="Agregar otro color (ej: Vino, Turquesa)"
+                className="flex-1 border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAgregarColorPersonalizado())}
+              />
+              <button
+                type="button"
+                onClick={handleAgregarColorPersonalizado}
+                disabled={!colorPersonalizado.trim()}
+                className="px-4 py-2 bg-[#1A1118] text-white rounded-sm text-sm font-['DM_Sans'] font-medium tracking-wide hover:bg-gradient-to-r hover:from-[#D4788A] hover:to-[#B85268] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] disabled:bg-[#9A7480] disabled:cursor-not-allowed"
+              >
+                Agregar
+              </button>
+            </div>
+
+            {formData.color && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {formData.color.split(',').map((colorNombre, index) => {
+                  const color = colorNombre.trim()
+                  const hex = getColorHex(color)
+                  
+                  return (
+                    <div
+                      key={index}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#FDF0F3] rounded-sm text-sm font-['DM_Sans']"
+                    >
+                      <div 
+                        className="w-4 h-4 rounded-sm border border-[rgba(212,120,138,0.25)]"
+                        style={{ backgroundColor: hex }}
+                      />
+                      <span className="text-[#1A1118]">{color}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleColorClick(color)}
+                        className="text-[#9A7480] hover:text-[#B85268] transition-colors duration-300"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+              Tallas disponibles
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {tallasDisponibles.map((talla) => (
+                <button
+                  key={talla}
+                  type="button"
+                  onClick={() => handleTallaToggle(talla)}
+                  className={`
+                    px-4 py-2 border rounded-sm text-sm font-['DM_Sans'] font-medium transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
+                    ${
+                      formData.sizes_available.includes(talla)
+                        ? 'border-[#1A1118] bg-[#1A1118] text-white'
+                        : 'border-[rgba(212,120,138,0.25)] text-[#2D2030] hover:border-[#D4788A]'
+                    }
+                  `}
+                >
+                  {talla}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+              Imagenes del producto {!esEdicion && '*'}
+            </label>
+            <p className="text-xs text-[#9A7480] font-['DM_Sans'] mb-3">
+              Maximo {MAX_IMAGENES} imagenes. La primera imagen sera la principal.
+            </p>
+
+            {previews.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-4">
+                {previews.map((preview, index) => (
+                  <div key={index} className="relative group">
+                    <div className="aspect-[3/4] bg-[#FDF0F3] rounded-sm overflow-hidden">
+                      <img
+                        src={preview}
+                        alt={`Vista previa ${index + 1}`}
+                        className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
+                      />
+                    </div>
+                    {index === 0 && (
+                      <span className="absolute top-2 left-2 px-2 py-0.5 bg-[#D4788A] text-white text-xs font-['DM_Sans'] font-medium rounded-sm">
+                        Principal
+                      </span>
+                    )}
                     <button
                       type="button"
-                      onClick={() => handleColorClick(color)}
-                      className="text-[#9A7480] hover:text-[#B85268] transition-colors duration-300"
+                      onClick={() => eliminarImagen(index)}
+                      className="absolute top-2 right-2 w-7 h-7 bg-[#1A1118] text-white rounded-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-[#B85268]"
                     >
                       ×
                     </button>
                   </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            )}
 
-        <div className="md:col-span-2">
-          <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
-            Tallas disponibles
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {tallasDisponibles.map((talla) => (
-              <button
-                key={talla}
-                type="button"
-                onClick={() => handleTallaToggle(talla)}
-                className={`
-                  px-4 py-2 border rounded-sm text-sm font-['DM_Sans'] font-medium transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
-                  ${
-                    formData.sizes_available.includes(talla)
-                      ? 'border-[#1A1118] bg-[#1A1118] text-white'
-                      : 'border-[rgba(212,120,138,0.25)] text-[#2D2030] hover:border-[#D4788A]'
-                  }
-                `}
-              >
-                {talla}
-              </button>
-            ))}
+            {previews.length < MAX_IMAGENES && (
+              <div className="flex items-center justify-center w-full">
+                <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-[rgba(212,120,138,0.35)] rounded-sm cursor-pointer hover:border-[#D4788A] transition-colors duration-300 bg-[#FDF0F3] bg-opacity-50">
+                  <div className="text-center">
+                    <svg
+                      className="w-10 h-10 text-[#9A7480] mx-auto mb-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <p className="text-sm text-[#2D2030] font-['DM_Sans'] font-light">
+                      {imagenes.length > 0 ? `${imagenes.length} imagenes seleccionadas` : 'Arrastra imagenes o haz clic aqui'}
+                    </p>
+                    <p className="text-xs text-[#9A7480] font-['DM_Sans'] mt-1">
+                      JPG, PNG o WebP (max. {TAMANO_MAXIMO_MB}MB c/u)
+                    </p>
+                    <p className="text-xs text-[#9A7480] font-['DM_Sans']">
+                      {previews.length}/{MAX_IMAGENES} imagenes
+                    </p>
+                  </div>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleImagenesSeleccionadas}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            )}
+            {errores.imagenes && (
+              <p className="mt-2 text-xs text-[#B85268] font-['DM_Sans']">{errores.imagenes}</p>
+            )}
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+              Descripcion
+            </label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows={3}
+              placeholder="Describe el producto..."
+              className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent resize-none bg-white"
+            />
           </div>
         </div>
 
-        <div className="md:col-span-2">
-          <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
-            Imagenes del producto {!esEdicion && '*'}
-          </label>
-          <p className="text-xs text-[#9A7480] font-['DM_Sans'] mb-3">
-            Maximo {MAX_IMAGENES} imagenes. La primera imagen sera la principal.
-          </p>
-
-          {previews.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-4">
-              {previews.map((preview, index) => (
-                <div key={index} className="relative group">
-                  <div className="aspect-[3/4] bg-[#FDF0F3] rounded-sm overflow-hidden">
-                    <img
-                      src={preview}
-                      alt={`Vista previa ${index + 1}`}
-                      className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
-                    />
-                  </div>
-                  {index === 0 && (
-                    <span className="absolute top-2 left-2 px-2 py-0.5 bg-[#D4788A] text-white text-xs font-['DM_Sans'] font-medium rounded-sm">
-                      Principal
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => eliminarImagen(index)}
-                    className="absolute top-2 right-2 w-7 h-7 bg-[#1A1118] text-white rounded-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-[#B85268]"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {previews.length < MAX_IMAGENES && (
-            <div className="flex items-center justify-center w-full">
-              <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-[rgba(212,120,138,0.35)] rounded-sm cursor-pointer hover:border-[#D4788A] transition-colors duration-300 bg-[#FDF0F3] bg-opacity-50">
-                <div className="text-center">
-                  <svg
-                    className="w-10 h-10 text-[#9A7480] mx-auto mb-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1}
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                  <p className="text-sm text-[#2D2030] font-['DM_Sans'] font-light">
-                    {imagenes.length > 0 ? `${imagenes.length} imagenes seleccionadas` : 'Arrastra imagenes o haz clic aqui'}
-                  </p>
-                  <p className="text-xs text-[#9A7480] font-['DM_Sans'] mt-1">
-                    JPG, PNG o WebP (max. {TAMANO_MAXIMO_MB}MB c/u)
-                  </p>
-                  <p className="text-xs text-[#9A7480] font-['DM_Sans']">
-                    {previews.length}/{MAX_IMAGENES} imagenes
-                  </p>
-                </div>
-                <input
-                  type="file"
-                  multiple
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={handleImagenesSeleccionadas}
-                  className="hidden"
-                />
-              </label>
-            </div>
-          )}
-          {errores.imagenes && (
-            <p className="mt-2 text-xs text-[#B85268] font-['DM_Sans']">{errores.imagenes}</p>
-          )}
-        </div>
-
-        <div className="md:col-span-2">
-          <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
-            Descripcion
-          </label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            rows={3}
-            placeholder="Describe el producto..."
-            className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent resize-none bg-white"
-          />
-        </div>
-      </div>
-
-      <div className="flex gap-3 pt-6 border-t border-[rgba(212,120,138,0.2)] mt-6">
-        <button
-          type="submit"
-          disabled={guardando}
-          className="flex-1 py-2.5 bg-[#1A1118] text-white rounded-sm font-['DM_Sans'] font-medium tracking-wide hover:bg-gradient-to-r hover:from-[#D4788A] hover:to-[#B85268] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] disabled:bg-[#9A7480] disabled:cursor-not-allowed text-sm relative overflow-hidden group"
-        >
-          <span className="relative z-10">
-            {guardando ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                {subiendo ? 'Subiendo imagenes...' : 'Guardando...'}
-              </span>
-            ) : esEdicion ? (
-              'Actualizar producto'
-            ) : (
-              'Crear producto'
-            )}
-          </span>
-        </button>
-
-        {onCancelar && (
+        <div className="flex gap-3 pt-6 border-t border-[rgba(212,120,138,0.2)] mt-6">
           <button
-            type="button"
-            onClick={onCancelar}
-            className="px-6 py-2.5 border border-[rgba(212,120,138,0.4)] text-[#2D2030] rounded-sm font-['DM_Sans'] font-medium hover:bg-[#FDF0F3] hover:border-[#D4788A] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] text-sm"
+            type="submit"
+            disabled={guardando}
+            className="flex-1 py-2.5 bg-[#1A1118] text-white rounded-sm font-['DM_Sans'] font-medium tracking-wide hover:bg-gradient-to-r hover:from-[#D4788A] hover:to-[#B85268] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] disabled:bg-[#9A7480] disabled:cursor-not-allowed text-sm relative overflow-hidden group"
           >
-            Cancelar
+            <span className="relative z-10">
+              {guardando ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  {subiendo ? 'Subiendo imagenes...' : 'Guardando...'}
+                </span>
+              ) : esEdicion ? (
+                'Actualizar producto'
+              ) : (
+                'Crear producto'
+              )}
+            </span>
           </button>
-        )}
-      </div>
-    </form>
+
+          {onCancelar && (
+            <button
+              type="button"
+              onClick={onCancelar}
+              className="px-6 py-2.5 border border-[rgba(212,120,138,0.4)] text-[#2D2030] rounded-sm font-['DM_Sans'] font-medium hover:bg-[#FDF0F3] hover:border-[#D4788A] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] text-sm"
+            >
+              Cancelar
+            </button>
+          )}
+        </div>
+      </form>
+    </>
   )
 }
 

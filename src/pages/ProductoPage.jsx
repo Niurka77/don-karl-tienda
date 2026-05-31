@@ -6,21 +6,18 @@ import WhatsAppButton from '../components/ui/WhatsAppButton'
 import DOMPurify from 'dompurify'
 
 /* ─────────────────────────────────────────
-   Mapa de colores (igual que ProductCard)
+   Mapa de colores
 ───────────────────────────────────────── */
 const COLOR_MAP = {
   negro: '#111111', blanco: '#F8F8F8', rojo: '#C0392B',
   rosa: '#E87D8F', dorado: '#C9A84C', plateado: '#B0B0B0',
   azul: '#2C5F8A', verde: '#2E7D32', beige: '#D4C5A9',
-  marrón: '#6D4C41', gris: '#78909C', amarillo: '#F9A825',
+  marron: '#6D4C41', gris: '#78909C', amarillo: '#F9A825',
   naranja: '#E64A19', morado: '#6A1B9A', vino: '#6D1F2E',
   turquesa: '#00897B',
 }
 const getColorHex = (n) => COLOR_MAP[n?.toLowerCase()] ?? 'var(--color-kb-rose)'
 
-/* ─────────────────────────────────────────
-   Estrellas
-───────────────────────────────────────── */
 const Stars = ({ rating, size = 18 }) => (
   <div className="flex gap-0.5" role="img" aria-label={`${rating} de 5 estrellas`}>
     {[1, 2, 3, 4, 5].map((s) => (
@@ -33,9 +30,6 @@ const Stars = ({ rating, size = 18 }) => (
   </div>
 )
 
-/* ─────────────────────────────────────────
-   Skeleton
-───────────────────────────────────────── */
 const Skeleton = ({ w = '100%', h = '20px', style = {} }) => (
   <div style={{
     width: w, height: h, borderRadius: '2px',
@@ -46,26 +40,34 @@ const Skeleton = ({ w = '100%', h = '20px', style = {} }) => (
   }} />
 )
 
-/* ─────────────────────────────────────────
-   ProductoPage
-───────────────────────────────────────── */
 const ProductoPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const { addItem, openCart } = useCartStore()
 
-  const [producto,       setProducto]      = useState(null)
-  const [cargando,       setCargando]      = useState(true)
-  const [error,          setError]         = useState(null)
-  const [selectedImage,  setSelectedImage] = useState(0)
-  const [selectedSize,   setSelectedSize]  = useState('')
-  const [cantidad,       setCantidad]      = useState(1)
-  const [agregando,      setAgregando]     = useState(false)
-  const [toastVisible,   setToastVisible]  = useState(false)
-  const [reviews,        setReviews]       = useState([])
-  const [avgRating,      setAvgRating]     = useState(null)
-  const [colores,        setColores]       = useState([])
-  const [tallas,         setTallas]        = useState([])
+  const [producto, setProducto] = useState(null)
+  const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState(null)
+  const [selectedImage, setSelectedImage] = useState(0)
+  const [selectedSize, setSelectedSize] = useState('')
+  const [cantidad, setCantidad] = useState(1)
+  const [agregando, setAgregando] = useState(false)
+  const [toastVisible, setToastVisible] = useState(false)
+  const [reviews, setReviews] = useState([])
+  const [avgRating, setAvgRating] = useState(null)
+  const [colores, setColores] = useState([])
+  const [tallas, setTallas] = useState([])
+  
+  // Estado para el formulario de reseña
+  const [mostrarFormularioReview, setMostrarFormularioReview] = useState(false)
+  const [reviewForm, setReviewForm] = useState({
+    customer_name: '',
+    rating: 5,
+    comment: ''
+  })
+  const [enviandoReview, setEnviandoReview] = useState(false)
+  const [reviewExito, setReviewExito] = useState('')
+  const [reviewError, setReviewError] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -90,8 +92,14 @@ const ProductoPage = () => {
           } catch { setTallas([]) }
         }
 
+        // Cargar SOLO reseñas aprobadas
         const { data: rev, error: re } = await supabase
-          .from('reviews').select('*').eq('product_id', id).order('created_at', { ascending: false })
+          .from('reviews')
+          .select('*')
+          .eq('product_id', id)
+          .eq('approved', true)
+          .order('created_at', { ascending: false })
+        
         if (cancelled) return
         if (!re && rev) {
           setReviews(rev)
@@ -128,7 +136,59 @@ const ProductoPage = () => {
 
   const handleComprarAhora = () => { handleAgregar(); openCart() }
 
-  /* ── ESTADOS ── */
+  // Manejar cambios en el formulario de reseña
+  const handleReviewChange = (e) => {
+    const { name, value } = e.target
+    setReviewForm(prev => ({ ...prev, [name]: value }))
+    if (reviewError) setReviewError('')
+    if (reviewExito) setReviewExito('')
+  }
+
+  // Enviar reseña
+  const handleSubmitReview = async (e) => {
+    e.preventDefault()
+    
+    if (!reviewForm.customer_name.trim()) {
+      setReviewError('Por favor ingresa tu nombre')
+      return
+    }
+    
+    if (reviewForm.comment.trim().length < 5) {
+      setReviewError('El comentario debe tener al menos 5 caracteres')
+      return
+    }
+    
+    setEnviandoReview(true)
+    setReviewError('')
+    setReviewExito('')
+    
+    try {
+      const { error } = await supabase
+        .from('reviews')
+        .insert([{
+          product_id: id,
+          customer_name: reviewForm.customer_name.trim(),
+          rating: reviewForm.rating,
+          comment: reviewForm.comment.trim(),
+          verified_purchase: false,
+          approved: false
+        }])
+      
+      if (error) throw error
+      
+      setReviewExito('Gracias por tu opinion. Tu reseña sera publicada despues de ser revisada por nuestro equipo.')
+      setReviewForm({ customer_name: '', rating: 5, comment: '' })
+      setMostrarFormularioReview(false)
+      
+      setTimeout(() => setReviewExito(''), 5000)
+    } catch (err) {
+      console.error('Error al enviar reseña:', err)
+      setReviewError('No se pudo enviar tu reseña. Intenta nuevamente.')
+    } finally {
+      setEnviandoReview(false)
+    }
+  }
+
   if (cargando) return (
     <div style={{ background: 'var(--color-kb-ivory)', minHeight: '100vh' }}>
       <style>{`@keyframes shimmerBg { 0%{background-position:200% center} 100%{background-position:-200% center} }`}</style>
@@ -174,19 +234,18 @@ const ProductoPage = () => {
     </div>
   )
 
-const tieneDescuento = producto.discount_percent > 0
-const precioFinal    = tieneDescuento ? producto.price_final : producto.price_original
-const imagenes       = producto.images_urls && producto.images_urls.length > 0
-  ? producto.images_urls
-  : producto.image_url 
-    ? [producto.image_url]
-    : []
+  const tieneDescuento = producto.discount_percent > 0
+  const precioFinal = tieneDescuento ? producto.price_final : producto.price_original
+  const imagenes = producto.images_urls && producto.images_urls.length > 0
+    ? producto.images_urls
+    : producto.image_url 
+      ? [producto.image_url]
+      : []
 
   return (
     <div style={{ background: 'var(--color-kb-ivory)', minHeight: '100vh' }}>
       <style>{`@keyframes shimmerBg { 0%{background-position:200% center} 100%{background-position:-200% center} }`}</style>
 
-      {/* ── TOAST ── */}
       {toastVisible && (
         <div
           className="fixed top-24 right-5 z-50 animate-slide-in"
@@ -212,7 +271,6 @@ const imagenes       = producto.images_urls && producto.images_urls.length > 0
 
       <div className="max-w-screen-xl mx-auto px-6 lg:px-10 py-12 md:py-20">
 
-        {/* ── BREADCRUMB ── */}
         <div className="flex items-center gap-2 mb-12">
           <button
             onClick={() => navigate('/')}
@@ -229,12 +287,9 @@ const imagenes       = producto.images_urls && producto.images_urls.length > 0
           </span>
         </div>
 
-        {/* ── GRID PRINCIPAL ── */}
         <div className="grid md:grid-cols-2 gap-10 lg:gap-20 items-start">
 
-          {/* ── GALERÍA ── */}
           <div className="md:sticky md:top-28">
-            {/* Imagen principal */}
             <div
               className="relative overflow-hidden mb-3"
               style={{ background: 'var(--color-kb-blush)', aspectRatio: '4/5' }}
@@ -246,13 +301,11 @@ const imagenes       = producto.images_urls && producto.images_urls.length > 0
                 loading="eager"
               />
 
-              {/* Badges sobre imagen */}
               <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
                 {producto.is_new && <span className="badge-new">Nuevo</span>}
                 {tieneDescuento && <span className="badge-sale">−{producto.discount_percent}%</span>}
               </div>
 
-              {/* SKU */}
               {producto.sku && (
                 <div className="absolute top-4 right-4 z-10">
                   <span className="text-editorial" style={{
@@ -265,7 +318,6 @@ const imagenes       = producto.images_urls && producto.images_urls.length > 0
                 </div>
               )}
 
-              {/* Flechas de navegación entre imágenes */}
               {imagenes.length > 1 && (
                 <>
                   <button
@@ -304,7 +356,6 @@ const imagenes       = producto.images_urls && producto.images_urls.length > 0
               )}
             </div>
 
-            {/* Miniaturas */}
             {imagenes.length > 1 && (
               <div className="grid grid-cols-4 gap-2">
                 {imagenes.map((img, idx) => (
@@ -328,10 +379,8 @@ const imagenes       = producto.images_urls && producto.images_urls.length > 0
             )}
           </div>
 
-          {/* ── FICHA ── */}
           <div className="py-2">
 
-            {/* Marca + código */}
             <div className="flex items-center gap-4 mb-4">
               {producto.brand && (
                 <span className="text-editorial" style={{
@@ -349,7 +398,6 @@ const imagenes       = producto.images_urls && producto.images_urls.length > 0
               )}
             </div>
 
-            {/* Nombre */}
             <h1 style={{
               fontFamily: 'var(--font-display)', fontSize: 'clamp(1.8rem, 4vw, 2.8rem)',
               fontWeight: 300, letterSpacing: '-0.02em', lineHeight: 1.1,
@@ -358,7 +406,6 @@ const imagenes       = producto.images_urls && producto.images_urls.length > 0
               {producto.name}
             </h1>
 
-            {/* Rating */}
             {avgRating && (
               <div className="flex items-center gap-3 mb-5">
                 <Stars rating={parseFloat(avgRating)} size={15} />
@@ -368,10 +415,8 @@ const imagenes       = producto.images_urls && producto.images_urls.length > 0
               </div>
             )}
 
-            {/* Separador */}
             <div style={{ height: '1px', background: 'rgba(212,120,138,0.12)', margin: '1.2rem 0 1.5rem' }} />
 
-            {/* Precio */}
             <div className="flex items-baseline gap-3 flex-wrap mb-6">
               <span style={{
                 fontFamily: 'var(--font-display)', fontSize: '2.4rem',
@@ -396,7 +441,6 @@ const imagenes       = producto.images_urls && producto.images_urls.length > 0
               </p>
             )}
 
-            {/* Descripción */}
             {producto.description && (
               <div
                 className="prose prose-sm max-w-none mb-6"
@@ -408,10 +452,8 @@ const imagenes       = producto.images_urls && producto.images_urls.length > 0
               />
             )}
 
-            {/* Separador */}
             <div style={{ height: '1px', background: 'rgba(212,120,138,0.1)', margin: '1.5rem 0' }} />
 
-            {/* Colores */}
             {colores.length > 0 && (
               <div className="mb-7">
                 <p className="text-editorial mb-3" style={{ color: 'var(--color-kb-mauve)', fontSize: '0.62rem', letterSpacing: '0.2em' }}>
@@ -438,7 +480,6 @@ const imagenes       = producto.images_urls && producto.images_urls.length > 0
               </div>
             )}
 
-            {/* Tallas */}
             {tallas.length > 0 && (
               <div className="mb-7">
                 <p className="text-editorial mb-3" style={{ color: 'var(--color-kb-mauve)', fontSize: '0.62rem', letterSpacing: '0.2em' }}>
@@ -469,13 +510,11 @@ const imagenes       = producto.images_urls && producto.images_urls.length > 0
               </div>
             )}
 
-            {/* Cantidad */}
             <div className="mb-8">
               <p className="text-editorial mb-3" style={{ color: 'var(--color-kb-mauve)', fontSize: '0.62rem', letterSpacing: '0.2em' }}>
                 Cantidad
               </p>
               <div className="flex items-center gap-0">
-                {/* Btn − */}
                 <button
                   onClick={() => setCantidad(Math.max(1, cantidad - 1))}
                   type="button"
@@ -493,7 +532,6 @@ const imagenes       = producto.images_urls && producto.images_urls.length > 0
                   −
                 </button>
 
-                {/* Número */}
                 <div style={{
                   width: '52px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                   border: '1px solid rgba(212,120,138,0.25)',
@@ -503,7 +541,6 @@ const imagenes       = producto.images_urls && producto.images_urls.length > 0
                   {cantidad}
                 </div>
 
-                {/* Btn + */}
                 <button
                   onClick={() => setCantidad(Math.min(producto.stock, cantidad + 1))}
                   disabled={cantidad >= producto.stock}
@@ -523,7 +560,6 @@ const imagenes       = producto.images_urls && producto.images_urls.length > 0
                   +
                 </button>
 
-                {/* Stock info */}
                 <span style={{
                   marginLeft: '14px', fontSize: '0.7rem', fontWeight: 300,
                   color: 'rgba(154,116,128,0.65)', letterSpacing: '0.04em',
@@ -533,7 +569,6 @@ const imagenes       = producto.images_urls && producto.images_urls.length > 0
               </div>
             </div>
 
-            {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-3 mb-8">
               <button
                 onClick={handleAgregar}
@@ -558,7 +593,6 @@ const imagenes       = producto.images_urls && producto.images_urls.length > 0
               </button>
             </div>
 
-            {/* Métodos de pago */}
             <div style={{
               padding: '1.2rem 1.4rem',
               border: '1px solid rgba(212,120,138,0.15)',
@@ -566,7 +600,7 @@ const imagenes       = producto.images_urls && producto.images_urls.length > 0
               borderRadius: '2px',
             }}>
               <p className="text-editorial mb-3" style={{ color: 'var(--color-kb-mauve)', fontSize: '0.6rem', letterSpacing: '0.2em' }}>
-                Métodos de pago
+                Metodos de pago
               </p>
               <div className="flex flex-wrap gap-2">
                 {['Yape', 'Plin', 'Tarjeta', 'Transferencia'].map((m) => (
@@ -587,10 +621,9 @@ const imagenes       = producto.images_urls && producto.images_urls.length > 0
           </div>
         </div>
 
-        {/* ── SECCIÓN RESEÑAS ── */}
+        {/* SECCION RESEÑAS COMPLETAMENTE RENOVADA */}
         <div className="mt-24 pt-12" style={{ borderTop: '1px solid rgba(212,120,138,0.1)' }}>
 
-          {/* Header reseñas */}
           <div className="flex items-end justify-between mb-10">
             <div className="flex items-center gap-4">
               <span style={{ width: '24px', height: '1px', background: 'var(--color-kb-rose)', display: 'inline-block' }} />
@@ -602,18 +635,100 @@ const imagenes       = producto.images_urls && producto.images_urls.length > 0
                 Opiniones
               </h2>
             </div>
-            {avgRating && (
-              <div className="flex items-center gap-3">
-                <Stars rating={parseFloat(avgRating)} size={16} />
-                <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 300, color: 'var(--color-kb-mauve)' }}>
-                  {avgRating}
-                </span>
-                <span style={{ fontSize: '0.72rem', fontWeight: 300, color: 'rgba(154,116,128,0.6)' }}>
-                  / {reviews.length} {reviews.length === 1 ? 'reseña' : 'reseñas'}
-                </span>
-              </div>
-            )}
+            <button
+              onClick={() => setMostrarFormularioReview(!mostrarFormularioReview)}
+              className="px-4 py-2 border border-[rgba(212,120,138,0.4)] text-[#2D2030] rounded-sm text-xs font-['DM_Sans'] font-medium tracking-wide hover:bg-[#FDF0F3] hover:border-[#D4788A] transition-all duration-300"
+            >
+              {mostrarFormularioReview ? 'Cancelar' : 'Escribir opinion'}
+            </button>
           </div>
+
+          {/* Formulario para escribir reseña */}
+          {mostrarFormularioReview && (
+            <div className="mb-10 p-6 bg-[#FDF0F3] rounded-sm border border-[rgba(212,120,138,0.2)]">
+              <h3 className="font-['Cormorant_Garamond'] text-xl font-light tracking-[-0.02em] text-[#1A1118] mb-4">
+                Comparte tu experiencia
+              </h3>
+              
+              {reviewExito && (
+                <div className="mb-4 p-3 border border-[#D4788A] bg-white rounded-sm">
+                  <p className="text-sm text-[#1A1118] font-['DM_Sans']">{reviewExito}</p>
+                </div>
+              )}
+              
+              {reviewError && (
+                <div className="mb-4 p-3 border border-[#B85268] bg-white rounded-sm">
+                  <p className="text-sm text-[#B85268] font-['DM_Sans']">{reviewError}</p>
+                </div>
+              )}
+              
+              <form onSubmit={handleSubmitReview} className="space-y-4">
+                <div>
+                  <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+                    Tu nombre *
+                  </label>
+                  <input
+                    type="text"
+                    name="customer_name"
+                    value={reviewForm.customer_name}
+                    onChange={handleReviewChange}
+                    placeholder="Maria Gonzalez"
+                    required
+                    className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+                    Puntuacion *
+                  </label>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setReviewForm(prev => ({ ...prev, rating: star }))}
+                        className="transition-all duration-300 hover:scale-110"
+                        aria-label={`${star} estrella${star !== 1 ? 's' : ''}`}
+                      >
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path
+                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                            fill={star <= reviewForm.rating ? 'var(--color-kb-gold)' : 'rgba(212,120,138,0.25)'}
+                            stroke="rgba(212,120,138,0.4)"
+                            strokeWidth="0.5"
+                          />
+                        </svg>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+                    Tu opinion *
+                  </label>
+                  <textarea
+                    name="comment"
+                    value={reviewForm.comment}
+                    onChange={handleReviewChange}
+                    rows={4}
+                    placeholder="Cuentanos que te parecio el producto..."
+                    required
+                    className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent resize-none bg-white"
+                  />
+                </div>
+                
+                <button
+                  type="submit"
+                  disabled={enviandoReview}
+                  className="px-6 py-2.5 bg-[#1A1118] text-white rounded-sm text-sm font-['DM_Sans'] font-medium tracking-wide hover:bg-gradient-to-r hover:from-[#D4788A] hover:to-[#B85268] transition-all duration-300 disabled:bg-[#9A7480] disabled:cursor-not-allowed"
+                >
+                  {enviandoReview ? 'Enviando...' : 'Enviar opinion'}
+                </button>
+              </form>
+            </div>
+          )}
 
           {reviews.length === 0 ? (
             <div className="py-16 text-center">
@@ -622,10 +737,10 @@ const imagenes       = producto.images_urls && producto.images_urls.length > 0
                 fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 300,
                 color: 'var(--color-kb-mauve)', fontSize: '1.1rem', marginBottom: '0.5rem',
               }}>
-                Aún sin reseñas
+                Aun sin reseñas
               </p>
               <p style={{ fontSize: '0.75rem', fontWeight: 300, color: 'rgba(154,116,128,0.5)' }}>
-                ¡Sé el primero en opinar!
+                ¡Se el primero en opinar!
               </p>
             </div>
           ) : (
@@ -641,10 +756,8 @@ const imagenes       = producto.images_urls && producto.images_urls.length > 0
                     animationDelay: `${i * 60}ms`, animationFillMode: 'backwards',
                   }}
                 >
-                  {/* Header de reseña */}
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      {/* Avatar inicial */}
                       <div style={{
                         width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0,
                         background: 'linear-gradient(135deg, var(--color-kb-rose), var(--color-kb-rose-deep))',
