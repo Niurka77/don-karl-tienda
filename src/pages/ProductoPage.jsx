@@ -174,11 +174,13 @@ const ProductoPage = () => {
     </div>
   )
 
-  const tieneDescuento = producto.discount_percent > 0
-  const precioFinal    = tieneDescuento ? producto.price_final : producto.price_original
-  const imagenes       = producto.images_urls
-    ? [producto.image_url, ...producto.images_urls].filter(Boolean)
-    : [producto.image_url].filter(Boolean)
+const tieneDescuento = producto.discount_percent > 0
+const precioFinal    = tieneDescuento ? producto.price_final : producto.price_original
+const imagenes       = producto.images_urls && producto.images_urls.length > 0
+  ? producto.images_urls
+  : producto.image_url 
+    ? [producto.image_url]
+    : []
 
   return (
     <div style={{ background: 'var(--color-kb-ivory)', minHeight: '100vh' }}>

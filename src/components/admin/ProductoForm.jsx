@@ -3,9 +3,16 @@ import { supabase } from '../../lib/supabase'
 
 const categorias = ['vestidos', 'bolsos', 'zapatos']
 const generos = ['mujer', 'hombre', 'unisex']
-const tallasDisponibles = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Único']
+const tallasDisponibles = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Unico']
 
-// ✅ NUEVO: Colores predefinidos para evitar errores humanos
+// Marcas predefinidas
+const marcasPredefinidas = [
+  'Guess', 'Tommy Hilfiger', 'Calvin Klein', 'Michael Kors',
+  'Victoria\'s Secret', 'Zara', 'H&M', 'Forever 21', 'Mango',
+  'Massimo Dutti', 'Steve Madden', 'Coach', 'Kate Spade',
+  'Ralph Lauren', 'Lacoste', 'Levi\'s', 'Nike', 'Adidas', 'Puma'
+]
+
 const coloresPredefinidos = [
   { nombre: 'Negro', hex: '#000000' },
   { nombre: 'Blanco', hex: '#FFFFFF' },
@@ -16,12 +23,16 @@ const coloresPredefinidos = [
   { nombre: 'Azul', hex: '#0000FF' },
   { nombre: 'Verde', hex: '#008000' },
   { nombre: 'Beige', hex: '#F5F5DC' },
-  { nombre: 'Marrón', hex: '#8B4513' },
+  { nombre: 'Marron', hex: '#8B4513' },
   { nombre: 'Gris', hex: '#808080' },
   { nombre: 'Amarillo', hex: '#FFD700' },
   { nombre: 'Naranja', hex: '#FFA500' },
   { nombre: 'Morado', hex: '#800080' },
 ]
+
+const MAX_IMAGENES = 5
+const TAMANO_MAXIMO_MB = 5
+const TIPOS_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg']
 
 const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
   const esEdicion = !!producto
@@ -36,23 +47,29 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     gender: 'mujer',
     color: '',
     brand: '',
+    brandPersonalizada: '',
     stock: '',
     sizes_available: [],
+    images_urls: [],
   })
 
-  const [imagen, setImagen] = useState(null)
-  const [imagenPreview, setImagenPreview] = useState('')
+  const [imagenes, setImagenes] = useState([])
+  const [previews, setPreviews] = useState([])
   const [subiendo, setSubiendo] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [errores, setErrores] = useState({})
   const [errorGeneral, setErrorGeneral] = useState('')
   const [exito, setExito] = useState('')
-  
-  // ✅ NUEVO: Estado para color personalizado
   const [colorPersonalizado, setColorPersonalizado] = useState('')
+  
+  // Estado para controlar si el select de marca esta en modo "Otra"
+  const [marcaSeleccion, setMarcaSeleccion] = useState('')
 
   useEffect(() => {
     if (producto) {
+      const brandValue = producto.brand || ''
+      const esMarcaPredefinida = marcasPredefinidas.includes(brandValue)
+      
       setFormData({
         name: producto.name || '',
         description: producto.description || '',
@@ -62,14 +79,23 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
         category: producto.category || 'vestidos',
         gender: producto.gender || 'mujer',
         color: producto.color || '',
-        brand: producto.brand || '',
+        brand: brandValue,
+        brandPersonalizada: esMarcaPredefinida ? '' : brandValue,
         stock: producto.stock?.toString() || '',
         sizes_available: Array.isArray(producto.sizes_available)
           ? producto.sizes_available
           : [],
+        images_urls: Array.isArray(producto.images_urls)
+          ? producto.images_urls
+          : (producto.image_url ? [producto.image_url] : []),
       })
-      if (producto.image_url) {
-        setImagenPreview(producto.image_url)
+      
+      setMarcaSeleccion(esMarcaPredefinida ? brandValue : 'Otra')
+      
+      if (producto.images_urls && Array.isArray(producto.images_urls)) {
+        setPreviews(producto.images_urls)
+      } else if (producto.image_url) {
+        setPreviews([producto.image_url])
       }
     }
   }, [producto])
@@ -80,6 +106,22 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     if (errores[name]) {
       setErrores((prev) => ({ ...prev, [name]: '' }))
     }
+  }
+
+  const handleMarcaChange = (e) => {
+    const value = e.target.value
+    setMarcaSeleccion(value)
+    
+    if (value === 'Otra') {
+      setFormData((prev) => ({ ...prev, brand: prev.brandPersonalizada }))
+    } else {
+      setFormData((prev) => ({ ...prev, brand: value, brandPersonalizada: '' }))
+    }
+  }
+
+  const handleMarcaPersonalizadaChange = (e) => {
+    const value = e.target.value
+    setFormData((prev) => ({ ...prev, brandPersonalizada: value, brand: value }))
   }
 
   const handleTallaToggle = (talla) => {
@@ -93,16 +135,13 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     })
   }
 
-  // ✅ NUEVO: Agregar color predefinido
   const handleColorClick = (colorNombre) => {
     const coloresActuales = formData.color ? formData.color.split(',').map(c => c.trim()) : []
     
     if (coloresActuales.includes(colorNombre)) {
-      // Remover color
       const nuevosColores = coloresActuales.filter(c => c !== colorNombre)
       setFormData((prev) => ({ ...prev, color: nuevosColores.join(', ') }))
     } else {
-      // Agregar color
       setFormData((prev) => ({ 
         ...prev, 
         color: [...coloresActuales, colorNombre].join(', ') 
@@ -110,7 +149,6 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     }
   }
 
-  // ✅ NUEVO: Agregar color personalizado
   const handleAgregarColorPersonalizado = () => {
     if (!colorPersonalizado.trim()) return
     
@@ -125,30 +163,98 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     }
   }
 
-  const handleImagen = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const validarImagen = (file) => {
+    if (!TIPOS_PERMITIDOS.includes(file.type)) {
+      return 'Solo se permiten imagenes JPG, PNG o WebP'
+    }
+    
+    if (file.size > TAMANO_MAXIMO_MB * 1024 * 1024) {
+      return `La imagen debe ser menor a ${TAMANO_MAXIMO_MB}MB`
+    }
+    
+    return null
+  }
 
-    const tiposPermitidos = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg']
-    if (!tiposPermitidos.includes(file.type)) {
+  const handleImagenesSeleccionadas = (e) => {
+    const files = Array.from(e.target.files || [])
+    
+    if (previews.length + files.length > MAX_IMAGENES) {
       setErrores((prev) => ({
         ...prev,
-        imagen: 'Solo se permiten imágenes JPG, PNG o WebP',
+        imagenes: `Maximo ${MAX_IMAGENES} imagenes permitidas. Actualmente tienes ${previews.length}`
       }))
       return
     }
-
-    if (file.size > 5 * 1024 * 1024) {
+    
+    const nuevosErrores = []
+    const nuevasImagenes = []
+    const nuevosPreviews = []
+    
+    for (const file of files) {
+      const error = validarImagen(file)
+      if (error) {
+        nuevosErrores.push(`${file.name}: ${error}`)
+      } else {
+        nuevasImagenes.push(file)
+        nuevosPreviews.push(URL.createObjectURL(file))
+      }
+    }
+    
+    if (nuevosErrores.length > 0) {
       setErrores((prev) => ({
         ...prev,
-        imagen: 'La imagen debe ser menor a 5MB',
+        imagenes: nuevosErrores.join(' ')
       }))
       return
     }
+    
+    setImagenes((prev) => [...prev, ...nuevasImagenes])
+    setPreviews((prev) => [...prev, ...nuevosPreviews])
+    setErrores((prev) => ({ ...prev, imagenes: '' }))
+  }
 
-    setImagen(file)
-    setImagenPreview(URL.createObjectURL(file))
-    setErrores((prev) => ({ ...prev, imagen: '' }))
+  const eliminarImagen = (index) => {
+    if (previews[index] && previews[index].startsWith('blob:')) {
+      URL.revokeObjectURL(previews[index])
+    }
+    
+    setImagenes((prev) => prev.filter((_, i) => i !== index))
+    setPreviews((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const getColorHex = (colorNombre) => {
+    const color = coloresPredefinidos.find(c => c.nombre.toLowerCase() === colorNombre.toLowerCase())
+    return color ? color.hex : '#FFFFFF'
+  }
+
+  const subirImagenes = async () => {
+    if (imagenes.length === 0) return formData.images_urls
+    
+    const urlsSubidas = []
+    
+    for (const imagen of imagenes) {
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}_${imagen.name.replace(/\s+/g, '_')}`
+      const filePath = `productos/${fileName}`
+      
+      const { error: uploadError } = await supabase.storage
+        .from('productos')
+        .upload(filePath, imagen, {
+          cacheControl: '3600',
+          upsert: true,
+        })
+      
+      if (uploadError) {
+        throw new Error(`Error al subir imagen: ${uploadError.message}`)
+      }
+      
+      const { data: publicUrlData } = supabase.storage
+        .from('productos')
+        .getPublicUrl(filePath)
+      
+      urlsSubidas.push(publicUrlData.publicUrl)
+    }
+    
+    return [...formData.images_urls, ...urlsSubidas]
   }
 
   const validar = () => {
@@ -178,8 +284,8 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
       nuevosErrores.sku = 'El SKU es obligatorio'
     }
 
-    if (!esEdicion && !imagen) {
-      nuevosErrores.imagen = 'La imagen es obligatoria para nuevos productos'
+    if (!esEdicion && previews.length === 0) {
+      nuevosErrores.imagenes = 'Al menos una imagen es obligatoria para nuevos productos'
     }
 
     setErrores(nuevosErrores)
@@ -196,29 +302,16 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     setGuardando(true)
 
     try {
-      let imageUrl = producto?.image_url || ''
-
-      if (imagen) {
+      let imageUrls = [...previews.filter(url => !url.startsWith('blob:') && typeof url === 'string')]
+      
+      if (imagenes.length > 0) {
         setSubiendo(true)
-        const fileName = `${Date.now()}_${imagen.name.replace(/\s+/g, '_')}`
-        const filePath = `${fileName}`
-
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('productos')
-          .upload(filePath, imagen, {
-            cacheControl: '3600',
-            upsert: true,
-          })
-
-        if (uploadError) throw new Error(`Error al subir imagen: ${uploadError.message}`)
-
-        const { data: publicUrlData } = supabase.storage
-          .from('productos')
-          .getPublicUrl(filePath)
-
-        imageUrl = publicUrlData.publicUrl
+        const nuevasUrls = await subirImagenes()
+        imageUrls = nuevasUrls.filter(url => typeof url === 'string' && url.startsWith('http'))
         setSubiendo(false)
       }
+      
+      const imagenPrincipal = imageUrls[0] || ''
 
       const datosProducto = {
         name: formData.name.trim(),
@@ -232,7 +325,8 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
         brand: formData.brand.trim(),
         stock: parseInt(formData.stock),
         sizes_available: formData.sizes_available,
-        image_url: imageUrl,
+        image_url: imagenPrincipal,
+        images_urls: imageUrls,
       }
 
       let resultado
@@ -278,34 +372,30 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     }
   }
 
-  // ✅ NUEVA: Función para obtener el hex de un color
-  const getColorHex = (colorNombre) => {
-    const color = coloresPredefinidos.find(c => c.nombre.toLowerCase() === colorNombre.toLowerCase())
-    return color ? color.hex : '#FFFFFF'
-  }
-
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm p-6">
-      <h2 className="text-lg font-semibold text-gray-800 mb-6">
-        {esEdicion ? 'Editar producto' : 'Nuevo producto'}
-      </h2>
+    <form onSubmit={handleSubmit} className="bg-[#FFF8F5] rounded-sm p-6">
+      <div className="border-b border-[rgba(212,120,138,0.2)] pb-4 mb-6">
+        <div className="w-6 h-px bg-[#D4788A] mb-3"></div>
+        <h2 className="font-['Cormorant_Garamond'] text-2xl font-light tracking-[-0.02em] text-[#1A1118]">
+          {esEdicion ? 'Editar producto' : 'Nuevo producto'}
+        </h2>
+      </div>
 
       {errorGeneral && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-600">{errorGeneral}</p>
+        <div className="mb-6 p-4 border border-[#B85268] bg-[#FDF0F3] rounded-sm">
+          <p className="text-sm text-[#B85268] font-['DM_Sans']">{errorGeneral}</p>
         </div>
       )}
 
       {exito && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-sm text-green-600">{exito}</p>
+        <div className="mb-6 p-4 border border-[#D4788A] bg-[#F2C4CE] bg-opacity-30 rounded-sm">
+          <p className="text-sm text-[#1A1118] font-['DM_Sans']">{exito}</p>
         </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Nombre */}
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
             Nombre del producto *
           </label>
           <input
@@ -314,19 +404,18 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
             value={formData.name}
             onChange={handleChange}
             placeholder="Vestido Floral Primavera"
-            className={`w-full border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent ${
-              errores.name ? 'border-red-400 bg-red-50' : 'border-gray-300'
+            className={`w-full border rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
+              errores.name ? 'border-[#B85268] bg-[#FDF0F3]' : 'border-[rgba(212,120,138,0.25)]'
             }`}
           />
           {errores.name && (
-            <p className="mt-1 text-xs text-red-500">{errores.name}</p>
+            <p className="mt-1 text-xs text-[#B85268] font-['DM_Sans']">{errores.name}</p>
           )}
         </div>
 
-        {/* SKU */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            SKU / Código *
+          <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+            SKU / Codigo *
           </label>
           <input
             type="text"
@@ -334,40 +423,58 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
             value={formData.sku}
             onChange={handleChange}
             placeholder="VES-001"
-            className={`w-full border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent ${
-              errores.sku ? 'border-red-400 bg-red-50' : 'border-gray-300'
+            className={`w-full border rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
+              errores.sku ? 'border-[#B85268] bg-[#FDF0F3]' : 'border-[rgba(212,120,138,0.25)]'
             }`}
           />
           {errores.sku && (
-            <p className="mt-1 text-xs text-red-500">{errores.sku}</p>
+            <p className="mt-1 text-xs text-[#B85268] font-['DM_Sans']">{errores.sku}</p>
           )}
         </div>
 
-        {/* Marca */}
+        {/* MARCA - DROPDOWN MODIFICADO */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
             Marca
           </label>
-          <input
-            type="text"
-            name="brand"
-            value={formData.brand}
-            onChange={handleChange}
-            placeholder="Zara"
-            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-          />
+          <select
+            value={marcaSeleccion}
+            onChange={handleMarcaChange}
+            className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
+          >
+            <option value="">Seleccionar marca</option>
+            {marcasPredefinidas.map((marca) => (
+              <option key={marca} value={marca}>{marca}</option>
+            ))}
+            <option value="Otra">Otra...</option>
+          </select>
         </div>
 
-        {/* Categoría */}
+        {/* Input para marca personalizada (solo visible si selecciona 'Otra') */}
+        {marcaSeleccion === 'Otra' && (
+          <div>
+            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+              Escribe la marca
+            </label>
+            <input
+              type="text"
+              value={formData.brandPersonalizada}
+              onChange={handleMarcaPersonalizadaChange}
+              placeholder="Ej: Mi Marca"
+              className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
+            />
+          </div>
+        )}
+
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Categoría
+          <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+            Categoria
           </label>
           <select
             name="category"
             value={formData.category}
             onChange={handleChange}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+            className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
           >
             {categorias.map((cat) => (
               <option key={cat} value={cat}>
@@ -377,16 +484,15 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
           </select>
         </div>
 
-        {/* Género */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Género
+          <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+            Genero
           </label>
           <select
             name="gender"
             value={formData.gender}
             onChange={handleChange}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+            className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
           >
             {generos.map((gen) => (
               <option key={gen} value={gen}>
@@ -396,13 +502,12 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
           </select>
         </div>
 
-        {/* Precio */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
             Precio original *
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9A7480] text-sm font-['DM_Sans']">
               $
             </span>
             <input
@@ -413,19 +518,18 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
               placeholder="120.00"
               step="0.01"
               min="0"
-              className={`w-full border rounded-lg pl-8 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent ${
-                errores.price_original ? 'border-red-400 bg-red-50' : 'border-gray-300'
+              className={`w-full border rounded-sm pl-8 pr-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
+                errores.price_original ? 'border-[#B85268] bg-[#FDF0F3]' : 'border-[rgba(212,120,138,0.25)]'
               }`}
             />
           </div>
           {errores.price_original && (
-            <p className="mt-1 text-xs text-red-500">{errores.price_original}</p>
+            <p className="mt-1 text-xs text-[#B85268] font-['DM_Sans']">{errores.price_original}</p>
           )}
         </div>
 
-        {/* Descuento */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
             Descuento (%)
           </label>
           <div className="relative">
@@ -437,21 +541,20 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
               placeholder="0"
               min="0"
               max="99"
-              className={`w-full border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent ${
-                errores.discount_percent ? 'border-red-400 bg-red-50' : 'border-gray-300'
+              className={`w-full border rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
+                errores.discount_percent ? 'border-[#B85268] bg-[#FDF0F3]' : 'border-[rgba(212,120,138,0.25)]'
               }`}
             />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9A7480] text-sm font-['DM_Sans']">
               %
             </span>
           </div>
           {errores.discount_percent && (
-            <p className="mt-1 text-xs text-red-500">{errores.discount_percent}</p>
+            <p className="mt-1 text-xs text-[#B85268] font-['DM_Sans']">{errores.discount_percent}</p>
           )}
           {formData.discount_percent > 0 && (
-            <p className="mt-1 text-xs text-green-600">
-              Precio final: $
-              {(
+            <p className="mt-1 text-xs text-[#D4788A] font-['DM_Sans']">
+              Precio final: ${(
                 parseFloat(formData.price_original || 0) *
                 (1 - parseInt(formData.discount_percent || 0) / 100)
               ).toFixed(2)}
@@ -459,9 +562,8 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
           )}
         </div>
 
-        {/* Stock */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
             Stock *
           </label>
           <input
@@ -471,22 +573,20 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
             onChange={handleChange}
             placeholder="5"
             min="0"
-            className={`w-full border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent ${
-              errores.stock ? 'border-red-400 bg-red-50' : 'border-gray-300'
+            className={`w-full border rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
+              errores.stock ? 'border-[#B85268] bg-[#FDF0F3]' : 'border-[rgba(212,120,138,0.25)]'
             }`}
           />
           {errores.stock && (
-            <p className="mt-1 text-xs text-red-500">{errores.stock}</p>
+            <p className="mt-1 text-xs text-[#B85268] font-['DM_Sans']">{errores.stock}</p>
           )}
         </div>
 
-        {/* ✅ CORREGIDO: Colores con selector visual */}
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
             Colores disponibles
           </label>
           
-          {/* Colores predefinidos */}
           <div className="flex flex-wrap gap-3 mb-4">
             {coloresPredefinidos.map((color) => {
               const coloresActuales = formData.color ? formData.color.split(',').map(c => c.trim()) : []
@@ -498,8 +598,8 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
                   type="button"
                   onClick={() => handleColorClick(color.nombre)}
                   className={`
-                    relative w-10 h-10 rounded-full border-2 transition-all transform hover:scale-110
-                    ${estaSeleccionado ? 'border-black ring-2 ring-black/20' : 'border-gray-300'}
+                    relative w-10 h-10 rounded-sm border-2 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-105
+                    ${estaSeleccionado ? 'border-[#1A1118] ring-1 ring-[#D4788A]' : 'border-[rgba(212,120,138,0.25)]'}
                   `}
                   style={{ backgroundColor: color.hex }}
                   title={color.nombre}
@@ -507,7 +607,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
                 >
                   {estaSeleccionado && (
                     <svg 
-                      className="absolute inset-0 w-full h-full text-white" 
+                      className="absolute inset-0 w-full h-full text-white drop-shadow-sm" 
                       fill="currentColor" 
                       viewBox="0 0 20 20"
                     >
@@ -519,27 +619,25 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
             })}
           </div>
 
-          {/* Color personalizado */}
-          <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-200">
+          <div className="flex items-center gap-3 mt-4 pt-4 border-t border-[rgba(212,120,138,0.15)]">
             <input
               type="text"
               value={colorPersonalizado}
               onChange={(e) => setColorPersonalizado(e.target.value)}
               placeholder="Agregar otro color (ej: Vino, Turquesa)"
-              className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+              className="flex-1 border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
               onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAgregarColorPersonalizado())}
             />
             <button
               type="button"
               onClick={handleAgregarColorPersonalizado}
               disabled={!colorPersonalizado.trim()}
-              className="px-4 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-[#1A1118] text-white rounded-sm text-sm font-['DM_Sans'] font-medium tracking-wide hover:bg-gradient-to-r hover:from-[#D4788A] hover:to-[#B85268] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] disabled:bg-[#9A7480] disabled:cursor-not-allowed"
             >
               Agregar
             </button>
           </div>
 
-          {/* Colores seleccionados */}
           {formData.color && (
             <div className="mt-4 flex flex-wrap gap-2">
               {formData.color.split(',').map((colorNombre, index) => {
@@ -549,17 +647,17 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
                 return (
                   <div
                     key={index}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full text-sm"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#FDF0F3] rounded-sm text-sm font-['DM_Sans']"
                   >
                     <div 
-                      className="w-4 h-4 rounded-full border border-gray-300"
+                      className="w-4 h-4 rounded-sm border border-[rgba(212,120,138,0.25)]"
                       style={{ backgroundColor: hex }}
                     />
-                    <span>{color}</span>
+                    <span className="text-[#1A1118]">{color}</span>
                     <button
                       type="button"
                       onClick={() => handleColorClick(color)}
-                      className="text-gray-500 hover:text-red-500"
+                      className="text-[#9A7480] hover:text-[#B85268] transition-colors duration-300"
                     >
                       ×
                     </button>
@@ -570,9 +668,8 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
           )}
         </div>
 
-        {/* Tallas */}
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
             Tallas disponibles
           </label>
           <div className="flex flex-wrap gap-2">
@@ -582,11 +679,11 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
                 type="button"
                 onClick={() => handleTallaToggle(talla)}
                 className={`
-                  px-4 py-2 border-2 rounded-lg text-sm font-medium transition-all
+                  px-4 py-2 border rounded-sm text-sm font-['DM_Sans'] font-medium transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
                   ${
                     formData.sizes_available.includes(talla)
-                      ? 'border-black bg-black text-white'
-                      : 'border-gray-300 text-gray-600 hover:border-gray-400'
+                      ? 'border-[#1A1118] bg-[#1A1118] text-white'
+                      : 'border-[rgba(212,120,138,0.25)] text-[#2D2030] hover:border-[#D4788A]'
                   }
                 `}
               >
@@ -596,30 +693,48 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
           </div>
         </div>
 
-        {/* Imagen */}
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Imagen del producto {!esEdicion && '*'}
+          <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+            Imagenes del producto {!esEdicion && '*'}
           </label>
+          <p className="text-xs text-[#9A7480] font-['DM_Sans'] mb-3">
+            Maximo {MAX_IMAGENES} imagenes. La primera imagen sera la principal.
+          </p>
 
-          <div className="flex items-start gap-6">
-            {/* Vista previa */}
-            {(imagenPreview || producto?.image_url) && (
-              <div className="w-32 h-40 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                <img
-                  src={imagenPreview}
-                  alt="Vista previa"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
+          {previews.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-4">
+              {previews.map((preview, index) => (
+                <div key={index} className="relative group">
+                  <div className="aspect-[3/4] bg-[#FDF0F3] rounded-sm overflow-hidden">
+                    <img
+                      src={preview}
+                      alt={`Vista previa ${index + 1}`}
+                      className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
+                    />
+                  </div>
+                  {index === 0 && (
+                    <span className="absolute top-2 left-2 px-2 py-0.5 bg-[#D4788A] text-white text-xs font-['DM_Sans'] font-medium rounded-sm">
+                      Principal
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => eliminarImagen(index)}
+                    className="absolute top-2 right-2 w-7 h-7 bg-[#1A1118] text-white rounded-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-[#B85268]"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
-            {/* Input de archivo */}
-            <div className="flex-1">
-              <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 transition-colors bg-gray-50">
+          {previews.length < MAX_IMAGENES && (
+            <div className="flex items-center justify-center w-full">
+              <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-[rgba(212,120,138,0.35)] rounded-sm cursor-pointer hover:border-[#D4788A] transition-colors duration-300 bg-[#FDF0F3] bg-opacity-50">
                 <div className="text-center">
                   <svg
-                    className="w-8 h-8 text-gray-400 mx-auto mb-2"
+                    className="w-10 h-10 text-[#9A7480] mx-auto mb-2"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -627,37 +742,38 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth={1.5}
+                      strokeWidth={1}
                       d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                     />
                   </svg>
-                  <p className="text-sm text-gray-500">
-                    {imagen
-                      ? imagen.name
-                      : 'Arrastra una imagen o haz clic aquí'}
+                  <p className="text-sm text-[#2D2030] font-['DM_Sans'] font-light">
+                    {imagenes.length > 0 ? `${imagenes.length} imagenes seleccionadas` : 'Arrastra imagenes o haz clic aqui'}
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    JPG, PNG o WebP (máx. 5MB)
+                  <p className="text-xs text-[#9A7480] font-['DM_Sans'] mt-1">
+                    JPG, PNG o WebP (max. {TAMANO_MAXIMO_MB}MB c/u)
+                  </p>
+                  <p className="text-xs text-[#9A7480] font-['DM_Sans']">
+                    {previews.length}/{MAX_IMAGENES} imagenes
                   </p>
                 </div>
                 <input
                   type="file"
+                  multiple
                   accept="image/jpeg,image/png,image/webp"
-                  onChange={handleImagen}
+                  onChange={handleImagenesSeleccionadas}
                   className="hidden"
                 />
               </label>
-              {errores.imagen && (
-                <p className="mt-1 text-xs text-red-500">{errores.imagen}</p>
-              )}
             </div>
-          </div>
+          )}
+          {errores.imagenes && (
+            <p className="mt-2 text-xs text-[#B85268] font-['DM_Sans']">{errores.imagenes}</p>
+          )}
         </div>
 
-        {/* Descripción */}
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Descripción
+          <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+            Descripcion
           </label>
           <textarea
             name="description"
@@ -665,35 +781,36 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
             onChange={handleChange}
             rows={3}
             placeholder="Describe el producto..."
-            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent resize-none"
+            className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent resize-none bg-white"
           />
         </div>
       </div>
 
-      {/* Botones */}
-      <div className="flex gap-3 pt-6 border-t border-gray-200 mt-6">
+      <div className="flex gap-3 pt-6 border-t border-[rgba(212,120,138,0.2)] mt-6">
         <button
           type="submit"
           disabled={guardando}
-          className="flex-1 py-2.5 bg-black text-white rounded-lg font-semibold hover:bg-gray-800 transition-all disabled:bg-gray-300 disabled:cursor-not-allowed text-sm"
+          className="flex-1 py-2.5 bg-[#1A1118] text-white rounded-sm font-['DM_Sans'] font-medium tracking-wide hover:bg-gradient-to-r hover:from-[#D4788A] hover:to-[#B85268] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] disabled:bg-[#9A7480] disabled:cursor-not-allowed text-sm relative overflow-hidden group"
         >
-          {guardando ? (
-            <span className="flex items-center justify-center gap-2">
-              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-              {subiendo ? 'Subiendo imagen...' : 'Guardando...'}
-            </span>
-          ) : esEdicion ? (
-            'Actualizar producto'
-          ) : (
-            'Crear producto'
-          )}
+          <span className="relative z-10">
+            {guardando ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                {subiendo ? 'Subiendo imagenes...' : 'Guardando...'}
+              </span>
+            ) : esEdicion ? (
+              'Actualizar producto'
+            ) : (
+              'Crear producto'
+            )}
+          </span>
         </button>
 
         {onCancelar && (
           <button
             type="button"
             onClick={onCancelar}
-            className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors text-sm"
+            className="px-6 py-2.5 border border-[rgba(212,120,138,0.4)] text-[#2D2030] rounded-sm font-['DM_Sans'] font-medium hover:bg-[#FDF0F3] hover:border-[#D4788A] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] text-sm"
           >
             Cancelar
           </button>
