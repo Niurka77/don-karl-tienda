@@ -3,127 +3,146 @@ import { Link, useNavigate } from 'react-router-dom'
 import useCartStore from '../store/cartStore'
 import { supabase } from '../lib/supabase'
 
+/* ─────────────────────────────────────────
+   Input base con línea inferior editorial
+───────────────────────────────────────── */
+const FieldLine = ({ name, value, onChange, placeholder, type = 'text', error, span }) => {
+  const [focused, setFocused] = useState(false)
+
+  return (
+    <div className={span ? 'md:col-span-2' : ''}>
+      <div style={{ position: 'relative', paddingBottom: '1px' }}>
+        {/* Placeholder flotante */}
+        <label
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: focused || value ? '-14px' : '10px',
+            fontSize: focused || value ? '0.58rem' : '0.82rem',
+            fontWeight: 300,
+            letterSpacing: focused || value ? '0.18em' : '0.02em',
+            textTransform: focused || value ? 'uppercase' : 'none',
+            color: error
+              ? '#E53935'
+              : focused
+              ? 'var(--color-kb-rose)'
+              : 'var(--color-kb-mauve)',
+            transition: 'all 0.25s cubic-bezier(0.16,1,0.3,1)',
+            pointerEvents: 'none',
+            fontFamily: 'var(--font-sans)',
+          }}
+        >
+          {placeholder}
+        </label>
+
+        <input
+          type={type}
+          name={name}
+          value={value}
+          onChange={onChange}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          autoComplete="off"
+          style={{
+            width: '100%',
+            background: 'transparent',
+            border: 'none',
+            borderBottom: `1px solid ${
+              error ? '#E53935' : focused ? 'var(--color-kb-rose)' : 'rgba(212,120,138,0.25)'
+            }`,
+            padding: '0.55rem 0 0.5rem',
+            fontSize: '0.88rem',
+            fontWeight: 300,
+            fontFamily: 'var(--font-sans)',
+            color: 'var(--color-kb-charcoal)',
+            outline: 'none',
+            transition: 'border-color 0.3s ease',
+            letterSpacing: '0.02em',
+          }}
+        />
+
+        {/* Línea de progreso animada al focus */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0,
+          height: '2px', borderRadius: '0',
+          background: 'linear-gradient(90deg, var(--color-kb-rose), var(--color-kb-soft-pink))',
+          width: focused ? '100%' : '0',
+          transition: 'width 0.4s cubic-bezier(0.16,1,0.3,1)',
+        }} />
+      </div>
+
+      {error && (
+        <p style={{ fontSize: '0.62rem', color: '#E53935', marginTop: '5px', letterSpacing: '0.04em', fontWeight: 300 }}>
+          {error}
+        </p>
+      )}
+    </div>
+  )
+}
+
+/* ─────────────────────────────────────────
+   CheckoutPage
+───────────────────────────────────────── */
 const CheckoutPage = () => {
   const navigate = useNavigate()
   const { items, getTotalPrice, clearCart } = useCartStore()
   const total = getTotalPrice()
 
   const [formData, setFormData] = useState({
-    nombre: '',
-    telefono: '',
-    email: '',
-    direccion: '',
-    ciudad: '',
-    metodoPago: '',
+    nombre: '', telefono: '', email: '',
+    direccion: '', ciudad: '', metodoPago: '',
   })
-
-  const [errores, setErrores] = useState({})
-  const [enviando, setEnviando] = useState(false)
+  const [errores,       setErrores]      = useState({})
+  const [enviando,      setEnviando]     = useState(false)
   const [errorServidor, setErrorServidor] = useState(null)
   const [pedidoExitoso, setPedidoExitoso] = useState(null)
 
-  // ✅ VALIDADORES
-  const validarEmail = (email) => {
-    if (!email) return true // Es opcional
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return re.test(email)
-  }
-
-  const validarTelefono = (telefono) => {
-    // Formato peruano: 9 dígitos empezando con 9
-    const re = /^9\d{8}$/
-    return re.test(telefono.replace(/\D/g, ''))
-  }
-
-  if (items.length === 0 && !pedidoExitoso) {
-    return (
-      <div className="max-w-7xl mx-auto px-6 py-32 text-center">
-        <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-6 h-6 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-          </svg>
-        </div>
-        <p className="text-foreground/60 text-sm mb-6">Tu bolsa está vacía</p>
-        <Link to="/" className="text-xs font-mono border border-foreground/20 px-6 py-2 rounded-full hover:bg-foreground hover:text-background transition-all">
-          ← Ir a la tienda
-        </Link>
-      </div>
-    )
-  }
+  const validarEmail    = (v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
+  const validarTelefono = (v) => /^9\d{8}$/.test(v.replace(/\D/g, ''))
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-    if (errores[name]) setErrores((prev) => ({ ...prev, [name]: '' }))
-    // ✅ Limpiar error de servidor cuando el usuario modifica cualquier campo
+    setFormData(p => ({ ...p, [name]: value }))
+    if (errores[name]) setErrores(p => ({ ...p, [name]: '' }))
     if (errorServidor) setErrorServidor(null)
   }
 
-  const validarFormulario = () => {
-    const nuevosErrores = {}
-    if (!formData.nombre.trim()) nuevosErrores.nombre = 'Requerido'
-    
-    if (!formData.telefono.trim()) {
-      nuevosErrores.telefono = 'Requerido'
-    } else if (!validarTelefono(formData.telefono)) {
-      nuevosErrores.telefono = 'Ingrese un número válido (ej: 999999999)'
-    }
-    
-    if (!formData.direccion.trim()) nuevosErrores.direccion = 'Requerido'
-    if (!formData.ciudad.trim()) nuevosErrores.ciudad = 'Requerido'
-    if (!formData.metodoPago) nuevosErrores.metodoPago = 'Selecciona un método'
-    
-    // ✅ Validar email si está presente
-    if (formData.email && !validarEmail(formData.email)) {
-      nuevosErrores.email = 'Formato de email inválido'
-    }
-    
-    setErrores(nuevosErrores)
-    return Object.keys(nuevosErrores).length === 0
+  const validar = () => {
+    const e = {}
+    if (!formData.nombre.trim())    e.nombre    = 'Requerido'
+    if (!formData.telefono.trim())  e.telefono  = 'Requerido'
+    else if (!validarTelefono(formData.telefono)) e.telefono = 'Número inválido (ej: 999999999)'
+    if (!formData.direccion.trim()) e.direccion = 'Requerido'
+    if (!formData.ciudad.trim())    e.ciudad    = 'Requerido'
+    if (!formData.metodoPago)       e.metodoPago = 'Selecciona un método'
+    if (formData.email && !validarEmail(formData.email)) e.email = 'Email inválido'
+    setErrores(e)
+    return Object.keys(e).length === 0
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  const handleSubmit = async (ev) => {
+    ev.preventDefault()
     setErrorServidor(null)
-    if (!validarFormulario()) return
+    if (!validar()) return
     setEnviando(true)
-
     try {
       const pedido = {
-        customer_name: formData.nombre.trim(),
-        customer_phone: formData.telefono.trim(),
-        customer_email: formData.email.trim() || null,
+        customer_name:    formData.nombre.trim(),
+        customer_phone:   formData.telefono.trim(),
+        customer_email:   formData.email.trim() || null,
         customer_address: formData.direccion.trim(),
-        customer_city: formData.ciudad.trim(),
-        products: items.map((item) => ({
-          product_id: item.id,
-          name: item.name,
-          talla: item.selectedSize,
-          cantidad: item.quantity,
-          precio_unitario: item.price,
-          subtotal: item.price * item.quantity,
-          sku: item.sku,
+        customer_city:    formData.ciudad.trim(),
+        products: items.map(i => ({
+          product_id: i.id, name: i.name, talla: i.selectedSize,
+          cantidad: i.quantity, precio_unitario: i.price,
+          subtotal: i.price * i.quantity, sku: i.sku,
         })),
-        total: total,
-        payment_method: formData.metodoPago,
-        status: 'pendiente',
+        total, payment_method: formData.metodoPago, status: 'pendiente',
       }
-
-      const { data, error } = await supabase
-        .from('orders')
-        .insert([pedido])
-        .select('id')
-        .single()
-
+      const { data, error } = await supabase.from('orders').insert([pedido]).select('id').single()
       if (error) throw error
-
-      for (const item of items) {
-        await supabase.rpc('decrementar_stock', {
-          product_id: item.id,
-          cantidad: item.quantity,
-        })
-      }
-
+      for (const item of items)
+        await supabase.rpc('decrementar_stock', { product_id: item.id, cantidad: item.quantity })
       setPedidoExitoso({ id: data.id, ...pedido })
       clearCart()
     } catch (err) {
@@ -134,173 +153,306 @@ const CheckoutPage = () => {
     }
   }
 
-  if (pedidoExitoso) {
-    return (
-      <div className="max-w-2xl mx-auto px-6 py-20">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-foreground/10 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-8 h-8 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-serif mb-2">Pedido confirmado</h2>
-          <p className="text-muted-foreground text-sm mb-6">
-            #{pedidoExitoso.id?.slice(0, 8).toUpperCase()}
-          </p>
-          <Link to="/" className="text-xs font-mono border border-foreground/20 px-6 py-2 rounded-full hover:bg-foreground hover:text-background transition-all">
-            ← Seguir comprando
-          </Link>
+  /* ── CARRITO VACÍO ── */
+  if (items.length === 0 && !pedidoExitoso) return (
+    <div
+      className="min-h-screen flex items-center justify-center"
+      style={{ background: 'var(--color-kb-ivory)' }}
+    >
+      <div className="text-center px-6">
+        <div style={{
+          width: '56px', height: '56px', borderRadius: '50%', margin: '0 auto 1.5rem',
+          border: '1px solid rgba(212,120,138,0.2)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"
+            style={{ color: 'var(--color-kb-rose)' }}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          </svg>
         </div>
+        <p style={{
+          fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 300,
+          fontStyle: 'italic', color: 'var(--color-kb-mauve)', marginBottom: '1.5rem',
+        }}>
+          Tu bolsa está vacía
+        </p>
+        <Link to="/" className="btn-kb-ghost">← Ir a la tienda</Link>
       </div>
-    )
-  }
+    </div>
+  )
 
+  /* ── PEDIDO EXITOSO ── */
+  if (pedidoExitoso) return (
+    <div
+      className="min-h-screen flex items-center justify-center"
+      style={{ background: 'var(--color-kb-ivory)' }}
+    >
+      <div className="text-center px-6 animate-scale-reveal max-w-sm">
+        {/* Ícono check animado */}
+        <div style={{
+          width: '72px', height: '72px', borderRadius: '50%', margin: '0 auto 2rem',
+          border: '1px solid rgba(212,120,138,0.25)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(250,237,241,0.6)',
+        }}>
+          <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"
+            style={{ color: 'var(--color-kb-rose)' }}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+
+        {/* Número pedido */}
+        <p className="text-editorial mb-3" style={{ color: 'var(--color-kb-rose)', fontSize: '0.62rem', letterSpacing: '0.25em' }}>
+          Pedido confirmado
+        </p>
+
+        <h2 style={{
+          fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 300,
+          letterSpacing: '-0.02em', color: 'var(--color-kb-charcoal)', marginBottom: '0.5rem',
+        }}>
+          ¡Gracias, {pedidoExitoso.customer_name.split(' ')[0]}!
+        </h2>
+
+        <p style={{ fontSize: '0.75rem', fontWeight: 300, color: 'var(--color-kb-mauve)', marginBottom: '0.5rem' }}>
+          Pedido #{pedidoExitoso.id?.slice(0, 8).toUpperCase()}
+        </p>
+
+        <p style={{ fontSize: '0.78rem', fontWeight: 300, color: 'rgba(154,116,128,0.7)', lineHeight: 1.6, marginBottom: '2.5rem' }}>
+          Nos pondremos en contacto contigo en breve para coordinar la entrega.
+        </p>
+
+        <div style={{ height: '1px', background: 'rgba(212,120,138,0.12)', marginBottom: '2rem' }} />
+
+        <Link to="/" className="btn-kb-ghost">← Seguir comprando</Link>
+      </div>
+    </div>
+  )
+
+  /* ── CHECKOUT PRINCIPAL ── */
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12 md:py-20">
-      <h1 className="text-3xl font-serif mb-12">Checkout</h1>
+    <div style={{ background: 'var(--color-kb-ivory)', minHeight: '100vh' }}>
+      <div className="max-w-screen-xl mx-auto px-6 lg:px-10 py-14 md:py-20">
 
-      <div className="grid lg:grid-cols-3 gap-12">
-        {/* Formulario */}
-        <form onSubmit={handleSubmit} className="lg:col-span-2 space-y-10">
-          {/* Datos */}
-          <div className="space-y-6">
-            <h2 className="text-sm font-mono tracking-wider text-foreground/60 uppercase">Contacto</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <input
-                  type="text"
-                  name="nombre"
-                  value={formData.nombre}
-                  onChange={handleChange}
-                  placeholder="Nombre completo"
-                  className={`w-full bg-transparent border-b ${errores.nombre ? 'border-red-500' : 'border-border'} py-2 text-sm focus:outline-none focus:border-foreground transition-colors`}
-                />
-                {errores.nombre && <p className="text-[10px] text-red-500 mt-1">{errores.nombre}</p>}
-              </div>
-              <div>
-                <input
-                  type="tel"
-                  name="telefono"
-                  value={formData.telefono}
-                  onChange={handleChange}
-                  placeholder="Teléfono"
-                  className={`w-full bg-transparent border-b ${errores.telefono ? 'border-red-500' : 'border-border'} py-2 text-sm focus:outline-none focus:border-foreground transition-colors`}
-                />
-                {errores.telefono && <p className="text-[10px] text-red-500 mt-1">{errores.telefono}</p>}
-              </div>
-              <div className="md:col-span-2">
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="Email (opcional)"
-                  className={`w-full bg-transparent border-b ${errores.email ? 'border-red-500' : 'border-border'} py-2 text-sm focus:outline-none focus:border-foreground transition-colors`}
-                />
-                {errores.email && <p className="text-[10px] text-red-500 mt-1">{errores.email}</p>}
-              </div>
-            </div>
-          </div>
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-14">
+          <span style={{ width: '24px', height: '1px', background: 'var(--color-kb-rose)', display: 'inline-block' }} />
+          <h1 style={{
+            fontFamily: 'var(--font-display)', fontSize: 'clamp(1.8rem, 4vw, 2.4rem)',
+            fontWeight: 300, fontStyle: 'italic', letterSpacing: '-0.02em',
+            color: 'var(--color-kb-charcoal)',
+          }}>
+            Checkout
+          </h1>
+        </div>
 
-          {/* Envío */}
-          <div className="space-y-6">
-            <h2 className="text-sm font-mono tracking-wider text-foreground/60 uppercase">Envío</h2>
-            <div className="space-y-6">
-              <div>
-                <input
-                  type="text"
-                  name="direccion"
-                  value={formData.direccion}
-                  onChange={handleChange}
-                  placeholder="Dirección"
-                  className={`w-full bg-transparent border-b ${errores.direccion ? 'border-red-500' : 'border-border'} py-2 text-sm focus:outline-none focus:border-foreground transition-colors`}
-                />
-                {errores.direccion && <p className="text-[10px] text-red-500 mt-1">{errores.direccion}</p>}
-              </div>
-              <div>
-                <input
-                  type="text"
-                  name="ciudad"
-                  value={formData.ciudad}
-                  onChange={handleChange}
-                  placeholder="Ciudad"
-                  className={`w-full bg-transparent border-b ${errores.ciudad ? 'border-red-500' : 'border-border'} py-2 text-sm focus:outline-none focus:border-foreground transition-colors`}
-                />
-                {errores.ciudad && <p className="text-[10px] text-red-500 mt-1">{errores.ciudad}</p>}
-              </div>
-            </div>
-          </div>
+        <div className="grid lg:grid-cols-3 gap-12 lg:gap-16 items-start">
 
-          {/* Pago */}
-          <div className="space-y-6">
-            <h2 className="text-sm font-mono tracking-wider text-foreground/60 uppercase">Pago</h2>
-            <div className="grid grid-cols-3 gap-3">
-              {['yape', 'plin', 'tarjeta'].map((metodo) => (
-                <button
-                  key={metodo}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, metodoPago: metodo })}
-                  className={`py-3 text-sm font-mono border rounded-full transition-all ${
-                    formData.metodoPago === metodo
-                      ? 'border-foreground bg-foreground text-background'
-                      : 'border-border text-foreground/60 hover:border-foreground/30'
-                  }`}
+          {/* ── FORMULARIO ── */}
+          <form onSubmit={handleSubmit} className="lg:col-span-2 space-y-12">
+
+            {/* CONTACTO */}
+            <section>
+              <p className="text-editorial mb-8" style={{ color: 'var(--color-kb-mauve)', fontSize: '0.62rem', letterSpacing: '0.25em' }}>
+                01 — Contacto
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
+                <FieldLine name="nombre"   value={formData.nombre}   onChange={handleChange} placeholder="Nombre completo" error={errores.nombre} />
+                <FieldLine name="telefono" value={formData.telefono} onChange={handleChange} placeholder="Teléfono"         type="tel" error={errores.telefono} />
+                <FieldLine name="email"    value={formData.email}    onChange={handleChange} placeholder="Email (opcional)" type="email" error={errores.email} span />
+              </div>
+            </section>
+
+            {/* Separador */}
+            <div style={{ height: '1px', background: 'rgba(212,120,138,0.1)' }} />
+
+            {/* ENVÍO */}
+            <section>
+              <p className="text-editorial mb-8" style={{ color: 'var(--color-kb-mauve)', fontSize: '0.62rem', letterSpacing: '0.25em' }}>
+                02 — Envío
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
+                <FieldLine name="direccion" value={formData.direccion} onChange={handleChange} placeholder="Dirección" error={errores.direccion} span />
+                <FieldLine name="ciudad"    value={formData.ciudad}    onChange={handleChange} placeholder="Ciudad"    error={errores.ciudad} />
+              </div>
+            </section>
+
+            {/* Separador */}
+            <div style={{ height: '1px', background: 'rgba(212,120,138,0.1)' }} />
+
+            {/* PAGO */}
+            <section>
+              <p className="text-editorial mb-8" style={{ color: 'var(--color-kb-mauve)', fontSize: '0.62rem', letterSpacing: '0.25em' }}>
+                03 — Método de pago
+              </p>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                {['yape', 'plin', 'tarjeta', 'transferencia'].map((m) => {
+                  const active = formData.metodoPago === m
+                  return (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => { setFormData(p => ({ ...p, metodoPago: m })); if (errores.metodoPago) setErrores(p => ({ ...p, metodoPago: '' })) }}
+                      style={{
+                        padding: '0.85rem 0.5rem',
+                        border: `1px solid ${active ? 'var(--color-kb-obsidian)' : 'rgba(212,120,138,0.2)'}`,
+                        background: active ? 'var(--color-kb-obsidian)' : 'white',
+                        color: active ? 'var(--color-kb-ivory)' : 'var(--color-kb-mauve)',
+                        fontSize: '0.62rem', fontWeight: active ? 500 : 300,
+                        fontFamily: 'var(--font-sans)',
+                        letterSpacing: '0.18em', textTransform: 'uppercase',
+                        borderRadius: '2px',
+                        transition: 'all 0.25s ease',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {m}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {errores.metodoPago && (
+                <p style={{ fontSize: '0.62rem', color: '#E53935', marginBottom: '1rem', letterSpacing: '0.04em' }}>
+                  {errores.metodoPago}
+                </p>
+              )}
+
+              {/* Info Yape */}
+              {formData.metodoPago === 'yape' && (
+                <div
+                  className="animate-slide-down"
+                  style={{
+                    padding: '1rem 1.2rem',
+                    border: '1px solid rgba(212,120,138,0.15)',
+                    background: 'rgba(250,237,241,0.5)',
+                    borderLeft: '2px solid var(--color-kb-rose)',
+                    borderRadius: '2px',
+                    fontSize: '0.78rem', fontWeight: 300,
+                    color: 'var(--color-kb-mauve)',
+                    lineHeight: 1.65,
+                  }}
                 >
-                  {metodo.toUpperCase()}
-                </button>
-              ))}
-            </div>
-            {errores.metodoPago && <p className="text-[10px] text-red-500">{errores.metodoPago}</p>}
-            
-            {formData.metodoPago === 'yape' && (
-              <div className="mt-4 p-4 bg-muted/50 rounded-2xl text-xs font-mono text-muted-foreground">
-                📱 Yape al 999 999 999 (KB Dresses). El pedido se confirma al recibir el comprobante oficial.
+                  Yapea al <strong style={{ color: 'var(--color-kb-rose-deep)', fontWeight: 500 }}>+51 906 877 812</strong> a nombre de KB Dresses.
+                  El pedido se confirma al recibir el comprobante.
+                </div>
+              )}
+            </section>
+
+            {/* Error servidor */}
+            {errorServidor && (
+              <div style={{
+                padding: '0.9rem 1.2rem',
+                border: '1px solid rgba(229,57,53,0.2)',
+                borderLeft: '2px solid #E53935',
+                background: 'rgba(229,57,53,0.04)',
+                fontSize: '0.78rem', fontWeight: 300,
+                color: '#C62828', letterSpacing: '0.02em',
+              }}>
+                {errorServidor}
               </div>
             )}
-          </div>
 
-          {errorServidor && (
-            <div className="p-4 bg-red-50/50 border border-red-200 rounded-2xl text-xs text-red-600">
-              {errorServidor}
-            </div>
-          )}
+            {/* Botón confirmar */}
+            <button
+              type="submit"
+              disabled={enviando}
+              className="w-full btn-kb-primary"
+              style={{ fontSize: '0.68rem', padding: '1.1rem', opacity: enviando ? 0.6 : 1 }}
+            >
+              <span>
+                {enviando ? 'Procesando…' : `Confirmar pedido — S/ ${total.toFixed(2)}`}
+              </span>
+            </button>
+          </form>
 
-          <button
-            type="submit"
-            disabled={enviando}
-            className="w-full py-4 bg-foreground text-background rounded-full text-sm font-medium tracking-wide hover:bg-foreground/90 transition-all disabled:opacity-50"
-          >
-            {enviando ? 'Procesando...' : `Confirmar pedido — $${total.toFixed(2)}`}
-          </button>
-        </form>
+          {/* ── RESUMEN DEL PEDIDO ── */}
+          <div className="lg:sticky lg:top-28">
+            <div style={{
+              background: 'white',
+              border: '1px solid rgba(212,120,138,0.12)',
+              padding: '1.8rem',
+            }}>
+              {/* Heading */}
+              <div className="flex items-center gap-3 mb-6">
+                <span style={{ width: '16px', height: '1px', background: 'var(--color-kb-rose)', flexShrink: 0 }} />
+                <p className="text-editorial" style={{ color: 'var(--color-kb-charcoal)', fontSize: '0.62rem', letterSpacing: '0.22em' }}>
+                  Tu pedido
+                </p>
+              </div>
 
-        {/* Resumen */}
-        <div className="lg:col-span-1">
-          <div className="sticky top-24 bg-muted/30 rounded-2xl p-6 space-y-4">
-            <h3 className="text-sm font-mono tracking-wider uppercase">Tu pedido</h3>
-            <div className="space-y-3 max-h-80 overflow-y-auto">
-              {items.map((item) => (
-                <div key={`${item.id}-${item.selectedSize}`} className="flex gap-3 text-sm">
-                  <div className="w-12 h-14 flex-shrink-0 bg-muted rounded-lg overflow-hidden">
-                    {/* ✅ CORREGIDO: item.image en lugar de item.image_url */}
-                    <img 
-                      src={item.image || 'https://via.placeholder.com/48x60'} 
-                      alt={item.name}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
+              {/* Items */}
+              <div className="space-y-4 mb-6" style={{ maxHeight: '340px', overflowY: 'auto' }}>
+                {items.map((item) => (
+                  <div
+                    key={`${item.id}-${item.selectedSize}`}
+                    className="flex gap-3"
+                  >
+                    {/* Miniatura */}
+                    <div style={{ width: '52px', height: '64px', flexShrink: 0, overflow: 'hidden', background: 'var(--color-kb-blush)' }}>
+                      <img
+                        src={item.image || 'https://via.placeholder.com/52x64'}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <p style={{ fontSize: '0.82rem', fontWeight: 400, color: 'var(--color-kb-charcoal)', marginBottom: '2px' }}
+                        className="line-clamp-1">
+                        {item.name}
+                      </p>
+                      <p style={{ fontSize: '0.65rem', fontWeight: 300, color: 'var(--color-kb-mauve)', letterSpacing: '0.04em', marginBottom: '4px' }}>
+                        {item.selectedSize && `Talla ${item.selectedSize} · `}Cant. {item.quantity}
+                      </p>
+                      <p style={{
+                        fontFamily: 'var(--font-display)', fontSize: '0.95rem', fontWeight: 400,
+                        color: 'var(--color-kb-rose-deep)', letterSpacing: '-0.01em',
+                      }}>
+                        S/ {(item.price * item.quantity).toFixed(2)}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-foreground line-clamp-1">{item.name}</p>
-                    <p className="text-[10px] text-muted-foreground">Talla: {item.selectedSize} × {item.quantity}</p>
-                    <p className="text-xs font-medium mt-1">${(item.price * item.quantity).toFixed(2)}</p>
-                  </div>
+                ))}
+              </div>
+
+              {/* Subtotal / envío / total */}
+              <div style={{ borderTop: '1px solid rgba(212,120,138,0.1)', paddingTop: '1.2rem' }}>
+                <div className="flex justify-between items-center mb-2">
+                  <span style={{ fontSize: '0.75rem', fontWeight: 300, color: 'var(--color-kb-mauve)' }}>Subtotal</span>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 300, color: 'var(--color-kb-charcoal)' }}>S/ {total.toFixed(2)}</span>
                 </div>
-              ))}
-            </div>
-            <div className="border-t border-border pt-4 text-right">
-              <p className="text-xs text-muted-foreground">Total</p>
-              <p className="text-xl font-semibold">${total.toFixed(2)}</p>
+                <div className="flex justify-between items-center mb-5">
+                  <span style={{ fontSize: '0.75rem', fontWeight: 300, color: 'var(--color-kb-mauve)' }}>Envío</span>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 300, color: '#4CAF50', letterSpacing: '0.04em' }}>Por coordinar</span>
+                </div>
+
+                <div style={{ borderTop: '1px solid rgba(212,120,138,0.1)', paddingTop: '1rem' }}
+                  className="flex justify-between items-baseline">
+                  <span className="text-editorial" style={{ color: 'var(--color-kb-mauve)', fontSize: '0.62rem', letterSpacing: '0.2em' }}>
+                    Total
+                  </span>
+                  <span style={{
+                    fontFamily: 'var(--font-display)', fontSize: '1.6rem',
+                    fontWeight: 300, letterSpacing: '-0.03em',
+                    color: 'var(--color-kb-rose-deep)',
+                  }}>
+                    S/ {total.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Trust badge */}
+              <div className="mt-5 flex items-center gap-2" style={{ opacity: 0.55 }}>
+                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20" style={{ color: 'var(--color-kb-rose)', flexShrink: 0 }}>
+                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                </svg>
+                <span style={{ fontSize: '0.6rem', fontWeight: 300, color: 'var(--color-kb-mauve)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                  Pago 100% seguro
+                </span>
+              </div>
             </div>
           </div>
         </div>
