@@ -28,7 +28,7 @@ const slides = [
     titleAccent: "Premium",
     subtitle: "Michael Kors · Tommy · CK",
     description: "Piel de alta calidad. El accesorio perfecto para el día a día.",
-    image: "https://images.unsplash.com/photo-1627123428493-eb5ae6dc65a3?w=1200&h=800&fit=crop",
+   image: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=1200&h=800&fit=crop",
     category: "billeteras",
     tag: "Más Vendido",
   }
