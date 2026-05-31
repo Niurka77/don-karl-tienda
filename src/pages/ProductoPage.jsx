@@ -60,6 +60,7 @@ const ProductoPage = () => {
   
   // Estado para el formulario de reseña
   const [mostrarFormularioReview, setMostrarFormularioReview] = useState(false)
+  const [mostrarTodasReviews, setMostrarTodasReviews] = useState(false)
   const [reviewForm, setReviewForm] = useState({
     customer_name: '',
     rating: 5,
@@ -92,12 +93,11 @@ const ProductoPage = () => {
           } catch { setTallas([]) }
         }
 
-        // Cargar SOLO reseñas aprobadas
+        // Cargar todas las reseñas (sin filtro de approved)
         const { data: rev, error: re } = await supabase
           .from('reviews')
           .select('*')
           .eq('product_id', id)
-          .eq('approved', true)
           .order('created_at', { ascending: false })
         
         if (cancelled) return
@@ -136,7 +136,6 @@ const ProductoPage = () => {
 
   const handleComprarAhora = () => { handleAgregar(); openCart() }
 
-  // Manejar cambios en el formulario de reseña
   const handleReviewChange = (e) => {
     const { name, value } = e.target
     setReviewForm(prev => ({ ...prev, [name]: value }))
@@ -144,7 +143,6 @@ const ProductoPage = () => {
     if (reviewExito) setReviewExito('')
   }
 
-  // Enviar reseña
   const handleSubmitReview = async (e) => {
     e.preventDefault()
     
@@ -171,12 +169,24 @@ const ProductoPage = () => {
           rating: reviewForm.rating,
           comment: reviewForm.comment.trim(),
           verified_purchase: false,
-          approved: false
         }])
       
       if (error) throw error
       
-      setReviewExito('Gracias por tu opinion. Tu reseña sera publicada despues de ser revisada por nuestro equipo.')
+      // Recargar las reseñas para mostrar la nueva
+      const { data: rev, error: re } = await supabase
+        .from('reviews')
+        .select('*')
+        .eq('product_id', id)
+        .order('created_at', { ascending: false })
+      
+      if (!re && rev) {
+        setReviews(rev)
+        if (rev.length > 0)
+          setAvgRating((rev.reduce((a, r) => a + r.rating, 0) / rev.length).toFixed(1))
+      }
+      
+      setReviewExito('Gracias por tu opinion. Tu reseña ya esta publicada.')
       setReviewForm({ customer_name: '', rating: 5, comment: '' })
       setMostrarFormularioReview(false)
       
@@ -241,6 +251,9 @@ const ProductoPage = () => {
     : producto.image_url 
       ? [producto.image_url]
       : []
+
+  // Determinar que reseñas mostrar (primeras 4 o todas)
+  const reviewsToShow = mostrarTodasReviews ? reviews : reviews.slice(0, 4)
 
   return (
     <div style={{ background: 'var(--color-kb-ivory)', minHeight: '100vh' }}>
@@ -621,7 +634,7 @@ const ProductoPage = () => {
           </div>
         </div>
 
-        {/* SECCION RESEÑAS COMPLETAMENTE RENOVADA */}
+        {/* SECCION RESEÑAS CON VER MAS */}
         <div className="mt-24 pt-12" style={{ borderTop: '1px solid rgba(212,120,138,0.1)' }}>
 
           <div className="flex items-end justify-between mb-10">
@@ -744,58 +757,72 @@ const ProductoPage = () => {
               </p>
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 gap-4">
-              {reviews.map((review, i) => (
-                <div
-                  key={`${review.id}-${i}`}
-                  className="animate-fade-up"
-                  style={{
-                    background: 'white',
-                    padding: '1.4rem 1.6rem',
-                    borderLeft: '2px solid rgba(212,120,138,0.2)',
-                    animationDelay: `${i * 60}ms`, animationFillMode: 'backwards',
-                  }}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div style={{
-                        width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0,
-                        background: 'linear-gradient(135deg, var(--color-kb-rose), var(--color-kb-rose-deep))',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        color: 'white', fontSize: '0.85rem', fontFamily: 'var(--font-display)',
-                        fontWeight: 400,
-                      }}>
-                        {review.customer_name?.charAt(0).toUpperCase() || 'C'}
+            <>
+              <div className="grid md:grid-cols-2 gap-4">
+                {reviewsToShow.map((review, i) => (
+                  <div
+                    key={`${review.id}-${i}`}
+                    className="animate-fade-up"
+                    style={{
+                      background: 'white',
+                      padding: '1.4rem 1.6rem',
+                      borderLeft: '2px solid rgba(212,120,138,0.2)',
+                      animationDelay: `${i * 60}ms`, animationFillMode: 'backwards',
+                    }}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div style={{
+                          width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0,
+                          background: 'linear-gradient(135deg, var(--color-kb-rose), var(--color-kb-rose-deep))',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          color: 'white', fontSize: '0.85rem', fontFamily: 'var(--font-display)',
+                          fontWeight: 400,
+                        }}>
+                          {review.customer_name?.charAt(0).toUpperCase() || 'C'}
+                        </div>
+                        <div>
+                          <p style={{ fontSize: '0.82rem', fontWeight: 400, color: 'var(--color-kb-charcoal)' }}>
+                            {review.customer_name || 'Cliente verificado'}
+                          </p>
+                          {review.verified_purchase && (
+                            <span className="flex items-center gap-1" style={{ fontSize: '0.62rem', color: '#4CAF50', fontWeight: 300, letterSpacing: '0.04em' }}>
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                              Compra verificada
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <p style={{ fontSize: '0.82rem', fontWeight: 400, color: 'var(--color-kb-charcoal)' }}>
-                          {review.customer_name || 'Cliente verificado'}
-                        </p>
-                        {review.verified_purchase && (
-                          <span className="flex items-center gap-1" style={{ fontSize: '0.62rem', color: '#4CAF50', fontWeight: 300, letterSpacing: '0.04em' }}>
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                            Compra verificada
-                          </span>
-                        )}
-                      </div>
+                      <Stars rating={review.rating} size={13} />
                     </div>
-                    <Stars rating={review.rating} size={13} />
+
+                    {review.comment && (
+                      <p style={{ fontSize: '0.82rem', fontWeight: 300, color: 'rgba(45,32,48,0.7)', lineHeight: 1.7, marginBottom: '0.75rem' }}>
+                        {review.comment}
+                      </p>
+                    )}
+
+                    <span style={{ fontSize: '0.65rem', fontWeight: 300, color: 'rgba(154,116,128,0.5)', letterSpacing: '0.04em' }}>
+                      {new Date(review.created_at).toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </span>
                   </div>
+                ))}
+              </div>
 
-                  {review.comment && (
-                    <p style={{ fontSize: '0.82rem', fontWeight: 300, color: 'rgba(45,32,48,0.7)', lineHeight: 1.7, marginBottom: '0.75rem' }}>
-                      {review.comment}
-                    </p>
-                  )}
-
-                  <span style={{ fontSize: '0.65rem', fontWeight: 300, color: 'rgba(154,116,128,0.5)', letterSpacing: '0.04em' }}>
-                    {new Date(review.created_at).toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' })}
-                  </span>
+              {/* Boton VER MAS / VER MENOS */}
+              {reviews.length > 4 && (
+                <div className="text-center mt-8">
+                  <button
+                    onClick={() => setMostrarTodasReviews(!mostrarTodasReviews)}
+                    className="px-6 py-2 border border-[rgba(212,120,138,0.4)] text-[#2D2030] rounded-sm text-xs font-['DM_Sans'] font-medium tracking-wide hover:bg-[#FDF0F3] hover:border-[#D4788A] transition-all duration-300"
+                  >
+                    {mostrarTodasReviews ? 'Ver menos' : `Ver todas las ${reviews.length} opiniones`}
+                  </button>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </div>
       </div>
