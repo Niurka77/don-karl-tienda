@@ -3,6 +3,7 @@ import BotonPDF from '../components/producto/BotonPDF'
 import HeroSection from '../components/ui/HeroSection'
 import TrustSection from '../components/ui/TrustSection'
 import CategoriesSection from '../components/ui/CategoriesSection'
+import VideoGallery from '../components/ui/VideoGallery'
 
 const HomePage = () => {
   return (
@@ -18,19 +19,18 @@ const HomePage = () => {
               Todos los productos
             </h3>
             <p className="text-gray-500 text-sm">
-              Explora nuestro catálogo completo importado de EE.UU.
+              Explora nuestro catalogo completo importado de EE.UU.
             </p>
           </div>
           <BotonPDF />
         </div>
         <ProductGrid />
       </div>
-      import VideoGallery from '../components/ui/VideoGallery'
 
-// Dentro del return, antes del footer o despues de los productos destacados:
-<section className="max-w-screen-xl mx-auto px-6 lg:px-10 py-16 md:py-24">
-  <VideoGallery limit={6} showTitle={true} />
-</section>
+      {/* Seccion de galeria de videos TikTok */}
+      <section className="max-w-screen-xl mx-auto px-6 lg:px-10 py-16 md:py-24">
+        <VideoGallery limit={6} showTitle={true} />
+      </section>
     </div>
   )
 }
