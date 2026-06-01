@@ -25,6 +25,12 @@ const HomePage = () => {
         </div>
         <ProductGrid />
       </div>
+      import VideoGallery from '../components/ui/VideoGallery'
+
+// Dentro del return, antes del footer o despues de los productos destacados:
+<section className="max-w-screen-xl mx-auto px-6 lg:px-10 py-16 md:py-24">
+  <VideoGallery limit={6} showTitle={true} />
+</section>
     </div>
   )
 }

@@ -9,7 +9,7 @@ import LoginPage from './pages/admin/LoginPage'
 import DashboardPage from './pages/admin/DashboardPage'
 import ProductosPage from './pages/admin/ProductosPage'
 import PedidosPage from './pages/admin/PedidosPage'
-
+import AdminVideos from './components/admin/AdminVideos'
 function App() {
   return (
     <Routes>
@@ -35,6 +35,7 @@ function App() {
         <Route index element={<DashboardPage />} />
         <Route path="productos" element={<ProductosPage />} />
         <Route path="pedidos" element={<PedidosPage />} />
+        <Route path="videos" element={<AdminVideos />} /> 
       </Route>
     </Routes>
   )
