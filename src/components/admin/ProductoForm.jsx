@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 
-const categorias = ['vestidos', 'bolsos', 'zapatos']
+const categorias = ['vestidos', 'bolsos', 'zapatos','Billeteras']
 const generos = ['mujer', 'hombre', 'unisex']
 const tallasDisponibles = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Unico']
 
