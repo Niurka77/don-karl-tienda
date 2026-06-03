@@ -33,22 +33,17 @@ const MAX_IMAGENES = 5
 const TAMANO_MAXIMO_MB = 5
 const TIPOS_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg']
 
-// Función para sanitizar el nombre del archivo (elimina caracteres no permitidos)
 const sanitizarNombreArchivo = (nombreOriginal) => {
-  // Separar nombre y extensión
   const ultimoPunto = nombreOriginal.lastIndexOf('.')
   const extension = ultimoPunto !== -1 ? nombreOriginal.slice(ultimoPunto) : ''
   let nombreSinExtension = ultimoPunto !== -1 ? nombreOriginal.slice(0, ultimoPunto) : nombreOriginal
 
-  // Normalizar caracteres Unicode (ej. á -> a, é -> e) y eliminar diacríticos
   nombreSinExtension = nombreSinExtension
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
 
-  // Reemplazar caracteres no alfanuméricos (excepto guión, guión bajo) por guión bajo
   nombreSinExtension = nombreSinExtension.replace(/[^a-zA-Z0-9_-]/g, '_')
 
-  // Evitar nombres vacíos
   if (nombreSinExtension.length === 0) nombreSinExtension = 'imagen'
 
   return `${nombreSinExtension}${extension}`
@@ -92,7 +87,6 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
       const brandValue = producto.brand || ''
       const esMarcaPredefinida = marcasPredefinidas.includes(brandValue)
       
-      // 🔧 CORRECCIÓN 1: Inicializar images_urls correctamente (fallback)
       let initialImagesUrls = []
       if (Array.isArray(producto.images_urls) && producto.images_urls.length > 0) {
         initialImagesUrls = producto.images_urls
@@ -120,15 +114,8 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
       })
       
       setMarcaSeleccion(esMarcaPredefinida ? brandValue : 'Otra')
-      
-      // 🔧 CORRECCIÓN 2: Inicializar previews correctamente (fallback)
-      if (Array.isArray(producto.images_urls) && producto.images_urls.length > 0) {
-        setPreviews(producto.images_urls)
-      } else if (producto.image_url) {
-        setPreviews([producto.image_url])
-      } else {
-        setPreviews([])
-      }
+      setPreviews(initialImagesUrls)
+      setImagenes([])
     }
   }, [producto])
 
@@ -248,7 +235,6 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     setErrores((prev) => ({ ...prev, imagenes: '' }))
   }
 
-  // 🔧 CORRECCIÓN 3: Confirmar eliminación de imágenes existentes
   const eliminarImagen = (index) => {
     const esImagenExistente = previews[index] && !previews[index].startsWith('blob:')
     if (esImagenExistente) {
@@ -268,16 +254,14 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
   }
 
   const subirImagenes = async () => {
-    if (imagenes.length === 0) return formData.images_urls
+    if (imagenes.length === 0) return []
     
     const urlsSubidas = []
     
     for (const imagen of imagenes) {
-      // Sanitizar el nombre del archivo ANTES de usarlo
       const nombreSanitizado = sanitizarNombreArchivo(imagen.name)
       const timestamp = Date.now()
       const randomStr = Math.random().toString(36).substring(7)
-      // Construir nombre final sin espacios y con timestamp para evitar colisiones
       const fileName = `${timestamp}_${randomStr}_${nombreSanitizado}`
       const filePath = `productos/${fileName}`
       
@@ -299,7 +283,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
       urlsSubidas.push(publicUrlData.publicUrl)
     }
     
-    return [...formData.images_urls, ...urlsSubidas]
+    return urlsSubidas
   }
 
   const validar = () => {
@@ -329,7 +313,6 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
       nuevosErrores.sku = 'El SKU es obligatorio'
     }
 
-    // 🔧 CORRECCIÓN 4: Validar que haya al menos una imagen (tanto en creación como en edición)
     if (previews.length === 0) {
       nuevosErrores.imagenes = 'El producto debe tener al menos una imagen'
     }
@@ -370,15 +353,20 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     setGuardando(true)
 
     try {
-      let imageUrls = [...previews.filter(url => !url.startsWith('blob:') && typeof url === 'string')]
+      // Obtener URLs existentes (las que no son blob:)
+      const urlsExistentes = previews.filter(url => !url.startsWith('blob:'))
       
+      let urlsNuevasSubidas = []
+      
+      // Si hay imágenes nuevas por subir
       if (imagenes.length > 0) {
         setSubiendo(true)
-        const nuevasUrls = await subirImagenes()
-        imageUrls = nuevasUrls.filter(url => typeof url === 'string' && url.startsWith('http'))
+        urlsNuevasSubidas = await subirImagenes()
         setSubiendo(false)
       }
       
+      // Combinar URLs existentes + nuevas subidas
+      const imageUrls = [...urlsExistentes, ...urlsNuevasSubidas]
       const imagenPrincipal = imageUrls[0] || ''
 
       const datosProducto = {
@@ -533,7 +521,6 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
             )}
           </div>
 
-          {/* MARCA - DROPDOWN */}
           <div>
             <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
               Marca
@@ -682,7 +669,6 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
             )}
           </div>
 
-          {/* TOGGLE - Mostrar en slider de nuevos productos */}
           <div className="md:col-span-2">
             <label className="flex items-center gap-3 cursor-pointer">
               <input
