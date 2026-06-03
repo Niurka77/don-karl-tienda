@@ -92,6 +92,14 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
       const brandValue = producto.brand || ''
       const esMarcaPredefinida = marcasPredefinidas.includes(brandValue)
       
+      // 🔧 CORRECCIÓN 1: Inicializar images_urls correctamente (fallback)
+      let initialImagesUrls = []
+      if (Array.isArray(producto.images_urls) && producto.images_urls.length > 0) {
+        initialImagesUrls = producto.images_urls
+      } else if (producto.image_url) {
+        initialImagesUrls = [producto.image_url]
+      }
+
       setFormData({
         name: producto.name || '',
         description: producto.description || '',
@@ -107,18 +115,19 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
         sizes_available: Array.isArray(producto.sizes_available)
           ? producto.sizes_available
           : [],
-        images_urls: Array.isArray(producto.images_urls)
-          ? producto.images_urls
-          : (producto.image_url ? [producto.image_url] : []),
+        images_urls: initialImagesUrls,
         is_featured: producto.is_featured || false,
       })
       
       setMarcaSeleccion(esMarcaPredefinida ? brandValue : 'Otra')
       
-      if (producto.images_urls && Array.isArray(producto.images_urls)) {
+      // 🔧 CORRECCIÓN 2: Inicializar previews correctamente (fallback)
+      if (Array.isArray(producto.images_urls) && producto.images_urls.length > 0) {
         setPreviews(producto.images_urls)
       } else if (producto.image_url) {
         setPreviews([producto.image_url])
+      } else {
+        setPreviews([])
       }
     }
   }, [producto])
@@ -239,7 +248,12 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     setErrores((prev) => ({ ...prev, imagenes: '' }))
   }
 
+  // 🔧 CORRECCIÓN 3: Confirmar eliminación de imágenes existentes
   const eliminarImagen = (index) => {
+    const esImagenExistente = previews[index] && !previews[index].startsWith('blob:')
+    if (esImagenExistente) {
+      if (!window.confirm('¿Eliminar esta imagen permanentemente?')) return
+    }
     if (previews[index] && previews[index].startsWith('blob:')) {
       URL.revokeObjectURL(previews[index])
     }
@@ -315,8 +329,9 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
       nuevosErrores.sku = 'El SKU es obligatorio'
     }
 
-    if (!esEdicion && previews.length === 0) {
-      nuevosErrores.imagenes = 'Al menos una imagen es obligatoria para nuevos productos'
+    // 🔧 CORRECCIÓN 4: Validar que haya al menos una imagen (tanto en creación como en edición)
+    if (previews.length === 0) {
+      nuevosErrores.imagenes = 'El producto debe tener al menos una imagen'
     }
 
     setErrores(nuevosErrores)
