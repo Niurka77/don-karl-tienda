@@ -10,6 +10,7 @@ import DashboardPage from './pages/admin/DashboardPage'
 import ProductosPage from './pages/admin/ProductosPage'
 import PedidosPage from './pages/admin/PedidosPage'
 import AdminVideos from './components/admin/AdminVideos'
+import HeroSlidesManager from './components/admin/HeroSlidesManager'
 function App() {
   return (
     <Routes>
@@ -36,6 +37,7 @@ function App() {
         <Route path="productos" element={<ProductosPage />} />
         <Route path="pedidos" element={<PedidosPage />} />
         <Route path="videos" element={<AdminVideos />} /> 
+        <Route path="/admin/slides" element={<HeroSlidesManager />} />
       </Route>
     </Routes>
   )

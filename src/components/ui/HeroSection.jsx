@@ -1,44 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-
-const slides = [
-  {
-    id: 1,
-    title: "Carteras",
-    titleAccent: "Importadas",
-    subtitle: "Guess · Tommy · Calvin Klein",
-    description: "Diseños exclusivos desde Estados Unidos. Calidad y estilo en cada pieza seleccionada.",
-    image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=1200&h=800&fit=crop",
-    category: "carteras",
-    tag: "Accesorios",
-  },
-  {
-    id: 2,
-    title: "Vestidos",
-    titleAccent: "de Fiesta",
-    subtitle: "Elegancia atemporal",
-    description: "Para ocasiones especiales. Tallas S al XXL. Colección 2025.",
-    image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=1200&h=800&fit=crop",
-    category: "vestidos",
-    tag: "Colección 2025",
-  },
-  {
-    id: 3,
-    title: "Billeteras",
-    titleAccent: "Premium",
-    subtitle: "Michael Kors · Tommy · CK",
-    description: "Piel de alta calidad. El accesorio perfecto para el día a día.",
-   image: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=1200&h=800&fit=crop",
-    category: "billeteras",
-    tag: "Más Vendido",
-  }
-]
+import { supabase } from '../../lib/supabase'
 
 const trustItems = [
   {
     label: '100% Original',
     icon: (
-      <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+      <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3 .708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
     ),
   },
   {
@@ -65,17 +33,90 @@ const trustItems = [
 ]
 
 const HeroSection = () => {
+  const [slides, setSlides] = useState([])
   const [currentSlide, setCurrentSlide] = useState(0)
   const [prevSlide, setPrevSlide] = useState(null)
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      goToSlide((currentSlide + 1) % slides.length)
-    }, 6500)
-    return () => clearInterval(timer)
-  }, [currentSlide])
+    fetchSlides()
+  }, [])
+
+  useEffect(() => {
+    if (slides.length > 0) {
+      const timer = setInterval(() => {
+        goToSlide((currentSlide + 1) % slides.length)
+      }, 6500)
+      return () => clearInterval(timer)
+    }
+  }, [currentSlide, slides])
+
+  const fetchSlides = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('hero_slides')
+        .select(`
+          *,
+          products (
+            name,
+            description,
+            category,
+            gender,
+            brand,
+            images_urls,
+            image_url
+          )
+        `)
+        .eq('active', true)
+        .order('sort_order', { ascending: true })
+
+      if (error) throw error
+
+      // Procesar slides: mezclar datos del producto con overrides
+      const processedSlides = data.map((slide) => {
+        const product = slide.products
+        const images = product?.images_urls?.length > 0 
+          ? product.images_urls 
+          : product?.image_url 
+            ? [product.image_url] 
+            : []
+
+        // Si no hay producto asociado, usar campos manuales
+        if (!product) {
+          return {
+            id: slide.id,
+            title: slide.title_override || 'Colección',
+            titleAccent: slide.title_accent_override || 'Exclusiva',
+            subtitle: slide.subtitle_override || 'Nueva Colección',
+            description: slide.description_override || 'Descubre nuestra selección exclusiva',
+            image: slide.image_override || 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=1200&h=800&fit=crop',
+            category: 'todos',
+            tag: slide.tag_override || 'Nuevo',
+          }
+        }
+
+        // Si hay producto, usar datos del producto (con overrides opcionales)
+        return {
+          id: slide.id,
+          title: slide.title_override || product.name.split(' ')[0] || 'Colección',
+          titleAccent: slide.title_accent_override || product.name.split(' ').slice(1).join(' ') || 'Exclusiva',
+          subtitle: slide.subtitle_override || product.brand || 'Nueva Colección',
+          description: slide.description_override || product.description || 'Descubre nuestra selección exclusiva',
+          image: slide.image_override || images[0] || 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=1200&h=800&fit=crop',
+          category: product.category || 'todos',
+          tag: slide.tag_override || 'Nuevo',
+        }
+      })
+
+      setSlides(processedSlides)
+    } catch (error) {
+      console.error('Error fetching slides:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const goToSlide = (index) => {
     if (isTransitioning || index === currentSlide) return
@@ -95,6 +136,21 @@ const HeroSection = () => {
 
   const handleComprarAhora = (categoria) => navigate(`/?categoria=${categoria}`)
 
+  if (loading) {
+    return (
+      <section className="relative min-h-[92vh] flex items-center justify-center bg-[#1A1118]">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-[#D4788A] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-[#F2C4CE] font-['DM_Sans'] text-sm tracking-widest">Cargando...</p>
+        </div>
+      </section>
+    )
+  }
+
+  if (slides.length === 0) {
+    return null
+  }
+
   return (
     <section
       className="relative overflow-hidden"
@@ -106,8 +162,7 @@ const HeroSection = () => {
     >
       {/* ── HERO PRINCIPAL ── */}
       <div className="relative min-h-[92vh] md:min-h-[88vh] flex items-center">
-
-        {/* Fondo con imagen del slide — capa parallax */}
+        {/* Fondo con imagen del slide */}
         {slides.map((slide, index) => (
           <div
             key={slide.id}
@@ -121,7 +176,6 @@ const HeroSection = () => {
               className="absolute inset-0 w-full h-full object-cover"
               style={{ filter: 'brightness(0.22) saturate(0.6)' }}
             />
-            {/* Gradiente editorial sobre la imagen */}
             <div
               className="absolute inset-0"
               style={{
@@ -135,7 +189,6 @@ const HeroSection = () => {
                 `,
               }}
             />
-            {/* Acento rosado difuso */}
             <div
               className="absolute inset-0"
               style={{
@@ -148,7 +201,6 @@ const HeroSection = () => {
         {/* Contenido del slide */}
         <div className="relative z-10 max-w-screen-xl mx-auto px-6 lg:px-10 w-full py-20">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-
             {/* ── LEFT: Texto ── */}
             <div>
               {slides.map((slide, index) => (
@@ -163,7 +215,6 @@ const HeroSection = () => {
                   }}
                   aria-hidden={index !== currentSlide}
                 >
-                  {/* Tag categoría */}
                   <div className="flex items-center gap-3 mb-7">
                     <span
                       className="text-editorial"
@@ -177,7 +228,6 @@ const HeroSection = () => {
                     />
                   </div>
 
-                  {/* Título dramático */}
                   <h1
                     className="mb-5 leading-[0.95]"
                     style={{
@@ -202,7 +252,6 @@ const HeroSection = () => {
                     </span>
                   </h1>
 
-                  {/* Subtítulo */}
                   <p
                     className="mb-4 text-editorial"
                     style={{ color: 'rgba(242,196,206,0.65)', letterSpacing: '0.2em' }}
@@ -210,7 +259,6 @@ const HeroSection = () => {
                     {slide.subtitle}
                   </p>
 
-                  {/* Descripción */}
                   <p
                     className="mb-10 leading-relaxed max-w-md"
                     style={{
@@ -222,7 +270,6 @@ const HeroSection = () => {
                     {slide.description}
                   </p>
 
-                  {/* Precio desde */}
                   <div className="flex items-baseline gap-2 mb-10">
                     <span
                       className="text-editorial"
@@ -244,7 +291,6 @@ const HeroSection = () => {
                     <span style={{ color: 'rgba(242,196,206,0.4)', fontSize: '0.8rem' }}>.00</span>
                   </div>
 
-                  {/* CTAs */}
                   <div className="flex flex-wrap gap-4">
                     <button
                       onClick={() => handleComprarAhora(slide.category)}
@@ -263,12 +309,12 @@ const HeroSection = () => {
                         letterSpacing: '0.18em',
                         fontSize: '0.7rem',
                       }}
-                      onMouseEnter={e => {
+                      onMouseEnter={(e) => {
                         e.currentTarget.style.color = 'var(--color-kb-rose-mist)'
                         e.currentTarget.style.borderBottomColor = 'var(--color-kb-rose)'
                         e.currentTarget.style.letterSpacing = '0.24em'
                       }}
-                      onMouseLeave={e => {
+                      onMouseLeave={(e) => {
                         e.currentTarget.style.color = 'rgba(242,196,206,0.7)'
                         e.currentTarget.style.borderBottomColor = 'rgba(212,120,138,0.3)'
                         e.currentTarget.style.letterSpacing = '0.18em'
@@ -283,7 +329,6 @@ const HeroSection = () => {
 
             {/* ── RIGHT: Imagen circular editorial ── */}
             <div className="hidden lg:flex justify-center items-center relative">
-              {/* Anillos decorativos */}
               <div
                 className="absolute rounded-full"
                 style={{
@@ -301,7 +346,6 @@ const HeroSection = () => {
                 }}
               />
 
-              {/* Imagen principal */}
               <div
                 className="relative overflow-hidden rounded-full"
                 style={{
@@ -326,7 +370,6 @@ const HeroSection = () => {
                 ))}
               </div>
 
-              {/* Badge flotante — número de slide */}
               <div
                 className="absolute bottom-6 right-6 animate-float"
                 style={{
@@ -361,7 +404,7 @@ const HeroSection = () => {
           </div>
         </div>
 
-        {/* Indicadores laterales — barra vertical */}
+        {/* Indicadores laterales */}
         <div
           className="absolute right-6 top-1/2 -translate-y-1/2 z-20 hidden md:flex flex-col gap-3"
           role="tablist"
@@ -376,7 +419,6 @@ const HeroSection = () => {
               aria-selected={index === currentSlide}
               aria-label={`${slide.title} ${slide.titleAccent}`}
             >
-              {/* Label aparece al hover */}
               <span
                 className="text-editorial opacity-0 group-hover:opacity-100 transition-all duration-300"
                 style={{
@@ -403,7 +445,6 @@ const HeroSection = () => {
           ))}
         </div>
 
-        {/* Número de slide esquina inferior izquierda */}
         <div className="absolute bottom-8 left-6 lg:left-10 z-20 hidden md:flex items-end gap-3">
           <span
             style={{
@@ -432,7 +473,6 @@ const HeroSection = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {trustItems.map((item) => (
               <div key={item.label} className="flex items-center gap-3 group">
-                {/* Icono */}
                 <div
                   className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-105"
                   style={{
@@ -449,7 +489,6 @@ const HeroSection = () => {
                     {item.icon}
                   </svg>
                 </div>
-                {/* Label */}
                 <span
                   className="text-editorial"
                   style={{
@@ -458,8 +497,8 @@ const HeroSection = () => {
                     letterSpacing: '0.18em',
                     transition: 'color 0.3s ease',
                   }}
-                  onMouseEnter={e => e.currentTarget.style.color = 'rgba(242,196,206,0.9)'}
-                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(242,196,206,0.55)'}
+                  onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(242,196,206,0.9)'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(242,196,206,0.55)'}
                 >
                   {item.label}
                 </span>
