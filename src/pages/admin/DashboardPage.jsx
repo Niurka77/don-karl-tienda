@@ -14,11 +14,29 @@ const DashboardPage = () => {
   const [aplicandoDescuento, setAplicandoDescuento] = useState(null)
   const [error, setError] = useState(null)
   const [descuentoManual, setDescuentoManual] = useState({})
+  
+  // 🆕 NUEVO: Productos con descuento aplicado en esta sesión
+  const [ajustesRecientes, setAjustesRecientes] = useState([])
+  
+  //  NUEVO: Sistema de notificaciones toast
+  const [toast, setToast] = useState(null)
 
   useEffect(() => {
     cargarStats()
     cargarEstancados()
   }, [])
+
+  // Auto-ocultar toast después de 4 segundos
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 4000)
+      return () => clearTimeout(timer)
+    }
+  }, [toast])
+
+  const mostrarToast = (mensaje, tipo = 'exito') => {
+    setToast({ mensaje, tipo })
+  }
 
   const cargarStats = async () => {
     try {
@@ -90,11 +108,10 @@ const DashboardPage = () => {
     const diasEstancado = getDiasEstancado(producto)
     const descuentoActual = producto.discount_percent || 0
     
-    // Lógica inteligente basada en tiempo estancado
-    if (diasEstancado > 60) return Math.min(descuentoActual + 30, 50) // Más de 2 meses
-    if (diasEstancado > 30) return Math.min(descuentoActual + 20, 50) // Más de 1 mes
-    if (diasEstancado > 15) return Math.min(descuentoActual + 10, 50) // Más de 15 días
-    return Math.min(descuentoActual + 5, 50) // Recién estancado
+    if (diasEstancado > 60) return Math.min(descuentoActual + 30, 50)
+    if (diasEstancado > 30) return Math.min(descuentoActual + 20, 50)
+    if (diasEstancado > 15) return Math.min(descuentoActual + 10, 50)
+    return Math.min(descuentoActual + 5, 50)
   }
 
   const getDiasEstancado = (producto) => {
@@ -104,10 +121,10 @@ const DashboardPage = () => {
   }
 
   const getNivelUrgencia = (dias) => {
-    if (dias > 60) return { nivel: 'Crítico', color: 'red', emoji: '🔴' }
+    if (dias > 60) return { nivel: 'Crítico', color: 'red', emoji: '' }
     if (dias > 30) return { nivel: 'Alto', color: 'orange', emoji: '🟠' }
     if (dias > 15) return { nivel: 'Medio', color: 'yellow', emoji: '🟡' }
-    return { nivel: 'Bajo', color: 'green', emoji: '🟢' }
+    return { nivel: 'Bajo', color: 'green', emoji: '' }
   }
 
   const handleDescuentoChange = (productoId, value) => {
@@ -117,23 +134,23 @@ const DashboardPage = () => {
     setDescuentoManual(prev => ({ ...prev, [productoId]: nuevoValor }))
   }
 
+  //  NUEVO: Aplicar descuento con flujo mejorado
   const aplicarDescuento = async (producto, descuentoPersonalizado) => {
     let nuevoDescuento = parseInt(descuentoPersonalizado, 10)
     if (isNaN(nuevoDescuento)) {
-      alert('Por favor ingresa un número válido')
+      mostrarToast('Por favor ingresa un número válido', 'error')
       return
     }
     if (nuevoDescuento < 0 || nuevoDescuento > 99) {
-      alert('El descuento debe estar entre 0% y 99%')
+      mostrarToast('El descuento debe estar entre 0% y 99%', 'error')
       return
     }
 
-    const confirmacion = window.confirm(
-      `¿Aplicar descuento del ${nuevoDescuento}% a "${producto.name}"?\n\n` +
-      `Precio actual: $${producto.price_original?.toFixed(2)}\n` +
-      `Precio final: $${(producto.price_original * (1 - nuevoDescuento / 100)).toFixed(2)}`
-    )
-    if (!confirmacion) return
+    // Si el descuento es el mismo que ya tiene, no hacer nada
+    if (nuevoDescuento === producto.discount_percent) {
+      mostrarToast('Este producto ya tiene ese descuento', 'info')
+      return
+    }
 
     setAplicandoDescuento(producto.id)
     try {
@@ -147,20 +164,57 @@ const DashboardPage = () => {
 
       if (error) throw error
 
-      setProductosEstancados(prev =>
-        prev.map(p =>
-          p.id === producto.id
-            ? { ...p, discount_percent: nuevoDescuento, is_new: false }
-            : p
-        )
+      // 🆕 NUEVO: Mover el producto de "estancados" a "ajustes recientes"
+      const productoActualizado = {
+        ...producto,
+        discount_percent: nuevoDescuento,
+        is_new: false,
+        descuentoAplicadoEn: new Date().toISOString(),
+        descuentoAnterior: producto.discount_percent || 0,
+      }
+
+      // Quitar de la lista principal con animación
+      setProductosEstancados(prev => prev.filter(p => p.id !== producto.id))
+      
+      // Agregar a ajustes recientes
+      setAjustesRecientes(prev => [productoActualizado, ...prev])
+
+      // Calcular precio anterior y nuevo para el mensaje
+      const precioAnterior = producto.price_original * (1 - (producto.discount_percent || 0) / 100)
+      const precioNuevo = producto.price_original * (1 - nuevoDescuento / 100)
+      const ahorro = precioAnterior - precioNuevo
+
+      mostrarToast(
+        `✅ ${producto.name}: ${producto.discount_percent || 0}% → ${nuevoDescuento}% (-$${ahorro.toFixed(2)})`,
+        'exito'
       )
-      alert(`✅ Descuento del ${nuevoDescuento}% aplicado correctamente`)
     } catch (err) {
       console.error('Error al aplicar descuento:', err)
-      alert('❌ Error al aplicar el descuento. Intenta nuevamente.')
+      mostrarToast('❌ Error al aplicar el descuento. Intenta nuevamente.', 'error')
     } finally {
       setAplicandoDescuento(null)
     }
+  }
+
+  // 🆕 NUEVO: Ajustar nuevamente un producto de ajustes recientes
+  const ajustarNuevamente = (productoAjustado) => {
+    // Volver a poner en la lista principal con el descuento actual
+    const productoEnLista = {
+      ...productoAjustado,
+      discount_percent: productoAjustado.descuentoAnterior, // Restaurar valor anterior en la lista
+    }
+    
+    setProductosEstancados(prev => [productoEnLista, ...prev])
+    setDescuentoManual(prev => ({ ...prev, [productoAjustado.id]: productoAjustado.discount_percent }))
+    setAjustesRecientes(prev => prev.filter(p => p.id !== productoAjustado.id))
+    
+    mostrarToast('🔄 Producto movido para nuevo ajuste', 'info')
+  }
+
+  // 🆕 NUEVO: Confirmar que el descuento fue suficiente (quitar de recientes)
+  const confirmarAjuste = (productoId) => {
+    setAjustesRecientes(prev => prev.filter(p => p.id !== productoId))
+    mostrarToast('✨ Ajuste confirmado. El producto ya no aparecerá aquí.', 'exito')
   }
 
   const cards = [
@@ -181,7 +235,7 @@ const DashboardPage = () => {
     {
       title: 'Productos Agotados',
       value: stats.productosAgotados,
-      icon: '⚠️',
+      icon: '️',
       color: 'bg-red-50 text-red-700',
       link: '/admin/productos',
     },
@@ -197,6 +251,27 @@ const DashboardPage = () => {
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-800 mb-6">Dashboard</h1>
+
+      {/* 🆕 NUEVO: Sistema de Toast Notifications */}
+      {toast && (
+        <div className="fixed top-6 right-6 z-50 animate-slide-in">
+          <div className={`px-5 py-3 rounded-lg shadow-lg border max-w-sm ${
+            toast.tipo === 'exito' ? 'bg-green-50 border-green-200 text-green-800' :
+            toast.tipo === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
+            'bg-blue-50 border-blue-200 text-blue-800'
+          }`}>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-medium">{toast.mensaje}</p>
+              <button
+                onClick={() => setToast(null)}
+                className="text-gray-400 hover:text-gray-600 text-lg leading-none"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg mb-6">
@@ -227,7 +302,87 @@ const DashboardPage = () => {
             ))}
           </div>
 
-          {/* Productos estancados */}
+          {/* 🆕 NUEVO: Sección de Ajustes Recientes (aparece primero si hay items) */}
+          {ajustesRecientes.length > 0 && (
+            <div className="mt-8 bg-white rounded-xl shadow-sm p-6 border-2 border-green-100">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                    <span>✨</span> Descuentos aplicados en esta sesión
+                  </h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Productos a los que ya les aplicaste descuento. Confirma que está bien o ajusta nuevamente.
+                  </p>
+                </div>
+                <span className="text-sm text-green-700 bg-green-100 px-3 py-1 rounded-full font-medium">
+                  {ajustesRecientes.length} ajuste{ajustesRecientes.length !== 1 ? 's' : ''}
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                {ajustesRecientes.map((producto) => {
+                  const tiempoTranscurrido = Math.floor(
+                    (new Date() - new Date(producto.descuentoAplicadoEn)) / 1000 / 60
+                  )
+                  const tiempoTexto = tiempoTranscurrido < 1 
+                    ? 'hace un momento' 
+                    : `hace ${tiempoTranscurrido} min`
+
+                  return (
+                    <div
+                      key={producto.id}
+                      className="p-4 bg-green-50 rounded-lg border border-green-200"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={producto.image_url || 'https://via.placeholder.com/48'}
+                            alt={producto.name}
+                            className="w-12 h-12 rounded object-cover bg-gray-100 flex-shrink-0"
+                          />
+                          <div>
+                            <p className="font-medium text-gray-800 text-sm">
+                              {producto.name}
+                            </p>
+                            <div className="flex items-center gap-2 text-xs text-gray-600">
+                              <span className="line-through">
+                                -{producto.descuentoAnterior}%
+                              </span>
+                              <span className="text-gray-400">→</span>
+                              <span className="text-green-700 font-semibold">
+                                -{producto.discount_percent}%
+                              </span>
+                              <span className="text-gray-400">•</span>
+                              <span>{tiempoTexto}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => ajustarNuevamente(producto)}
+                            className="px-3 py-1.5 text-xs font-medium text-orange-700 bg-orange-100 rounded-lg hover:bg-orange-200 transition-colors"
+                            title="Volver a la lista para ajustar"
+                          >
+                            🔄 Ajustar más
+                          </button>
+                          <button
+                            onClick={() => confirmarAjuste(producto.id)}
+                            className="px-3 py-1.5 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+                            title="Descuento suficiente, quitar de la lista"
+                          >
+                            ✓ Listo
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Productos estancados - lista principal */}
           {productosEstancados.length > 0 && (
             <div className="mt-8 bg-white rounded-xl shadow-sm p-6">
               <div className="flex items-center justify-between mb-4">
@@ -236,7 +391,7 @@ const DashboardPage = () => {
                     📦 Productos con baja rotación
                   </h2>
                   <p className="text-sm text-gray-500 mt-1">
-                    Productos sin ventas hace más de 15 días. Aplica un descuento para acelerar su venta.
+                    Productos sin ventas hace más de 15 días. Al aplicarles descuento, pasarán a "Ajustes recientes".
                   </p>
                 </div>
                 <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
