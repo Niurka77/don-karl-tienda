@@ -13,6 +13,8 @@ const DashboardPage = () => {
   const [productosEstancados, setProductosEstancados] = useState([])
   const [aplicandoDescuento, setAplicandoDescuento] = useState(null)
   const [error, setError] = useState(null)
+  // Estado para almacenar el porcentaje ingresado por producto
+  const [descuentoManual, setDescuentoManual] = useState({})
 
   useEffect(() => {
     cargarStats()
@@ -72,26 +74,45 @@ const DashboardPage = () => {
 
       if (error) throw error
       setProductosEstancados(data || [])
+      // Inicializar el estado de descuento manual para cada producto con el valor sugerido automático
+      const initialManual = {}
+      data.forEach(p => {
+        const sugerido = Math.min((p.discount_percent || 0) + 10, 50)
+        initialManual[p.id] = sugerido
+      })
+      setDescuentoManual(initialManual)
     } catch (err) {
       console.error('Error al cargar estancados:', err)
     }
   }
 
-  const aplicarDescuento = async (producto) => {
-    // ✅ CONFIRMACIÓN: Preguntar antes de aplicar
+  const handleDescuentoChange = (productoId, value) => {
+    let nuevoValor = parseInt(value, 10)
+    if (isNaN(nuevoValor)) nuevoValor = 0
+    // Limitar entre 0 y 99 (puedes cambiar a 50 si prefieres)
+    nuevoValor = Math.min(99, Math.max(0, nuevoValor))
+    setDescuentoManual(prev => ({ ...prev, [productoId]: nuevoValor }))
+  }
+
+  const aplicarDescuento = async (producto, descuentoPersonalizado) => {
+    // Validar que el descuento sea un número válido
+    let nuevoDescuento = parseInt(descuentoPersonalizado, 10)
+    if (isNaN(nuevoDescuento)) {
+      alert('Por favor ingresa un número válido')
+      return
+    }
+    if (nuevoDescuento < 0 || nuevoDescuento > 99) {
+      alert('El descuento debe estar entre 0% y 99%')
+      return
+    }
+
     const confirmacion = window.confirm(
-      `¿Aplicar descuento del ${Math.min((producto.discount_percent || 0) + 10, 50)}% a "${producto.name}"?`
+      `¿Aplicar descuento del ${nuevoDescuento}% a "${producto.name}"?`
     )
-    
     if (!confirmacion) return
 
     setAplicandoDescuento(producto.id)
     try {
-      const nuevoDescuento = Math.min(
-        (producto.discount_percent || 0) + 10,
-        50
-      )
-
       const { error } = await supabase
         .from('products')
         .update({
@@ -102,15 +123,14 @@ const DashboardPage = () => {
 
       if (error) throw error
 
-      // ✅ ACTUALIZAR UI: Remover de la lista inmediatamente
-      setProductosEstancados(
-        productosEstancados.map((p) =>
-          p.id === producto.id 
+      // Actualizar la lista local
+      setProductosEstancados(prev =>
+        prev.map(p =>
+          p.id === producto.id
             ? { ...p, discount_percent: nuevoDescuento, is_new: false }
             : p
         )
       )
-      
       alert(`✅ Descuento del ${nuevoDescuento}% aplicado correctamente`)
     } catch (err) {
       console.error('Error al aplicar descuento:', err)
@@ -199,47 +219,63 @@ const DashboardPage = () => {
                 Productos con stock sin ventas hace más de 15 días. Aplica un descuento para acelerar su salida.
               </p>
               <div className="space-y-3">
-                {productosEstancados.map((producto) => (
-                  <div
-                    key={producto.id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-amber-50 rounded-lg border border-amber-200"
-                  >
-                    <div className="flex items-center gap-4">
-                      <img
-                        src={producto.image_url || 'https://via.placeholder.com/48'}
-                        alt={producto.name}
-                        className="w-12 h-12 rounded object-cover bg-gray-100 flex-shrink-0"
-                      />
-                      <div>
-                        <p className="font-medium text-gray-800 text-sm">
-                          {producto.name}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          Stock: {producto.stock} | Precio: ${producto.price_original?.toFixed(2)}
-                          {producto.discount_percent > 0 && (
-                            <span className="text-red-500 ml-2">
-                              (-{producto.discount_percent}% actual)
+                {productosEstancados.map((producto) => {
+                  const sugerido = Math.min((producto.discount_percent || 0) + 10, 50)
+                  const valorActual = descuentoManual[producto.id] !== undefined ? descuentoManual[producto.id] : sugerido
+                  return (
+                    <div
+                      key={producto.id}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-amber-50 rounded-lg border border-amber-200"
+                    >
+                      <div className="flex items-center gap-4">
+                        <img
+                          src={producto.image_url || 'https://via.placeholder.com/48'}
+                          alt={producto.name}
+                          className="w-12 h-12 rounded object-cover bg-gray-100 flex-shrink-0"
+                        />
+                        <div>
+                          <p className="font-medium text-gray-800 text-sm">
+                            {producto.name}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Stock: {producto.stock} | Precio: ${producto.price_original?.toFixed(2)}
+                            {producto.discount_percent > 0 && (
+                              <span className="text-red-500 ml-2">
+                                (-{producto.discount_percent}% actual)
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          min="0"
+                          max="99"
+                          step="1"
+                          value={valorActual}
+                          onChange={(e) => handleDescuentoChange(producto.id, e.target.value)}
+                          className="w-20 px-2 py-1 border border-gray-300 rounded text-sm text-center"
+                          aria-label="Porcentaje de descuento"
+                        />
+                        <button
+                          onClick={() => aplicarDescuento(producto, valorActual)}
+                          disabled={aplicandoDescuento === producto.id}
+                          className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-all disabled:bg-gray-300 disabled:cursor-not-allowed whitespace-nowrap"
+                        >
+                          {aplicandoDescuento === producto.id ? (
+                            <span className="flex items-center gap-2">
+                              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                              Aplicando...
                             </span>
+                          ) : (
+                            'Aplicar'
                           )}
-                        </p>
+                        </button>
                       </div>
                     </div>
-                    <button
-                      onClick={() => aplicarDescuento(producto)}
-                      disabled={aplicandoDescuento === producto.id}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-all disabled:bg-gray-300 disabled:cursor-not-allowed whitespace-nowrap"
-                    >
-                      {aplicandoDescuento === producto.id ? (
-                        <span className="flex items-center gap-2">
-                          <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                          Aplicando...
-                        </span>
-                      ) : (
-                        `Aplicar -${Math.min((producto.discount_percent || 0) + 10, 50)}%`
-                      )}
-                    </button>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )}

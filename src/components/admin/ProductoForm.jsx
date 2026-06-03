@@ -33,6 +33,27 @@ const MAX_IMAGENES = 5
 const TAMANO_MAXIMO_MB = 5
 const TIPOS_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg']
 
+// Función para sanitizar el nombre del archivo (elimina caracteres no permitidos)
+const sanitizarNombreArchivo = (nombreOriginal) => {
+  // Separar nombre y extensión
+  const ultimoPunto = nombreOriginal.lastIndexOf('.')
+  const extension = ultimoPunto !== -1 ? nombreOriginal.slice(ultimoPunto) : ''
+  let nombreSinExtension = ultimoPunto !== -1 ? nombreOriginal.slice(0, ultimoPunto) : nombreOriginal
+
+  // Normalizar caracteres Unicode (ej. á -> a, é -> e) y eliminar diacríticos
+  nombreSinExtension = nombreSinExtension
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+
+  // Reemplazar caracteres no alfanuméricos (excepto guión, guión bajo) por guión bajo
+  nombreSinExtension = nombreSinExtension.replace(/[^a-zA-Z0-9_-]/g, '_')
+
+  // Evitar nombres vacíos
+  if (nombreSinExtension.length === 0) nombreSinExtension = 'imagen'
+
+  return `${nombreSinExtension}${extension}`
+}
+
 const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
   const esEdicion = !!producto
 
@@ -63,7 +84,6 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
   const [colorPersonalizado, setColorPersonalizado] = useState('')
   const [marcaSeleccion, setMarcaSeleccion] = useState('')
   
-  // Estado para mostrar el dialogo de confirmacion al crear nuevo producto
   const [mostrarDialogoSlider, setMostrarDialogoSlider] = useState(false)
   const [dialogoCallback, setDialogoCallback] = useState(null)
 
@@ -239,7 +259,12 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     const urlsSubidas = []
     
     for (const imagen of imagenes) {
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}_${imagen.name.replace(/\s+/g, '_')}`
+      // Sanitizar el nombre del archivo ANTES de usarlo
+      const nombreSanitizado = sanitizarNombreArchivo(imagen.name)
+      const timestamp = Date.now()
+      const randomStr = Math.random().toString(36).substring(7)
+      // Construir nombre final sin espacios y con timestamp para evitar colisiones
+      const fileName = `${timestamp}_${randomStr}_${nombreSanitizado}`
       const filePath = `productos/${fileName}`
       
       const { error: uploadError } = await supabase.storage
@@ -298,7 +323,6 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     return Object.keys(nuevosErrores).length === 0
   }
 
-  // Funcion para preguntar si quiere mostrar en slider (solo para nuevos productos)
   const preguntarMostrarEnSlider = () => {
     return new Promise((resolve) => {
       setMostrarDialogoSlider(true)
@@ -321,7 +345,6 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
 
     if (!validar()) return
 
-    // Para productos nuevos, preguntar si mostrar en slider
     let featuredValue = formData.is_featured
     if (!esEdicion) {
       const respuesta = await preguntarMostrarEnSlider()
@@ -405,7 +428,6 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
 
   return (
     <>
-      {/* Dialogo para preguntar si mostrar en slider */}
       {mostrarDialogoSlider && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-[#FFF8F5] rounded-sm p-6 max-w-md w-full mx-4">
@@ -514,7 +536,6 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
             </select>
           </div>
 
-          {/* Input para marca personalizada */}
           {marcaSeleccion === 'Otra' && (
             <div>
               <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
@@ -903,6 +924,5 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     </>
   )
 }
-
 
 export default ProductoForm
