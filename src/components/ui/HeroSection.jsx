@@ -48,7 +48,7 @@ const HeroSection = () => {
     if (slides.length > 0) {
       const timer = setInterval(() => {
         goToSlide((currentSlide + 1) % slides.length)
-      }, 6500)
+      }, 4000) // 🔥 REDUCIDO: De 6500ms a 4000ms (4 segundos)
       return () => clearInterval(timer)
     }
   }, [currentSlide, slides])
@@ -74,7 +74,6 @@ const HeroSection = () => {
 
       if (error) throw error
 
-      // Procesar slides: mezclar datos del producto con overrides
       const processedSlides = data.map((slide) => {
         const product = slide.products
         const images = product?.images_urls?.length > 0 
@@ -83,7 +82,6 @@ const HeroSection = () => {
             ? [product.image_url] 
             : []
 
-        // Si no hay producto asociado, usar campos manuales
         if (!product) {
           return {
             id: slide.id,
@@ -97,7 +95,6 @@ const HeroSection = () => {
           }
         }
 
-        // Si hay producto, usar datos del producto (con overrides opcionales)
         return {
           id: slide.id,
           title: slide.title_override || product.name.split(' ')[0] || 'Colección',
@@ -106,7 +103,7 @@ const HeroSection = () => {
           description: slide.description_override || product.description || 'Descubre nuestra selección exclusiva',
           image: slide.image_override || images[0] || 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=1200&h=800&fit=crop',
           category: product.category || 'todos',
-          tag: slide.tag_override || 'Nuevo',
+          tag: slide.tag_override || 'Nuevo', // ✅ AHORA USA tag_override
         }
       })
 
@@ -160,9 +157,7 @@ const HeroSection = () => {
       aria-label="Carrusel de productos destacados"
       style={{ background: 'var(--color-kb-ivory)' }}
     >
-      {/* ── HERO PRINCIPAL ── */}
       <div className="relative min-h-[92vh] md:min-h-[88vh] flex items-center">
-        {/* Fondo con imagen del slide */}
         {slides.map((slide, index) => (
           <div
             key={slide.id}
@@ -198,10 +193,8 @@ const HeroSection = () => {
           </div>
         ))}
 
-        {/* Contenido del slide */}
         <div className="relative z-10 max-w-screen-xl mx-auto px-6 lg:px-10 w-full py-20">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-            {/* ── LEFT: Texto ── */}
             <div>
               {slides.map((slide, index) => (
                 <div
@@ -327,7 +320,6 @@ const HeroSection = () => {
               ))}
             </div>
 
-            {/* ── RIGHT: Imagen circular editorial ── */}
             <div className="hidden lg:flex justify-center items-center relative">
               <div
                 className="absolute rounded-full"
@@ -370,6 +362,7 @@ const HeroSection = () => {
                 ))}
               </div>
 
+              {/* ✅ BADGE DINÁMICO: Muestra el tag del slide actual */}
               <div
                 className="absolute bottom-6 right-6 animate-float"
                 style={{
@@ -385,7 +378,7 @@ const HeroSection = () => {
                   className="text-editorial mb-1"
                   style={{ color: 'rgba(212,120,138,0.7)', fontSize: '0.6rem' }}
                 >
-                  Colección
+                  {slides[currentSlide]?.tag?.includes('20') ? 'Colección' : 'Tag'}
                 </p>
                 <p
                   style={{
@@ -397,14 +390,13 @@ const HeroSection = () => {
                     letterSpacing: '-0.02em',
                   }}
                 >
-                  2025
+                  {slides[currentSlide]?.tag || '2025'}
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Indicadores laterales */}
         <div
           className="absolute right-6 top-1/2 -translate-y-1/2 z-20 hidden md:flex flex-col gap-3"
           role="tablist"
@@ -462,7 +454,6 @@ const HeroSection = () => {
         </div>
       </div>
 
-      {/* ── BANDA DE CONFIANZA ── */}
       <div
         style={{
           background: 'var(--color-kb-obsidian)',

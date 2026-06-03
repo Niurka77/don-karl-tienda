@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 
+const MAX_SLIDES = 5
+
 const HeroSlidesManager = () => {
   const [slides, setSlides] = useState([])
   const [products, setProducts] = useState([])
@@ -19,6 +21,7 @@ const HeroSlidesManager = () => {
   })
   const [editingId, setEditingId] = useState(null)
   const [showCustomFields, setShowCustomFields] = useState(false)
+  const [selectedProductImages, setSelectedProductImages] = useState([])
 
   useEffect(() => {
     fetchData()
@@ -26,7 +29,6 @@ const HeroSlidesManager = () => {
 
   const fetchData = async () => {
     try {
-      // Obtener slides
       const { data: slidesData, error: slidesError } = await supabase
         .from('hero_slides')
         .select(`
@@ -43,7 +45,6 @@ const HeroSlidesManager = () => {
 
       if (slidesError) throw slidesError
 
-      // Obtener productos con imágenes
       const { data: productsData, error: productsError } = await supabase
         .from('products')
         .select('id, name, brand, category, images_urls, image_url')
@@ -62,11 +63,16 @@ const HeroSlidesManager = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    if (slides.length >= MAX_SLIDES && !editingId) {
+      alert(`Solo se permiten máximo ${MAX_SLIDES} slides`)
+      return
+    }
+
     setSaving(true)
 
     try {
       if (editingId) {
-        // Actualizar
         const { error } = await supabase
           .from('hero_slides')
           .update(formData)
@@ -74,7 +80,6 @@ const HeroSlidesManager = () => {
 
         if (error) throw error
       } else {
-        // Crear nuevo
         const { error } = await supabase
           .from('hero_slides')
           .insert([formData])
@@ -106,6 +111,18 @@ const HeroSlidesManager = () => {
     })
     setEditingId(slide.id)
     setShowCustomFields(!!slide.title_override || !!slide.subtitle_override)
+    
+    // Cargar imágenes del producto si existe
+    if (slide.product_id && slide.products) {
+      const images = slide.products.images_urls?.length > 0 
+        ? slide.products.images_urls 
+        : slide.products.image_url 
+          ? [slide.products.image_url] 
+          : []
+      setSelectedProductImages(images)
+    } else {
+      setSelectedProductImages([])
+    }
   }
 
   const handleDelete = async (id) => {
@@ -127,12 +144,27 @@ const HeroSlidesManager = () => {
 
   const handleProductChange = (productId) => {
     const product = products.find(p => p.id === productId)
+    
+    // Obtener imágenes del producto seleccionado
+    const images = product?.images_urls?.length > 0 
+      ? product.images_urls 
+      : product?.image_url 
+        ? [product.image_url] 
+        : []
+    
+    setSelectedProductImages(images)
+    
     setFormData(prev => ({
       ...prev,
       product_id: productId,
-      // Si no hay overrides, mantener los campos vacíos
-      title_override: prev.title_override,
-      title_accent_override: prev.title_accent_override,
+      image_override: '', // Resetear imagen personalizada al cambiar producto
+    }))
+  }
+
+  const handleImageSelect = (imageUrl) => {
+    setFormData(prev => ({
+      ...prev,
+      image_override: imageUrl
     }))
   }
 
@@ -150,16 +182,7 @@ const HeroSlidesManager = () => {
     })
     setEditingId(null)
     setShowCustomFields(false)
-  }
-
-  const getProductImage = (product) => {
-    if (!product) return null
-    const images = product.images_urls?.length > 0 
-      ? product.images_urls 
-      : product.image_url 
-        ? [product.image_url] 
-        : []
-    return images[0]
+    setSelectedProductImages([])
   }
 
   if (loading) {
@@ -170,8 +193,18 @@ const HeroSlidesManager = () => {
     <div className="p-6 max-w-6xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-light text-gray-800 mb-2">Gestión del Slider Principal</h1>
-        <p className="text-gray-600">Configura los productos que aparecerán en el hero de la página principal</p>
+        <p className="text-gray-600">
+          Configura los productos que aparecerán en el hero de la página principal
+          <span className="text-sm text-gray-500 ml-2">(Máximo {MAX_SLIDES} slides)</span>
+        </p>
       </div>
+
+      {/* Alerta de límite */}
+      {slides.length >= MAX_SLIDES && (
+        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded text-amber-800">
+          ⚠️ Has alcanzado el límite máximo de {MAX_SLIDES} slides. Elimina uno para crear otro.
+        </div>
+      )}
 
       {/* Formulario */}
       <div className="bg-white rounded-lg shadow p-6 mb-8">
@@ -191,16 +224,50 @@ const HeroSlidesManager = () => {
               className="w-full border border-gray-300 rounded px-3 py-2"
             >
               <option value="">Seleccionar producto...</option>
-              {products.map(product => {
-                const image = getProductImage(product)
-                return (
-                  <option key={product.id} value={product.id}>
-                    {product.name} - {product.brand}
-                  </option>
-                )
-              })}
+              {products.map(product => (
+                <option key={product.id} value={product.id}>
+                  {product.name} - {product.brand}
+                </option>
+              ))}
             </select>
           </div>
+
+          {/* Selector visual de imágenes */}
+          {selectedProductImages.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Seleccionar imagen del producto
+              </label>
+              <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+                {selectedProductImages.map((img, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => handleImageSelect(img)}
+                    className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                      formData.image_override === img
+                        ? 'border-blue-500 ring-2 ring-blue-200'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    {formData.image_override === img && (
+                      <div className="absolute inset-0 bg-blue-500 bg-opacity-20 flex items-center justify-center">
+                        <svg className="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                {formData.image_override 
+                  ? 'Imagen seleccionada ✓' 
+                  : 'Si no seleccionas, usará la primera imagen del producto'}
+              </p>
+            </div>
+          )}
 
           {/* Toggle campos personalizados */}
           <div className="flex items-center gap-2">
@@ -212,7 +279,7 @@ const HeroSlidesManager = () => {
               className="rounded"
             />
             <label htmlFor="customFields" className="text-sm text-gray-700">
-              Personalizar textos e imagen (si no se marca, usará los datos del producto)
+              Personalizar textos (si no se marca, usará los datos del producto)
             </label>
           </div>
 
@@ -260,14 +327,14 @@ const HeroSlidesManager = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tag/Etiqueta
+                  Tag/Etiqueta (ej: 2026)
                 </label>
                 <input
                   type="text"
                   value={formData.tag_override}
                   onChange={(e) => setFormData(prev => ({ ...prev, tag_override: e.target.value }))}
                   className="w-full border border-gray-300 rounded px-3 py-2"
-                  placeholder="Ej: Colección 2025"
+                  placeholder="Ej: Colección 2026"
                 />
               </div>
 
@@ -282,22 +349,6 @@ const HeroSlidesManager = () => {
                   className="w-full border border-gray-300 rounded px-3 py-2"
                   placeholder="Descripción del slide..."
                 />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  URL de imagen personalizada
-                </label>
-                <input
-                  type="url"
-                  value={formData.image_override}
-                  onChange={(e) => setFormData(prev => ({ ...prev, image_override: e.target.value }))}
-                  className="w-full border border-gray-300 rounded px-3 py-2"
-                  placeholder="https://..."
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Si se deja vacío, usará la primera imagen del producto
-                </p>
               </div>
             </div>
           )}
@@ -362,7 +413,7 @@ const HeroSlidesManager = () => {
       {/* Lista de slides */}
       <div className="bg-white rounded-lg shadow">
         <div className="p-6 border-b">
-          <h2 className="text-xl font-light text-gray-800">Slides Existentes ({slides.length})</h2>
+          <h2 className="text-xl font-light text-gray-800">Slides Existentes ({slides.length}/{MAX_SLIDES})</h2>
         </div>
 
         {slides.length === 0 ? (
@@ -373,18 +424,16 @@ const HeroSlidesManager = () => {
           <div className="divide-y">
             {slides.map((slide) => {
               const product = slide.products
-              const image = slide.image_override || getProductImage(product)
+              const image = slide.image_override || (product?.images_urls?.[0] || product?.image_url)
 
               return (
                 <div key={slide.id} className="p-4 flex items-center gap-4 hover:bg-gray-50">
-                  {/* Imagen */}
                   <div className="w-20 h-20 bg-gray-200 rounded overflow-hidden flex-shrink-0">
                     {image && (
                       <img src={image} alt="" className="w-full h-full object-cover" />
                     )}
                   </div>
 
-                  {/* Info */}
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <h3 className="font-medium">
@@ -400,14 +449,13 @@ const HeroSlidesManager = () => {
                       {product?.brand && `${product.brand} • `}
                       Orden: {slide.sort_order}
                     </p>
-                    {slide.title_override && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        Personalizado: {slide.title_override} {slide.title_accent_override}
+                    {slide.tag_override && (
+                      <p className="text-xs text-blue-600 mt-1">
+                        Tag: {slide.tag_override}
                       </p>
                     )}
                   </div>
 
-                  {/* Acciones */}
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleEdit(slide)}
