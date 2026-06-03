@@ -49,6 +49,23 @@ const AdminLayout = () => {
         </svg>
       ),
     },
+     // 👈 NUEVO ITEM PARA EDICION DE SLIDERS
+    {
+      path: '/admin/slides',
+      label: 'Slides del Hero',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M4 6h16v12H4z"
+      />
+      <circle cx="8" cy="10" r="1.5" />
+      <path d="M4 16l5-5 3 3 4-4 4 6" />
+    </svg>
+      ),
+    },
   ]
 
   return (
