@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 
-const categorias = ['vestidos', 'bolsos', 'zapatos','Billeteras']
+const categorias = ['vestidos', 'bolsos', 'zapatos', 'Billeteras']
 const generos = ['mujer', 'hombre', 'unisex']
 const tallasDisponibles = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Unico']
 
@@ -33,6 +33,66 @@ const MAX_IMAGENES = 5
 const TAMANO_MAXIMO_MB = 5
 const TIPOS_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg']
 
+// 🎵 SISTEMA DE SONIDOS CON WEB AUDIO API
+const playSound = (type) => {
+  try {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)()
+    const oscillator = audioContext.createOscillator()
+    const gainNode = audioContext.createGain()
+    
+    oscillator.connect(gainNode)
+    gainNode.connect(audioContext.destination)
+    
+    switch (type) {
+      case 'success':
+        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime)
+        oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1)
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3)
+        oscillator.start(audioContext.currentTime)
+        oscillator.stop(audioContext.currentTime + 0.3)
+        break
+        
+      case 'error':
+        oscillator.frequency.setValueAtTime(300, audioContext.currentTime)
+        oscillator.frequency.exponentialRampToValueAtTime(150, audioContext.currentTime + 0.3)
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3)
+        oscillator.start(audioContext.currentTime)
+        oscillator.stop(audioContext.currentTime + 0.3)
+        break
+        
+      case 'warning':
+        oscillator.frequency.setValueAtTime(440, audioContext.currentTime)
+        gainNode.gain.setValueAtTime(0.2, audioContext.currentTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2)
+        oscillator.start(audioContext.currentTime)
+        oscillator.stop(audioContext.currentTime + 0.2)
+        break
+        
+      case 'click':
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime)
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05)
+        oscillator.start(audioContext.currentTime)
+        oscillator.stop(audioContext.currentTime + 0.05)
+        break
+        
+      case 'upload':
+        oscillator.frequency.setValueAtTime(600, audioContext.currentTime)
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.1)
+        oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.2)
+        gainNode.gain.setValueAtTime(0.2, audioContext.currentTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3)
+        oscillator.start(audioContext.currentTime)
+        oscillator.stop(audioContext.currentTime + 0.3)
+        break
+    }
+  } catch (error) {
+    console.error('Error al reproducir sonido:', error)
+  }
+}
+
 const sanitizarNombreArchivo = (nombreOriginal) => {
   const ultimoPunto = nombreOriginal.lastIndexOf('.')
   const extension = ultimoPunto !== -1 ? nombreOriginal.slice(ultimoPunto) : ''
@@ -51,6 +111,7 @@ const sanitizarNombreArchivo = (nombreOriginal) => {
 
 const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
   const esEdicion = !!producto
+  const formRef = useRef(null)
 
   const [formData, setFormData] = useState({
     name: '',
@@ -79,8 +140,26 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
   const [colorPersonalizado, setColorPersonalizado] = useState('')
   const [marcaSeleccion, setMarcaSeleccion] = useState('')
   
-  const [mostrarDialogoSlider, setMostrarDialogoSlider] = useState(false)
-  const [dialogoCallback, setDialogoCallback] = useState(null)
+  const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false)
+  const [confirmacionCallback, setConfirmacionCallback] = useState(null)
+  
+  const [skuExiste, setSkuExiste] = useState(false)
+
+  const [toasts, setToasts] = useState([])
+
+  const agregarToast = (mensaje, tipo = 'info') => {
+    const id = Date.now()
+    setToasts(prev => [...prev, { id, mensaje, tipo }])
+    playSound(tipo)
+    
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id))
+    }, 4000)
+  }
+
+  const removerToast = (id) => {
+    setToasts(prev => prev.filter(t => t.id !== id))
+  }
 
   useEffect(() => {
     if (producto) {
@@ -119,12 +198,47 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     }
   }, [producto])
 
+  useEffect(() => {
+    if (formData.sku.trim().length > 2) {
+      const verificarSku = async () => {
+        const { data, error } = await supabase
+          .from('products')
+          .select('id')
+          .eq('sku', formData.sku.trim())
+          .neq('id', producto?.id || '00000000-0000-0000-0000-000000000000')
+          .limit(1)
+
+        if (!error && data && data.length > 0) {
+          setSkuExiste(true)
+          setErrores(prev => ({ ...prev, sku: 'Este SKU ya existe' }))
+        } else {
+          setSkuExiste(false)
+          if (errores.sku === 'Este SKU ya existe') {
+            setErrores(prev => ({ ...prev, sku: '' }))
+          }
+        }
+      }
+      verificarSku()
+    } else {
+      setSkuExiste(false)
+    }
+  }, [formData.sku, producto?.id])
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
-    setFormData((prev) => ({ 
-      ...prev, 
-      [name]: type === 'checkbox' ? checked : value 
-    }))
+    
+    if (name === 'discount_percent') {
+      let numValue = parseInt(value, 10)
+      if (isNaN(numValue) || numValue < 0) numValue = 0
+      if (numValue > 99) numValue = 99
+      setFormData((prev) => ({ ...prev, [name]: numValue.toString() }))
+    } else {
+      setFormData((prev) => ({ 
+        ...prev, 
+        [name]: type === 'checkbox' ? checked : value 
+      }))
+    }
+    
     if (errores[name]) {
       setErrores((prev) => ({ ...prev, [name]: '' }))
     }
@@ -133,6 +247,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
   const handleMarcaChange = (e) => {
     const value = e.target.value
     setMarcaSeleccion(value)
+    playSound('click')
     
     if (value === 'Otra') {
       setFormData((prev) => ({ ...prev, brand: prev.brandPersonalizada }))
@@ -182,6 +297,9 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
         color: [...coloresActuales, colorPersonalizado.trim()].join(', ') 
       }))
       setColorPersonalizado('')
+      agregarToast('Color agregado', 'success')
+    } else {
+      agregarToast('Este color ya está seleccionado', 'warning')
     }
   }
 
@@ -205,6 +323,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
         ...prev,
         imagenes: `Maximo ${MAX_IMAGENES} imagenes permitidas. Actualmente tienes ${previews.length}`
       }))
+      agregarToast(`Máximo ${MAX_IMAGENES} imágenes`, 'warning')
       return
     }
     
@@ -227,12 +346,14 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
         ...prev,
         imagenes: nuevosErrores.join(' ')
       }))
+      agregarToast('Algunas imágenes no son válidas', 'error')
       return
     }
     
     setImagenes((prev) => [...prev, ...nuevasImagenes])
     setPreviews((prev) => [...prev, ...nuevosPreviews])
     setErrores((prev) => ({ ...prev, imagenes: '' }))
+    agregarToast(`${nuevasImagenes.length} imagen(es) agregada(s)`, 'success')
   }
 
   const eliminarImagen = (index) => {
@@ -246,6 +367,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     
     setImagenes((prev) => prev.filter((_, i) => i !== index))
     setPreviews((prev) => prev.filter((_, i) => i !== index))
+    agregarToast('Imagen eliminada', 'info')
   }
 
   const getColorHex = (colorNombre) => {
@@ -311,6 +433,8 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
 
     if (!formData.sku.trim()) {
       nuevosErrores.sku = 'El SKU es obligatorio'
+    } else if (skuExiste) {
+      nuevosErrores.sku = 'Este SKU ya existe'
     }
 
     if (previews.length === 0) {
@@ -321,19 +445,19 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     return Object.keys(nuevosErrores).length === 0
   }
 
-  const preguntarMostrarEnSlider = () => {
+  const solicitarConfirmacion = (mensaje) => {
     return new Promise((resolve) => {
-      setMostrarDialogoSlider(true)
-      setDialogoCallback(() => resolve)
+      setMostrarConfirmacion(true)
+      setConfirmacionCallback(() => resolve)
     })
   }
 
-  const responderDialogoSlider = (respuesta) => {
-    if (dialogoCallback) {
-      dialogoCallback(respuesta)
-      setDialogoCallback(null)
+  const responderConfirmacion = (respuesta) => {
+    if (confirmacionCallback) {
+      confirmacionCallback(respuesta)
+      setConfirmacionCallback(null)
     }
-    setMostrarDialogoSlider(false)
+    setMostrarConfirmacion(false)
   }
 
   const handleSubmit = async (e) => {
@@ -341,31 +465,35 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     setErrorGeneral('')
     setExito('')
 
-    if (!validar()) return
+    if (!validar()) {
+      agregarToast('Por favor corrige los errores', 'error')
+      return
+    }
 
-    let featuredValue = formData.is_featured
-    if (!esEdicion) {
-      const respuesta = await preguntarMostrarEnSlider()
-      featuredValue = respuesta
-      setFormData(prev => ({ ...prev, is_featured: respuesta }))
+    if (esEdicion) {
+      const confirmado = await solicitarConfirmacion(
+        '¿Estás seguro de guardar los cambios en este producto?'
+      )
+      if (!confirmado) {
+        agregarToast('Cambios cancelados', 'info')
+        return
+      }
     }
 
     setGuardando(true)
 
     try {
-      // Obtener URLs existentes (las que no son blob:)
       const urlsExistentes = previews.filter(url => !url.startsWith('blob:'))
       
       let urlsNuevasSubidas = []
       
-      // Si hay imágenes nuevas por subir
       if (imagenes.length > 0) {
         setSubiendo(true)
         urlsNuevasSubidas = await subirImagenes()
         setSubiendo(false)
+        playSound('upload')
       }
       
-      // Combinar URLs existentes + nuevas subidas
       const imageUrls = [...urlsExistentes, ...urlsNuevasSubidas]
       const imagenPrincipal = imageUrls[0] || ''
 
@@ -383,7 +511,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
         sizes_available: formData.sizes_available,
         image_url: imagenPrincipal,
         images_urls: imageUrls,
-        is_featured: esEdicion ? formData.is_featured : featuredValue,
+        is_featured: formData.is_featured,
       }
 
       let resultado
@@ -398,6 +526,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
 
         if (error) throw error
         resultado = data
+        agregarToast('Producto actualizado correctamente', 'success')
       } else {
         const { data, error } = await supabase
           .from('products')
@@ -407,6 +536,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
 
         if (error) throw error
         resultado = data
+        agregarToast('Producto creado correctamente', 'success')
       }
 
       setExito(
@@ -423,46 +553,74 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     } catch (err) {
       console.error('Error al guardar producto:', err)
       setErrorGeneral(err.message || 'Error al guardar el producto')
+      agregarToast(err.message || 'Error al guardar', 'error')
     } finally {
       setGuardando(false)
       setSubiendo(false)
     }
   }
 
+  const precioFinal = formData.price_original && formData.discount_percent > 0
+    ? parseFloat(formData.price_original) * (1 - parseInt(formData.discount_percent) / 100)
+    : null
+
   return (
     <>
-      {mostrarDialogoSlider && (
+      <div className="fixed top-4 right-4 z-50 space-y-2">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`px-4 py-3 rounded-lg shadow-lg border max-w-sm animate-slide-in ${
+              toast.tipo === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
+              toast.tipo === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
+              toast.tipo === 'warning' ? 'bg-yellow-50 border-yellow-200 text-yellow-800' :
+              'bg-blue-50 border-blue-200 text-blue-800'
+            }`}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-medium">{toast.mensaje}</p>
+              <button
+                onClick={() => removerToast(toast.id)}
+                className="text-gray-400 hover:text-gray-600 text-lg leading-none"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {mostrarConfirmacion && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-[#FFF8F5] rounded-sm p-6 max-w-md w-full mx-4">
             <div className="w-6 h-px bg-[#D4788A] mb-4"></div>
             <h3 className="font-['Cormorant_Garamond'] text-xl font-light tracking-[-0.02em] text-[#1A1118] mb-3">
-              Mostrar en slider de nuevos productos
+              Confirmar cambios
             </h3>
             <p className="text-sm font-['DM_Sans'] font-light text-[#2D2030] mb-6">
-              ¿Deseas que este producto aparezca en el slider de 
-              &quot;Recien Llegados&quot; en la pagina principal?
+              ¿Estás seguro de guardar los cambios en este producto?
             </p>
             <div className="flex gap-3">
               <button
                 type="button"
-                onClick={() => responderDialogoSlider(true)}
+                onClick={() => responderConfirmacion(true)}
                 className="flex-1 py-2.5 bg-[#1A1118] text-white rounded-sm font-['DM_Sans'] font-medium tracking-wide hover:bg-gradient-to-r hover:from-[#D4788A] hover:to-[#B85268] transition-all duration-300"
               >
-                Si, mostrar
+                Sí, guardar
               </button>
               <button
                 type="button"
-                onClick={() => responderDialogoSlider(false)}
+                onClick={() => responderConfirmacion(false)}
                 className="flex-1 py-2.5 border border-[rgba(212,120,138,0.4)] text-[#2D2030] rounded-sm font-['DM_Sans'] font-medium hover:bg-[#FDF0F3] hover:border-[#D4788A] transition-all duration-300"
               >
-                No mostrar
+                Cancelar
               </button>
             </div>
           </div>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-[#FFF8F5] rounded-sm p-6">
+      <form onSubmit={handleSubmit} ref={formRef} className="bg-[#FFF8F5] rounded-sm p-6">
         <div className="border-b border-[rgba(212,120,138,0.2)] pb-4 mb-6">
           <div className="w-6 h-px bg-[#D4788A] mb-3"></div>
           <h2 className="font-['Cormorant_Garamond'] text-2xl font-light tracking-[-0.02em] text-[#1A1118]">
@@ -518,6 +676,9 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
             />
             {errores.sku && (
               <p className="mt-1 text-xs text-[#B85268] font-['DM_Sans']">{errores.sku}</p>
+            )}
+            {skuExiste && (
+              <p className="mt-1 text-xs text-orange-600 font-['DM_Sans']">⚠️ Este SKU ya existe</p>
             )}
           </div>
 
@@ -619,33 +780,45 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
             <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
               Descuento (%)
             </label>
-            <div className="relative">
+            <div className="space-y-2">
+              <div className="relative">
+                <input
+                  type="number"
+                  name="discount_percent"
+                  value={formData.discount_percent}
+                  onChange={handleChange}
+                  placeholder="0"
+                  min="0"
+                  max="99"
+                  className={`w-full border rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
+                    errores.discount_percent ? 'border-[#B85268] bg-[#FDF0F3]' : 'border-[rgba(212,120,138,0.25)]'
+                  }`}
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9A7480] text-sm font-['DM_Sans']">
+                  %
+                </span>
+              </div>
+              
               <input
-                type="number"
-                name="discount_percent"
-                value={formData.discount_percent}
-                onChange={handleChange}
-                placeholder="0"
+                type="range"
                 min="0"
                 max="99"
-                className={`w-full border rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
-                  errores.discount_percent ? 'border-[#B85268] bg-[#FDF0F3]' : 'border-[rgba(212,120,138,0.25)]'
-                }`}
+                value={formData.discount_percent}
+                onChange={(e) => handleChange({ target: { name: 'discount_percent', value: e.target.value } })}
+                className="w-full h-2 bg-[rgba(212,120,138,0.2)] rounded-lg appearance-none cursor-pointer accent-[#D4788A]"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9A7480] text-sm font-['DM_Sans']">
-                %
-              </span>
+              
+              {precioFinal !== null && precioFinal < parseFloat(formData.price_original || 0) && (
+                <div className="bg-[#FDF0F3] rounded-sm p-2 border border-[rgba(212,120,138,0.2)]">
+                  <p className="text-xs text-[#9A7480] font-['DM_Sans']">
+                    Precio final: <span className="font-semibold text-[#1A1118]">${precioFinal.toFixed(2)}</span>
+                    <span className="ml-2 line-through text-[#9A7480]">${parseFloat(formData.price_original).toFixed(2)}</span>
+                  </p>
+                </div>
+              )}
             </div>
             {errores.discount_percent && (
               <p className="mt-1 text-xs text-[#B85268] font-['DM_Sans']">{errores.discount_percent}</p>
-            )}
-            {formData.discount_percent > 0 && (
-              <p className="mt-1 text-xs text-[#D4788A] font-['DM_Sans']">
-                Precio final: ${(
-                  parseFloat(formData.price_original || 0) *
-                  (1 - parseInt(formData.discount_percent || 0) / 100)
-                ).toFixed(2)}
-              </p>
             )}
           </div>
 
@@ -683,7 +856,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
               </span>
             </label>
             <p className="text-xs text-[#9A7480] font-['DM_Sans'] mt-1 ml-8">
-              Los productos marcados apareceran en el slider &quot;Recien Llegados&quot; de la pagina principal
+              Los productos marcados apareceran en el slider "Recien Llegados" de la pagina principal
             </p>
           </div>
 
