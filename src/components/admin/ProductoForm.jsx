@@ -3,7 +3,22 @@ import { supabase } from '../../lib/supabase'
 
 const categorias = ['vestidos', 'bolsos', 'zapatos', 'Billeteras']
 const generos = ['mujer', 'hombre', 'unisex']
-const tallasDisponibles = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Unico']
+
+// 🆕 TALLAS DINÁMICAS POR CATEGORÍA
+const tallasPorCategoria = {
+  vestidos: ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Unico'],
+  bolsos: ['Unico', 'Pequeño', 'Mediano', 'Grande'],
+  zapatos: ['35', '36', '37', '38', '39', '40', '41', '42', '43', '44'],
+  Billeteras: ['Unico'],
+}
+
+// 🆕 PREFIJOS PARA SKU AUTOMÁTICO
+const prefijosCategoria = {
+  vestidos: 'VES',
+  bolsos: 'BOL',
+  zapatos: 'ZAP',
+  Billeteras: 'BIL',
+}
 
 const marcasPredefinidas = [
   'Guess', 'Tommy Hilfiger', 'Calvin Klein', 'Michael Kors',
@@ -32,8 +47,9 @@ const coloresPredefinidos = [
 const MAX_IMAGENES = 5
 const TAMANO_MAXIMO_MB = 5
 const TIPOS_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg']
+const MAX_SLIDES = 5
 
-// 🎵 SISTEMA DE SONIDOS CON WEB AUDIO API
+//  SISTEMA DE SONIDOS CON WEB AUDIO API
 const playSound = (type) => {
   try {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)()
@@ -144,8 +160,13 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
   const [confirmacionCallback, setConfirmacionCallback] = useState(null)
   
   const [skuExiste, setSkuExiste] = useState(false)
+  const [generandoSku, setGenerandoSku] = useState(false)
+  const [skuEditandoManualmente, setSkuEditandoManualmente] = useState(false)
 
   const [toasts, setToasts] = useState([])
+
+  //  Tallas disponibles según la categoría actual
+  const tallasDisponibles = tallasPorCategoria[formData.category] || tallasPorCategoria.vestidos
 
   const agregarToast = (mensaje, tipo = 'info') => {
     const id = Date.now()
@@ -199,7 +220,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
   }, [producto])
 
   useEffect(() => {
-    if (formData.sku.trim().length > 2) {
+    if (formData.sku.trim().length > 2 && !generandoSku) {
       const verificarSku = async () => {
         const { data, error } = await supabase
           .from('products')
@@ -222,7 +243,19 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     } else {
       setSkuExiste(false)
     }
-  }, [formData.sku, producto?.id])
+  }, [formData.sku, producto?.id, generandoSku])
+
+  // 🆕 NUEVO: Cuando cambia la categoría, limpiar tallas inválidas
+  useEffect(() => {
+    if (esEdicion) return // No limpiar al editar
+    
+    const tallasValidas = tallasPorCategoria[formData.category] || []
+    const tallasFiltradas = formData.sizes_available.filter(t => tallasValidas.includes(t))
+    
+    if (tallasFiltradas.length !== formData.sizes_available.length) {
+      setFormData(prev => ({ ...prev, sizes_available: tallasFiltradas }))
+    }
+  }, [formData.category])
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -408,6 +441,51 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     return urlsSubidas
   }
 
+  // 🆕 NUEVO: Generar SKU automático basado en categoría
+  const generarSkuAutomatico = async () => {
+    setGenerandoSku(true)
+    try {
+      const prefijo = prefijosCategoria[formData.category] || 'PROD'
+      
+      // Buscar todos los SKUs que empiecen con este prefijo
+      const { data, error } = await supabase
+        .from('products')
+        .select('sku')
+        .like('sku', `${prefijo}-%`)
+        .order('sku', { ascending: false })
+      
+      if (error) throw error
+      
+      let siguienteNumero = 1
+      
+      if (data && data.length > 0) {
+        // Encontrar el número más alto
+        const numeros = data
+          .map(p => {
+            const partes = p.sku.split('-')
+            const num = parseInt(partes[partes.length - 1])
+            return isNaN(num) ? 0 : num
+          })
+          .filter(n => n > 0)
+        
+        if (numeros.length > 0) {
+          siguienteNumero = Math.max(...numeros) + 1
+        }
+      }
+      
+      // Formato: PREFIJO-01, PREFIJO-02, etc.
+      const nuevoSku = `${prefijo}-${String(siguienteNumero).padStart(2, '0')}`
+      
+      setFormData(prev => ({ ...prev, sku: nuevoSku }))
+      agregarToast(`SKU generado: ${nuevoSku}`, 'success')
+    } catch (err) {
+      console.error('Error generando SKU:', err)
+      agregarToast('Error al generar SKU automático', 'error')
+    } finally {
+      setGenerandoSku(false)
+    }
+  }
+
   const validar = () => {
     const nuevosErrores = {}
 
@@ -432,7 +510,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     }
 
     if (!formData.sku.trim()) {
-      nuevosErrores.sku = 'El SKU es obligatorio'
+      nuevosErrores.sku = 'El SKU es obligatorio. Haz clic en "Auto" para generarlo automáticamente'
     } else if (skuExiste) {
       nuevosErrores.sku = 'Este SKU ya existe'
     }
@@ -537,6 +615,51 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
         if (error) throw error
         resultado = data
         agregarToast('Producto creado correctamente', 'success')
+
+        // 🆕 NUEVO: Si está marcado como featured, crear slide automáticamente
+        if (formData.is_featured && resultado?.id) {
+          try {
+            // Verificar si aún hay espacio (máximo 5 slides)
+            const { count } = await supabase
+              .from('hero_slides')
+              .select('*', { count: 'exact', head: true })
+            
+            if (count !== null && count < MAX_SLIDES) {
+              // Obtener el siguiente sort_order disponible
+              const { data: slidesExistentes } = await supabase
+                .from('hero_slides')
+                .select('sort_order')
+                .order('sort_order', { ascending: false })
+                .limit(1)
+              
+              const siguienteOrden = slidesExistentes && slidesExistentes.length > 0
+                ? (slidesExistentes[0].sort_order || 0) + 1
+                : 0
+              
+              const { error: slideError } = await supabase
+                .from('hero_slides')
+                .insert([{
+                  product_id: resultado.id,
+                  title_override: resultado.name,
+                  image_override: resultado.image_url,
+                  active: true,
+                  sort_order: siguienteOrden,
+                }])
+              
+              if (slideError) {
+                console.warn('No se pudo crear el slide:', slideError)
+                agregarToast('Producto creado pero no se pudo agregar al slider', 'warning')
+              } else {
+                agregarToast('✓ Slide creado automáticamente', 'success')
+              }
+            } else {
+              agregarToast(`⚠️ Slider lleno (${MAX_SLIDES}/${MAX_SLIDES}). El producto no se agregó al slider`, 'warning')
+            }
+          } catch (slideErr) {
+            console.warn('Error al crear slide:', slideErr)
+            agregarToast('Producto creado pero hubo un error con el slider', 'warning')
+          }
+        }
       }
 
       setExito(
@@ -664,16 +787,33 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
             <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
               SKU / Codigo *
             </label>
-            <input
-              type="text"
-              name="sku"
-              value={formData.sku}
-              onChange={handleChange}
-              placeholder="VES-001"
-              className={`w-full border rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
-                errores.sku ? 'border-[#B85268] bg-[#FDF0F3]' : 'border-[rgba(212,120,138,0.25)]'
-              }`}
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                name="sku"
+                value={formData.sku}
+                onChange={handleChange}
+                placeholder="VES-001"
+                disabled={!skuEditandoManualmente && !esEdicion}
+                className={`flex-1 border rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
+                  errores.sku ? 'border-[#B85268] bg-[#FDF0F3]' : 'border-[rgba(212,120,138,0.25)]'
+                } ${!skuEditandoManualmente && !esEdicion ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+              />
+              {!esEdicion && (
+                <button
+                  type="button"
+                  onClick={skuEditandoManualmente ? () => setSkuEditandoManualmente(false) : generarSkuAutomatico}
+                  disabled={generandoSku}
+                  className="px-4 py-2.5 bg-[#1A1118] text-white rounded-sm text-xs font-['DM_Sans'] font-medium hover:bg-gradient-to-r hover:from-[#D4788A] hover:to-[#B85268] transition-all duration-300 disabled:bg-[#9A7480] disabled:cursor-not-allowed whitespace-nowrap"
+                  title={skuEditandoManualmente ? "Volver a generación automática" : "Generar SKU automático según la categoría"}
+                >
+                  {generandoSku ? '...' : skuEditandoManualmente ? 'Auto' : 'Editar'}
+                </button>
+              )}
+            </div>
+            <p className="mt-1 text-[0.65rem] text-[#9A7480] font-['DM_Sans']">
+               {skuEditandoManualmente || esEdicion ? 'Puedes editar el SKU manualmente' : `Click en "Auto" para generar según categoría (${prefijosCategoria[formData.category]}-XX)`}
+            </p>
             {errores.sku && (
               <p className="mt-1 text-xs text-[#B85268] font-['DM_Sans']">{errores.sku}</p>
             )}
@@ -857,6 +997,9 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
             </label>
             <p className="text-xs text-[#9A7480] font-['DM_Sans'] mt-1 ml-8">
               Los productos marcados apareceran en el slider "Recien Llegados" de la pagina principal
+              {!esEdicion && formData.is_featured && (
+                <span className="ml-1 text-[#D4788A]">• Se creará el slide automáticamente</span>
+              )}
             </p>
           </div>
 
@@ -946,9 +1089,13 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
             )}
           </div>
 
+          {/* 🆕 TALLAS DINÁMICAS POR CATEGORÍA */}
           <div className="md:col-span-2">
             <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
               Tallas disponibles
+              <span className="ml-2 text-[0.55rem] normal-case tracking-normal text-[#D4788A]">
+                (para {formData.category})
+              </span>
             </label>
             <div className="flex flex-wrap gap-2">
               {tallasDisponibles.map((talla) => (
@@ -969,6 +1116,12 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
                 </button>
               ))}
             </div>
+            <p className="text-xs text-[#9A7480] font-['DM_Sans'] mt-2">
+              {formData.category === 'vestidos' && ' Tallas de ropa: XS a XXL'}
+              {formData.category === 'bolsos' && ' Tamaños de bolsos'}
+              {formData.category === 'zapatos' && '👠 Tallas numéricas de calzado'}
+              {formData.category === 'Billeteras' && '💳 Billeteras: talla única'}
+            </p>
           </div>
 
           <div className="md:col-span-2">
