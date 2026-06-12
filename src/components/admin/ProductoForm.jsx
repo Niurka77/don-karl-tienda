@@ -14,10 +14,10 @@ const tallasPorCategoria = {
 
 // 🆕 PREFIJOS PARA SKU AUTOMÁTICO
 const prefijosCategoria = {
-  vestidos: 'VES',
-  bolsos: 'BOL',
-  zapatos: 'ZAP',
-  Billeteras: 'BIL',
+  vestidos: 'KB-VES',
+  bolsos: 'KB-BOL',
+  zapatos: 'KB-ZAP',
+  Billeteras: 'KB-BIL',
 }
 
 const marcasPredefinidas = [
@@ -244,7 +244,47 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
       setSkuExiste(false)
     }
   }, [formData.sku, producto?.id, generandoSku])
-
+// 🆕 NUEVO: Generar/actualizar SKU automáticamente cuando cambia la categoría
+useEffect(() => {
+  if (esEdicion) return // No modificar al editar
+  
+  const generarSkuAlCambiarCategoria = async () => {
+    const prefijo = prefijosCategoria[formData.category] || 'KB-PROD'
+    
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('sku')
+        .like('sku', `${prefijo}-%`)
+        .order('sku', { ascending: false })
+      
+      if (error) throw error
+      
+      let siguienteNumero = 1
+      
+      if (data && data.length > 0) {
+        const numeros = data
+          .map(p => {
+            const partes = p.sku.split('-')
+            const num = parseInt(partes[partes.length - 1])
+            return isNaN(num) ? 0 : num
+          })
+          .filter(n => n > 0)
+        
+        if (numeros.length > 0) {
+          siguienteNumero = Math.max(...numeros) + 1
+        }
+      }
+      
+      const nuevoSku = `${prefijo}-${String(siguienteNumero).padStart(3, '0')}`
+      setFormData(prev => ({ ...prev, sku: nuevoSku }))
+    } catch (err) {
+      console.error('Error generando SKU automático:', err)
+    }
+  }
+  
+  generarSkuAlCambiarCategoria()
+}, [formData.category, esEdicion])
   // 🆕 NUEVO: Cuando cambia la categoría, limpiar tallas inválidas
   useEffect(() => {
     if (esEdicion) return // No limpiar al editar
@@ -473,8 +513,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
         }
       }
       
-      // Formato: PREFIJO-01, PREFIJO-02, etc.
-      const nuevoSku = `${prefijo}-${String(siguienteNumero).padStart(2, '0')}`
+    const nuevoSku = `${prefijo}-${String(siguienteNumero).padStart(3, '0')}`
       
       setFormData(prev => ({ ...prev, sku: nuevoSku }))
       agregarToast(`SKU generado: ${nuevoSku}`, 'success')
