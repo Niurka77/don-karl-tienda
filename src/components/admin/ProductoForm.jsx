@@ -27,6 +27,7 @@ const marcasPredefinidas = [
   'Ralph Lauren', 'Lacoste', 'Levi\'s', 'Nike', 'Adidas', 'Puma'
 ]
 
+
 const coloresPredefinidos = [
   { nombre: 'Negro', hex: '#000000' },
   { nombre: 'Blanco', hex: '#FFFFFF' },
@@ -49,7 +50,7 @@ const TAMANO_MAXIMO_MB = 5
 const TIPOS_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg']
 const MAX_SLIDES = 5
 
-//  SISTEMA DE SONIDOS CON WEB AUDIO API
+// 🔊 SISTEMA DE SONIDOS CON WEB AUDIO API
 const playSound = (type) => {
   try {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)()
@@ -58,7 +59,7 @@ const playSound = (type) => {
     
     oscillator.connect(gainNode)
     gainNode.connect(audioContext.destination)
-    
+
     switch (type) {
       case 'success':
         oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime)
@@ -68,7 +69,7 @@ const playSound = (type) => {
         oscillator.start(audioContext.currentTime)
         oscillator.stop(audioContext.currentTime + 0.3)
         break
-        
+      
       case 'error':
         oscillator.frequency.setValueAtTime(300, audioContext.currentTime)
         oscillator.frequency.exponentialRampToValueAtTime(150, audioContext.currentTime + 0.3)
@@ -77,7 +78,7 @@ const playSound = (type) => {
         oscillator.start(audioContext.currentTime)
         oscillator.stop(audioContext.currentTime + 0.3)
         break
-        
+      
       case 'warning':
         oscillator.frequency.setValueAtTime(440, audioContext.currentTime)
         gainNode.gain.setValueAtTime(0.2, audioContext.currentTime)
@@ -85,7 +86,7 @@ const playSound = (type) => {
         oscillator.start(audioContext.currentTime)
         oscillator.stop(audioContext.currentTime + 0.2)
         break
-        
+      
       case 'click':
         oscillator.frequency.setValueAtTime(800, audioContext.currentTime)
         gainNode.gain.setValueAtTime(0.1, audioContext.currentTime)
@@ -93,7 +94,7 @@ const playSound = (type) => {
         oscillator.start(audioContext.currentTime)
         oscillator.stop(audioContext.currentTime + 0.05)
         break
-        
+      
       case 'upload':
         oscillator.frequency.setValueAtTime(600, audioContext.currentTime)
         oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.1)
@@ -113,22 +114,21 @@ const sanitizarNombreArchivo = (nombreOriginal) => {
   const ultimoPunto = nombreOriginal.lastIndexOf('.')
   const extension = ultimoPunto !== -1 ? nombreOriginal.slice(ultimoPunto) : ''
   let nombreSinExtension = ultimoPunto !== -1 ? nombreOriginal.slice(0, ultimoPunto) : nombreOriginal
-
+  
   nombreSinExtension = nombreSinExtension
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-
   nombreSinExtension = nombreSinExtension.replace(/[^a-zA-Z0-9_-]/g, '_')
-
+  
   if (nombreSinExtension.length === 0) nombreSinExtension = 'imagen'
-
+  
   return `${nombreSinExtension}${extension}`
 }
 
 const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
   const esEdicion = !!producto
   const formRef = useRef(null)
-
+  
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -145,7 +145,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     images_urls: [],
     is_featured: false,
   })
-
+  
   const [imagenes, setImagenes] = useState([])
   const [previews, setPreviews] = useState([])
   const [subiendo, setSubiendo] = useState(false)
@@ -155,17 +155,14 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
   const [exito, setExito] = useState('')
   const [colorPersonalizado, setColorPersonalizado] = useState('')
   const [marcaSeleccion, setMarcaSeleccion] = useState('')
-  
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false)
   const [confirmacionCallback, setConfirmacionCallback] = useState(null)
-  
   const [skuExiste, setSkuExiste] = useState(false)
   const [generandoSku, setGenerandoSku] = useState(false)
   const [skuEditandoManualmente, setSkuEditandoManualmente] = useState(false)
-
   const [toasts, setToasts] = useState([])
 
-  //  Tallas disponibles según la categoría actual
+  // 🎯 Tallas disponibles según la categoría actual
   const tallasDisponibles = tallasPorCategoria[formData.category] || tallasPorCategoria.vestidos
 
   const agregarToast = (mensaje, tipo = 'info') => {
@@ -228,7 +225,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
           .eq('sku', formData.sku.trim())
           .neq('id', producto?.id || '00000000-0000-0000-0000-000000000000')
           .limit(1)
-
+        
         if (!error && data && data.length > 0) {
           setSkuExiste(true)
           setErrores(prev => ({ ...prev, sku: 'Este SKU ya existe' }))
@@ -244,48 +241,50 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
       setSkuExiste(false)
     }
   }, [formData.sku, producto?.id, generandoSku])
-// 🆕 NUEVO: Generar/actualizar SKU automáticamente cuando cambia la categoría
-useEffect(() => {
-  if (esEdicion) return // No modificar al editar
-  
-  const generarSkuAlCambiarCategoria = async () => {
-    const prefijo = prefijosCategoria[formData.category] || 'KB-PROD'
+
+  // 🆕 Generar/actualizar SKU automáticamente cuando cambia la categoría
+  useEffect(() => {
+    if (esEdicion) return // No modificar al editar
     
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('sku')
-        .like('sku', `${prefijo}-%`)
-        .order('sku', { ascending: false })
+    const generarSkuAlCambiarCategoria = async () => {
+      const prefijo = prefijosCategoria[formData.category] || 'KB-PROD'
       
-      if (error) throw error
-      
-      let siguienteNumero = 1
-      
-      if (data && data.length > 0) {
-        const numeros = data
-          .map(p => {
-            const partes = p.sku.split('-')
-            const num = parseInt(partes[partes.length - 1])
-            return isNaN(num) ? 0 : num
-          })
-          .filter(n => n > 0)
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('sku')
+          .like('sku', `${prefijo}-%`)
+          .order('sku', { ascending: false })
         
-        if (numeros.length > 0) {
-          siguienteNumero = Math.max(...numeros) + 1
+        if (error) throw error
+        
+        let siguienteNumero = 1
+        
+        if (data && data.length > 0) {
+          const numeros = data
+            .map(p => {
+              const partes = p.sku.split('-')
+              const num = parseInt(partes[partes.length - 1])
+              return isNaN(num) ? 0 : num
+            })
+            .filter(n => n > 0)
+          
+          if (numeros.length > 0) {
+            siguienteNumero = Math.max(...numeros) + 1
+          }
         }
+        
+        const nuevoSku = `${prefijo}-${String(siguienteNumero).padStart(3, '0')}`
+        setFormData(prev => ({ ...prev, sku: nuevoSku }))
+      } catch (err) {
+        console.error('Error generando SKU automático:', err)
       }
-      
-      const nuevoSku = `${prefijo}-${String(siguienteNumero).padStart(3, '0')}`
-      setFormData(prev => ({ ...prev, sku: nuevoSku }))
-    } catch (err) {
-      console.error('Error generando SKU automático:', err)
     }
-  }
-  
-  generarSkuAlCambiarCategoria()
-}, [formData.category, esEdicion])
-  // 🆕 NUEVO: Cuando cambia la categoría, limpiar tallas inválidas
+    
+    generarSkuAlCambiarCategoria()
+  }, [formData.category, esEdicion])
+
+  // 🆕 Cuando cambia la categoría, limpiar tallas inválidas
   useEffect(() => {
     if (esEdicion) return // No limpiar al editar
     
@@ -380,11 +379,9 @@ useEffect(() => {
     if (!TIPOS_PERMITIDOS.includes(file.type)) {
       return 'Solo se permiten imagenes JPG, PNG o WebP'
     }
-    
     if (file.size > TAMANO_MAXIMO_MB * 1024 * 1024) {
       return `La imagen debe ser menor a ${TAMANO_MAXIMO_MB}MB`
     }
-    
     return null
   }
 
@@ -399,11 +396,11 @@ useEffect(() => {
       agregarToast(`Máximo ${MAX_IMAGENES} imágenes`, 'warning')
       return
     }
-    
+
     const nuevosErrores = []
     const nuevasImagenes = []
     const nuevosPreviews = []
-    
+
     for (const file of files) {
       const error = validarImagen(file)
       if (error) {
@@ -413,7 +410,7 @@ useEffect(() => {
         nuevosPreviews.push(URL.createObjectURL(file))
       }
     }
-    
+
     if (nuevosErrores.length > 0) {
       setErrores((prev) => ({
         ...prev,
@@ -422,7 +419,7 @@ useEffect(() => {
       agregarToast('Algunas imágenes no son válidas', 'error')
       return
     }
-    
+
     setImagenes((prev) => [...prev, ...nuevasImagenes])
     setPreviews((prev) => [...prev, ...nuevosPreviews])
     setErrores((prev) => ({ ...prev, imagenes: '' }))
@@ -431,9 +428,11 @@ useEffect(() => {
 
   const eliminarImagen = (index) => {
     const esImagenExistente = previews[index] && !previews[index].startsWith('blob:')
+    
     if (esImagenExistente) {
       if (!window.confirm('¿Eliminar esta imagen permanentemente?')) return
     }
+    
     if (previews[index] && previews[index].startsWith('blob:')) {
       URL.revokeObjectURL(previews[index])
     }
@@ -481,13 +480,12 @@ useEffect(() => {
     return urlsSubidas
   }
 
-  // 🆕 NUEVO: Generar SKU automático basado en categoría
+  // 🆕 Generar SKU automático basado en categoría
   const generarSkuAutomatico = async () => {
     setGenerandoSku(true)
     try {
       const prefijo = prefijosCategoria[formData.category] || 'PROD'
       
-      // Buscar todos los SKUs que empiecen con este prefijo
       const { data, error } = await supabase
         .from('products')
         .select('sku')
@@ -499,7 +497,6 @@ useEffect(() => {
       let siguienteNumero = 1
       
       if (data && data.length > 0) {
-        // Encontrar el número más alto
         const numeros = data
           .map(p => {
             const partes = p.sku.split('-')
@@ -513,7 +510,7 @@ useEffect(() => {
         }
       }
       
-    const nuevoSku = `${prefijo}-${String(siguienteNumero).padStart(3, '0')}`
+      const nuevoSku = `${prefijo}-${String(siguienteNumero).padStart(3, '0')}`
       
       setFormData(prev => ({ ...prev, sku: nuevoSku }))
       agregarToast(`SKU generado: ${nuevoSku}`, 'success')
@@ -527,7 +524,7 @@ useEffect(() => {
 
   const validar = () => {
     const nuevosErrores = {}
-
+    
     if (!formData.name.trim()) {
       nuevosErrores.name = 'El nombre es obligatorio'
     }
@@ -581,7 +578,7 @@ useEffect(() => {
     e.preventDefault()
     setErrorGeneral('')
     setExito('')
-
+    
     if (!validar()) {
       agregarToast('Por favor corrige los errores', 'error')
       return
@@ -655,16 +652,14 @@ useEffect(() => {
         resultado = data
         agregarToast('Producto creado correctamente', 'success')
 
-        // 🆕 NUEVO: Si está marcado como featured, crear slide automáticamente
+        // 🆕 Si está marcado como featured, crear slide automáticamente
         if (formData.is_featured && resultado?.id) {
           try {
-            // Verificar si aún hay espacio (máximo 5 slides)
             const { count } = await supabase
               .from('hero_slides')
               .select('*', { count: 'exact', head: true })
             
             if (count !== null && count < MAX_SLIDES) {
-              // Obtener el siguiente sort_order disponible
               const { data: slidesExistentes } = await supabase
                 .from('hero_slides')
                 .select('sort_order')
@@ -728,6 +723,7 @@ useEffect(() => {
 
   return (
     <>
+      {/* Toasts */}
       <div className="fixed top-4 right-4 z-50 space-y-2">
         {toasts.map((toast) => (
           <div
@@ -752,6 +748,7 @@ useEffect(() => {
         ))}
       </div>
 
+      {/* Modal de confirmación */}
       {mostrarConfirmacion && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-[#FFF8F5] rounded-sm p-6 max-w-md w-full mx-4">
@@ -803,6 +800,7 @@ useEffect(() => {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* ✅ NOMBRE - PRIMERO */}
           <div className="md:col-span-2">
             <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
               Nombre del producto *
@@ -822,9 +820,29 @@ useEffect(() => {
             )}
           </div>
 
+          {/* ✅ CATEGORÍA - AHORA ANTES DE SKU */}
           <div>
             <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
-              SKU / Codigo *
+              Categoría
+            </label>
+            <select
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
+            >
+              {categorias.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* ✅ SKU - AHORA DESPUÉS DE CATEGORÍA */}
+          <div>
+            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+              SKU / Código *
             </label>
             <div className="flex gap-2">
               <input
@@ -851,7 +869,7 @@ useEffect(() => {
               )}
             </div>
             <p className="mt-1 text-[0.65rem] text-[#9A7480] font-['DM_Sans']">
-               {skuEditandoManualmente || esEdicion ? 'Puedes editar el SKU manualmente' : `Click en "Auto" para generar según categoría (${prefijosCategoria[formData.category]}-XX)`}
+              {skuEditandoManualmente || esEdicion ? 'Puedes editar el SKU manualmente' : `Click en "Auto" para generar según categoría (${prefijosCategoria[formData.category]}-XX)`}
             </p>
             {errores.sku && (
               <p className="mt-1 text-xs text-[#B85268] font-['DM_Sans']">{errores.sku}</p>
@@ -861,6 +879,7 @@ useEffect(() => {
             )}
           </div>
 
+          {/* Marca */}
           <div>
             <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
               Marca
@@ -893,27 +912,10 @@ useEffect(() => {
             </div>
           )}
 
+          {/* Género */}
           <div>
             <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
-              Categoria
-            </label>
-            <select
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
-            >
-              {categorias.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
-              Genero
+              Género
             </label>
             <select
               name="gender"
@@ -929,6 +931,7 @@ useEffect(() => {
             </select>
           </div>
 
+          {/* Precio */}
           <div>
             <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
               Precio original *
@@ -955,6 +958,7 @@ useEffect(() => {
             )}
           </div>
 
+          {/* Descuento */}
           <div>
             <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
               Descuento (%)
@@ -1001,6 +1005,7 @@ useEffect(() => {
             )}
           </div>
 
+          {/* Stock */}
           <div>
             <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
               Stock *
@@ -1021,6 +1026,7 @@ useEffect(() => {
             )}
           </div>
 
+          {/* Featured */}
           <div className="md:col-span-2">
             <label className="flex items-center gap-3 cursor-pointer">
               <input
@@ -1035,13 +1041,14 @@ useEffect(() => {
               </span>
             </label>
             <p className="text-xs text-[#9A7480] font-['DM_Sans'] mt-1 ml-8">
-              Los productos marcados apareceran en el slider "Recien Llegados" de la pagina principal
+              Los productos marcados aparecerán en el slider "Recién Llegados" de la página principal
               {!esEdicion && formData.is_featured && (
                 <span className="ml-1 text-[#D4788A]">• Se creará el slide automáticamente</span>
               )}
             </p>
           </div>
 
+          {/* Colores */}
           <div className="md:col-span-2">
             <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
               Colores disponibles
@@ -1071,7 +1078,7 @@ useEffect(() => {
                         fill="currentColor" 
                         viewBox="0 0 20 20"
                       >
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     )}
                   </button>
@@ -1128,7 +1135,7 @@ useEffect(() => {
             )}
           </div>
 
-          {/* 🆕 TALLAS DINÁMICAS POR CATEGORÍA */}
+          {/* Tallas dinámicas */}
           <div className="md:col-span-2">
             <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
               Tallas disponibles
@@ -1156,19 +1163,20 @@ useEffect(() => {
               ))}
             </div>
             <p className="text-xs text-[#9A7480] font-['DM_Sans'] mt-2">
-              {formData.category === 'vestidos' && ' Tallas de ropa: XS a XXL'}
-              {formData.category === 'bolsos' && ' Tamaños de bolsos'}
+              {formData.category === 'vestidos' && '👗 Tallas de ropa: XS a XXL'}
+              {formData.category === 'bolsos' && '👜 Tamaños de bolsos'}
               {formData.category === 'zapatos' && '👠 Tallas numéricas de calzado'}
               {formData.category === 'Billeteras' && '💳 Billeteras: talla única'}
             </p>
           </div>
 
+          {/* Imágenes */}
           <div className="md:col-span-2">
             <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
-              Imagenes del producto {!esEdicion && '*'}
+              Imágenes del producto {!esEdicion && '*'}
             </label>
             <p className="text-xs text-[#9A7480] font-['DM_Sans'] mb-3">
-              Maximo {MAX_IMAGENES} imagenes. La primera imagen sera la principal.
+              Máximo {MAX_IMAGENES} imágenes. La primera imagen será la principal.
             </p>
 
             {previews.length > 0 && (
@@ -1217,13 +1225,13 @@ useEffect(() => {
                       />
                     </svg>
                     <p className="text-sm text-[#2D2030] font-['DM_Sans'] font-light">
-                      {imagenes.length > 0 ? `${imagenes.length} imagenes seleccionadas` : 'Arrastra imagenes o haz clic aqui'}
+                      {imagenes.length > 0 ? `${imagenes.length} imágenes seleccionadas` : 'Arrastra imágenes o haz clic aquí'}
                     </p>
                     <p className="text-xs text-[#9A7480] font-['DM_Sans'] mt-1">
-                      JPG, PNG o WebP (max. {TAMANO_MAXIMO_MB}MB c/u)
+                      JPG, PNG o WebP (máx. {TAMANO_MAXIMO_MB}MB c/u)
                     </p>
                     <p className="text-xs text-[#9A7480] font-['DM_Sans']">
-                      {previews.length}/{MAX_IMAGENES} imagenes
+                      {previews.length}/{MAX_IMAGENES} imágenes
                     </p>
                   </div>
                   <input
@@ -1241,9 +1249,10 @@ useEffect(() => {
             )}
           </div>
 
+          {/* Descripción */}
           <div className="md:col-span-2">
             <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
-              Descripcion
+              Descripción
             </label>
             <textarea
               name="description"
@@ -1256,6 +1265,7 @@ useEffect(() => {
           </div>
         </div>
 
+        {/* Botones */}
         <div className="flex gap-3 pt-6 border-t border-[rgba(212,120,138,0.2)] mt-6">
           <button
             type="submit"
@@ -1266,7 +1276,7 @@ useEffect(() => {
               {guardando ? (
                 <span className="flex items-center justify-center gap-2">
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                  {subiendo ? 'Subiendo imagenes...' : 'Guardando...'}
+                  {subiendo ? 'Subiendo imágenes...' : 'Guardando...'}
                 </span>
               ) : esEdicion ? (
                 'Actualizar producto'
