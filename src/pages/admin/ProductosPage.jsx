@@ -1,54 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import ProductoForm from '../../components/admin/ProductoForm'
-
-// 🔊 Sistema de sonidos (Web Audio API)
-const playSound = (type) => {
-  try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext
-    if (!AudioContext) return
-    const ctx = new AudioContext()
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.connect(gain)
-    gain.connect(ctx.destination)
-
-    switch (type) {
-      case 'success':
-        osc.frequency.setValueAtTime(523.25, ctx.currentTime)
-        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1)
-        gain.gain.setValueAtTime(0.3, ctx.currentTime)
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3)
-        osc.start(ctx.currentTime)
-        osc.stop(ctx.currentTime + 0.3)
-        break
-      case 'warning':
-        osc.frequency.setValueAtTime(440, ctx.currentTime)
-        gain.gain.setValueAtTime(0.2, ctx.currentTime)
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2)
-        osc.start(ctx.currentTime)
-        osc.stop(ctx.currentTime + 0.2)
-        break
-      case 'error':
-        osc.frequency.setValueAtTime(300, ctx.currentTime)
-        osc.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.3)
-        gain.gain.setValueAtTime(0.3, ctx.currentTime)
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3)
-        osc.start(ctx.currentTime)
-        osc.stop(ctx.currentTime + 0.3)
-        break
-      case 'click':
-        osc.frequency.setValueAtTime(800, ctx.currentTime)
-        gain.gain.setValueAtTime(0.1, ctx.currentTime)
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05)
-        osc.start(ctx.currentTime)
-        osc.stop(ctx.currentTime + 0.05)
-        break
-    }
-  } catch (e) {
-    console.warn('Audio no disponible:', e)
-  }
-}
+import { useAdminNotifications } from '../../hooks/useAdminNotifications'
 
 const ProductosPage = () => {
   const [productos, setProductos] = useState([])
@@ -71,15 +24,8 @@ const ProductosPage = () => {
   // Modal de eliminación
   const [modalEliminar, setModalEliminar] = useState({ abierto: false, producto: null })
   
-  // Sistema de Notificaciones (Toasts)
-  const [toasts, setToasts] = useState([])
-  const agregarToast = (mensaje, tipo = 'info') => {
-    const id = Date.now()
-    setToasts(prev => [...prev, { id, mensaje, tipo }])
-    playSound(tipo === 'info' ? 'click' : tipo)
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000)
-  }
-  const eliminarToast = (id) => setToasts(prev => prev.filter(t => t.id !== id))
+  // 🔔 Usar hook centralizado de notificaciones
+  const { agregarToast, ToastContainer } = useAdminNotifications()
 
   useEffect(() => {
     cargarProductos()
@@ -175,7 +121,6 @@ const ProductosPage = () => {
   const handleEditar = (producto) => {
     setProductoEditar(producto)
     setMostrarFormulario(true)
-    playSound('click')
   }
 
   const handleGuardar = (productoGuardado) => {
@@ -216,22 +161,8 @@ const ProductosPage = () => {
 
   return (
     <div className="min-h-screen bg-[#FFF8F5] p-4 md:p-6">
-      {/* Toasts Container */}
-      <div className="fixed top-4 right-4 z-[60] space-y-2 max-w-sm w-full pointer-events-none">
-        {toasts.map(toast => (
-          <div
-            key={toast.id}
-            className={`pointer-events-auto px-4 py-3 rounded-sm shadow-md border flex items-center justify-between gap-3 animate-slide-in ${
-              toast.tipo === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
-              toast.tipo === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
-              'bg-[#FDF0F3] border-[#D4788A] text-[#1A1118]'
-            }`}
-          >
-            <p className="text-sm font-['DM_Sans'] font-medium">{toast.mensaje}</p>
-            <button onClick={() => eliminarToast(toast.id)} className="text-lg leading-none hover:opacity-70">×</button>
-          </div>
-        ))}
-      </div>
+      {/* 🔔 Toast Container del hook centralizado */}
+      <ToastContainer />
 
       {/* Modal Eliminar */}
       {modalEliminar.abierto && (
@@ -266,7 +197,7 @@ const ProductosPage = () => {
           <p className="text-sm text-[#9A7480] font-['DM_Sans'] mt-1">{productos.length} productos registrados</p>
         </div>
         <button
-          onClick={() => { setProductoEditar(null); setMostrarFormulario(true); playSound('click') }}
+          onClick={() => { setProductoEditar(null); setMostrarFormulario(true); }}
           className="px-5 py-2.5 bg-[#1A1118] text-white rounded-sm font-['DM_Sans'] font-medium tracking-wide hover:bg-gradient-to-r hover:from-[#D4788A] hover:to-[#B85268] transition-all shadow-sm"
         >
           + Nuevo producto
@@ -310,7 +241,7 @@ const ProductosPage = () => {
             <option value="">Todo el stock</option>
             <option value="agotado">Agotado</option>
             <option value="critico">Crítico (1-5)</option>
-          <option value="disponible">{'Disponible (>5)'}</option>
+            <option value="disponible">Disponible (&gt;5)</option>
           </select>
         </div>
       </div>

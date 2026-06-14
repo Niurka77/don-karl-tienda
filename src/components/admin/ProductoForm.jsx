@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
+import { useAdminNotifications } from '../../hooks/useAdminNotifications'
 
 const categorias = ['vestidos', 'bolsos', 'zapatos', 'Billeteras']
 const generos = ['mujer', 'hombre', 'unisex']
@@ -27,7 +28,6 @@ const marcasPredefinidas = [
   'Ralph Lauren', 'Lacoste', 'Levi\'s', 'Nike', 'Adidas', 'Puma'
 ]
 
-
 const coloresPredefinidos = [
   { nombre: 'Negro', hex: '#000000' },
   { nombre: 'Blanco', hex: '#FFFFFF' },
@@ -50,66 +50,6 @@ const TAMANO_MAXIMO_MB = 5
 const TIPOS_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg']
 const MAX_SLIDES = 5
 
-// 🔊 SISTEMA DE SONIDOS CON WEB AUDIO API
-const playSound = (type) => {
-  try {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)()
-    const oscillator = audioContext.createOscillator()
-    const gainNode = audioContext.createGain()
-    
-    oscillator.connect(gainNode)
-    gainNode.connect(audioContext.destination)
-
-    switch (type) {
-      case 'success':
-        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime)
-        oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1)
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3)
-        oscillator.start(audioContext.currentTime)
-        oscillator.stop(audioContext.currentTime + 0.3)
-        break
-      
-      case 'error':
-        oscillator.frequency.setValueAtTime(300, audioContext.currentTime)
-        oscillator.frequency.exponentialRampToValueAtTime(150, audioContext.currentTime + 0.3)
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3)
-        oscillator.start(audioContext.currentTime)
-        oscillator.stop(audioContext.currentTime + 0.3)
-        break
-      
-      case 'warning':
-        oscillator.frequency.setValueAtTime(440, audioContext.currentTime)
-        gainNode.gain.setValueAtTime(0.2, audioContext.currentTime)
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2)
-        oscillator.start(audioContext.currentTime)
-        oscillator.stop(audioContext.currentTime + 0.2)
-        break
-      
-      case 'click':
-        oscillator.frequency.setValueAtTime(800, audioContext.currentTime)
-        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime)
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05)
-        oscillator.start(audioContext.currentTime)
-        oscillator.stop(audioContext.currentTime + 0.05)
-        break
-      
-      case 'upload':
-        oscillator.frequency.setValueAtTime(600, audioContext.currentTime)
-        oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.1)
-        oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.2)
-        gainNode.gain.setValueAtTime(0.2, audioContext.currentTime)
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3)
-        oscillator.start(audioContext.currentTime)
-        oscillator.stop(audioContext.currentTime + 0.3)
-        break
-    }
-  } catch (error) {
-    console.error('Error al reproducir sonido:', error)
-  }
-}
-
 const sanitizarNombreArchivo = (nombreOriginal) => {
   const ultimoPunto = nombreOriginal.lastIndexOf('.')
   const extension = ultimoPunto !== -1 ? nombreOriginal.slice(ultimoPunto) : ''
@@ -128,6 +68,9 @@ const sanitizarNombreArchivo = (nombreOriginal) => {
 const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
   const esEdicion = !!producto
   const formRef = useRef(null)
+  
+  // 🔔 Usar hook centralizado de notificaciones
+  const { agregarToast, ToastContainer } = useAdminNotifications()
   
   const [formData, setFormData] = useState({
     name: '',
@@ -160,24 +103,9 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
   const [skuExiste, setSkuExiste] = useState(false)
   const [generandoSku, setGenerandoSku] = useState(false)
   const [skuEditandoManualmente, setSkuEditandoManualmente] = useState(false)
-  const [toasts, setToasts] = useState([])
 
   // 🎯 Tallas disponibles según la categoría actual
   const tallasDisponibles = tallasPorCategoria[formData.category] || tallasPorCategoria.vestidos
-
-  const agregarToast = (mensaje, tipo = 'info') => {
-    const id = Date.now()
-    setToasts(prev => [...prev, { id, mensaje, tipo }])
-    playSound(tipo)
-    
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id))
-    }, 4000)
-  }
-
-  const removerToast = (id) => {
-    setToasts(prev => prev.filter(t => t.id !== id))
-  }
 
   useEffect(() => {
     if (producto) {
@@ -319,7 +247,6 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
   const handleMarcaChange = (e) => {
     const value = e.target.value
     setMarcaSeleccion(value)
-    playSound('click')
     
     if (value === 'Otra') {
       setFormData((prev) => ({ ...prev, brand: prev.brandPersonalizada }))
@@ -605,7 +532,6 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
         setSubiendo(true)
         urlsNuevasSubidas = await subirImagenes()
         setSubiendo(false)
-        playSound('upload')
       }
       
       const imageUrls = [...urlsExistentes, ...urlsNuevasSubidas]
@@ -723,30 +649,8 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
 
   return (
     <>
-      {/* Toasts */}
-      <div className="fixed top-4 right-4 z-50 space-y-2">
-        {toasts.map((toast) => (
-          <div
-            key={toast.id}
-            className={`px-4 py-3 rounded-lg shadow-lg border max-w-sm animate-slide-in ${
-              toast.tipo === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
-              toast.tipo === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
-              toast.tipo === 'warning' ? 'bg-yellow-50 border-yellow-200 text-yellow-800' :
-              'bg-blue-50 border-blue-200 text-blue-800'
-            }`}
-          >
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-medium">{toast.mensaje}</p>
-              <button
-                onClick={() => removerToast(toast.id)}
-                className="text-gray-400 hover:text-gray-600 text-lg leading-none"
-              >
-                ×
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+      {/* 🔔 Toast Container del hook centralizado */}
+      <ToastContainer />
 
       {/* Modal de confirmación */}
       {mostrarConfirmacion && (
