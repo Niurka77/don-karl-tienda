@@ -1,646 +1,762 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAdminNotifications } from '../../hooks/useAdminNotifications'
 
-const DashboardPage = () => {
-  const [stats, setStats] = useState({
-    totalProductos: 0,
-    totalPedidos: 0,
-    productosAgotados: 0,
-    pedidosPendientes: 0,
-    ingresosSemana: 0,
-    ingresosMes: 0,
-  })
-  
-  const [cargando, setCargando] = useState(true)
-  const [productosEstancados, setProductosEstancados] = useState([])
-  const [ajustesRecientes, setAjustesRecientes] = useState([])
-  const [aplicandoDescuento, setAplicandoDescuento] = useState(null)
-  const [error, setError] = useState(null)
-  const [descuentoManual, setDescuentoManual] = useState({})
-  const [busquedaEstancados, setBusquedaEstancados] = useState('')
-  const [filtroDias, setFiltroDias] = useState(15)
+// ---------------------------------------------------------------------------
+// Tipos / constantes
+// ---------------------------------------------------------------------------
 
-  // 🔔 Usar hook centralizado de notificaciones
-  const { agregarToast, ToastContainer } = useAdminNotifications()
+const URGENCY_LEVELS = {
+  CRITICAL: { label: 'Crítico',  threshold: 60 },
+  HIGH:     { label: 'Alto',     threshold: 30 },
+  MEDIUM:   { label: 'Medio',    threshold: 15 },
+  LOW:      { label: 'Bajo',     threshold: 0  },
+}
+
+const DAY_FILTER_OPTIONS = [
+  { value: 15, label: '15 días' },
+  { value: 30, label: '30 días' },
+  { value: 60, label: '60 días' },
+]
+
+const MAX_DISCOUNT_PERCENT = 50
+const DISCOUNT_HARD_CAP   = 99
+
+// ---------------------------------------------------------------------------
+// Utilidades puras (sin efectos secundarios, fácilmente testeables)
+// ---------------------------------------------------------------------------
+
+const formatCurrency = (amount) =>
+  new Intl.NumberFormat('es-PE', {
+    style: 'currency',
+    currency: 'PEN',
+    minimumFractionDigits: 2,
+  }).format(amount ?? 0)
+
+const getDaysStagnant = (product) => {
+  const referenceDate = product.last_sale_date ?? product.created_at
+  return Math.floor((Date.now() - new Date(referenceDate).getTime()) / 86_400_000)
+}
+
+const getUrgencyLevel = (days) => {
+  if (days > URGENCY_LEVELS.CRITICAL.threshold) return 'CRITICAL'
+  if (days > URGENCY_LEVELS.HIGH.threshold)     return 'HIGH'
+  if (days > URGENCY_LEVELS.MEDIUM.threshold)   return 'MEDIUM'
+  return 'LOW'
+}
+
+const getRecommendedDiscount = (product) => {
+  const days           = getDaysStagnant(product)
+  const currentDiscount = product.discount_percent ?? 0
+  if (days > 60) return Math.min(currentDiscount + 30, MAX_DISCOUNT_PERCENT)
+  if (days > 30) return Math.min(currentDiscount + 20, MAX_DISCOUNT_PERCENT)
+  if (days > 15) return Math.min(currentDiscount + 10, MAX_DISCOUNT_PERCENT)
+  return Math.min(currentDiscount + 5, MAX_DISCOUNT_PERCENT)
+}
+
+const clampDiscount = (raw) => {
+  const parsed = parseInt(raw, 10)
+  if (isNaN(parsed)) return 0
+  return Math.min(DISCOUNT_HARD_CAP, Math.max(0, parsed))
+}
+
+const buildInitialDiscountMap = (products) =>
+  Object.fromEntries(products.map((p) => [p.id, getRecommendedDiscount(p)]))
+
+const exportStatsToCSV = (stats) => {
+  const rows = [
+    ['ESTADÍSTICAS DE VENTAS'],
+    ['Generado el:', new Date().toLocaleString('es-PE')],
+    [],
+    ['MÉTRICA', 'VALOR'],
+    ['Total Productos',    stats.totalProducts],
+    ['Total Pedidos',      stats.totalOrders],
+    ['Productos Agotados', stats.outOfStockProducts],
+    ['Pedidos Pendientes', stats.pendingOrders],
+    ['Ingresos Semana',   formatCurrency(stats.weekRevenue)],
+    ['Ingresos Mes',      formatCurrency(stats.monthRevenue)],
+  ]
+  const csv  = rows.map((r) => r.join(',')).join('\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url  = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href     = url
+  link.download = `estadisticas_${new Date().toISOString().split('T')[0]}.csv`
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+// ---------------------------------------------------------------------------
+// Sub-componentes de presentación
+// ---------------------------------------------------------------------------
+
+const UrgencyBadge = ({ days }) => {
+  const level = getUrgencyLevel(days)
+
+  const styles = {
+    CRITICAL: 'bg-[#8A2A3D]/10 text-[#8A2A3D] border-[#8A2A3D]/20',
+    HIGH:     'bg-[#C9A84C]/10 text-[#8A6520] border-[#C9A84C]/20',
+    MEDIUM:   'bg-[#D4788A]/10 text-[#B85268] border-[#D4788A]/20',
+    LOW:      'bg-[#9A7480]/10 text-[#6B4F5B] border-[#9A7480]/20',
+  }
+
+  const indicators = {
+    CRITICAL: 'bg-[#8A2A3D]',
+    HIGH:     'bg-[#C9A84C]',
+    MEDIUM:   'bg-[#D4788A]',
+    LOW:      'bg-[#9A7480]',
+  }
+
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border font-['DM_Sans'] ${styles[level]}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${indicators[level]}`} />
+      {URGENCY_LEVELS[level].label} · {days} días
+    </span>
+  )
+}
+
+const StatCard = ({ title, value, accent, linkTo }) => (
+  <Link
+    to={linkTo}
+    className="group relative bg-[#FFF8F5] rounded-sm p-6 border border-[rgba(212,120,138,0.12)] shadow-[0_1px_4px_rgba(26,17,24,0.04)] hover:shadow-[0_4px_20px_rgba(212,120,138,0.12)] hover:border-[rgba(212,120,138,0.3)] transition-all duration-300 overflow-hidden"
+  >
+    <div
+      className="absolute top-0 left-0 w-full h-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+      style={{ background: 'linear-gradient(90deg, #D4788A, #B85268)' }}
+    />
+    <p className="text-[10px] font-['DM_Sans'] uppercase tracking-[0.12em] text-[#9A7480] mb-3">
+      {title}
+    </p>
+    <p className={`font-['Cormorant_Garamond'] text-3xl font-light tracking-tight ${accent ? 'text-[#B85268]' : 'text-[#1A1118]'}`}>
+      {value}
+    </p>
+  </Link>
+)
+
+const DashboardSkeleton = () => (
+  <div className="space-y-8 animate-pulse">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="h-28 bg-[rgba(212,120,138,0.06)] rounded-sm border border-[rgba(212,120,138,0.08)]" />
+      ))}
+    </div>
+    <div className="h-64 bg-[rgba(212,120,138,0.06)] rounded-sm border border-[rgba(212,120,138,0.08)]" />
+  </div>
+)
+
+const ErrorBanner = ({ message, onRetry }) => (
+  <div className="flex items-center justify-between p-4 bg-[#8A2A3D]/5 border border-[#8A2A3D]/20 rounded-sm mb-6">
+    <p className="text-sm text-[#8A2A3D] font-['DM_Sans']">{message}</p>
+    {onRetry && (
+      <button
+        onClick={onRetry}
+        className="text-xs font-medium text-[#8A2A3D] underline underline-offset-2 hover:no-underline font-['DM_Sans']"
+      >
+        Reintentar
+      </button>
+    )}
+  </div>
+)
+
+const SectionHeader = ({ title, subtitle, badge }) => (
+  <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-6">
+    <div>
+      <div className="w-5 h-px bg-[#D4788A] mb-3" />
+      <h2 className="font-['Cormorant_Garamond'] text-xl font-light text-[#1A1118]">{title}</h2>
+      {subtitle && (
+        <p className="text-xs text-[#9A7480] font-['DM_Sans'] mt-1">{subtitle}</p>
+      )}
+    </div>
+    {badge}
+  </div>
+)
+
+const Spinner = ({ size = 'md' }) => {
+  const sizeClass = size === 'sm' ? 'w-3.5 h-3.5 border' : 'w-4 h-4 border-2'
+  return (
+    <span
+      className={`${sizeClass} border-current border-t-transparent rounded-full animate-spin`}
+      aria-hidden="true"
+    />
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Componente: tarjeta de producto estancado
+// ---------------------------------------------------------------------------
+
+const StagnantProductCard = ({ product, discountValue, onDiscountChange, onApply, isApplying }) => {
+  const days           = getDaysStagnant(product)
+  const recommended    = getRecommendedDiscount(product)
+  const finalPrice     = product.price_original * (1 - discountValue / 100)
+  const originalPrice  = product.price_original * (1 - (product.discount_percent ?? 0) / 100)
+  const saving         = originalPrice - finalPrice
+
+  const urgencyRationale = {
+    CRITICAL: 'Sin movimiento prolongado. Descuento agresivo recomendado para recuperar inversión.',
+    HIGH:     'Baja rotación. Un descuento moderado puede reactivar el interés.',
+    MEDIUM:   'Estancamiento reciente. Ajuste conservador como primer paso.',
+    LOW:      'Pocas ventas. Un descuento pequeño puede impulsar la visibilidad.',
+  }
+
+  const level = getUrgencyLevel(days)
+
+  return (
+    <article className="p-5 bg-white rounded-sm border border-[rgba(212,120,138,0.12)] shadow-[0_1px_4px_rgba(26,17,24,0.03)]">
+      <div className="flex flex-col sm:flex-row sm:items-start gap-4 mb-4">
+        <img
+          src={product.image_url ?? 'https://placehold.co/64x64/F2C4CE/9A7480?text=KB'}
+          alt={product.name}
+          className="w-16 h-16 rounded-sm object-cover bg-[#FDF0F3] flex-shrink-0"
+          loading="lazy"
+        />
+        <div className="flex-1 min-w-0">
+          <h3 className="font-medium text-[#1A1118] font-['DM_Sans'] truncate">{product.name}</h3>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
+            <span className="text-xs text-[#9A7480] font-['DM_Sans']">
+              Stock: <strong className="text-[#1A1118]">{product.stock}</strong>
+            </span>
+            <span className="text-xs text-[#9A7480] font-['DM_Sans']">
+              Precio: <strong className="text-[#1A1118]">{formatCurrency(product.price_original)}</strong>
+            </span>
+            {(product.discount_percent ?? 0) > 0 && (
+              <span className="text-xs text-[#B85268] font-medium font-['DM_Sans']">
+                -{product.discount_percent}% activo
+              </span>
+            )}
+          </div>
+          <div className="mt-2">
+            <UrgencyBadge days={days} />
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-[#FDF0F3] rounded-sm p-4 mb-4 border border-[rgba(212,120,138,0.15)]">
+        <p className="text-xs font-semibold text-[#1A1118] font-['DM_Sans'] mb-1">
+          Recomendación: <span className="text-[#B85268]">-{recommended}%</span>
+        </p>
+        <p className="text-xs text-[#9A7480] font-['DM_Sans'] leading-relaxed">
+          {urgencyRationale[level]}
+        </p>
+      </div>
+
+      <div className="flex flex-col sm:flex-row sm:items-end gap-4">
+        <div className="flex-1">
+          <label className="block text-xs font-medium text-[#1A1118] font-['DM_Sans'] mb-1.5">
+            Descuento personalizado
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min="0"
+              max={DISCOUNT_HARD_CAP}
+              value={discountValue}
+              onChange={(e) => onDiscountChange(product.id, e.target.value)}
+              className="w-24 px-3 py-2 border border-[rgba(212,120,138,0.25)] rounded-sm text-sm text-[#1A1118] bg-white focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-[#D4788A] font-['DM_Sans']"
+            />
+            <span className="text-sm text-[#9A7480] font-['DM_Sans']">%</span>
+          </div>
+        </div>
+
+        <div className="bg-[#FFF8F5] rounded-sm p-3 border border-[rgba(212,120,138,0.12)] min-w-[160px]">
+          <p className="text-[10px] text-[#9A7480] font-['DM_Sans'] uppercase tracking-wide mb-1">
+            Precio final
+          </p>
+          <div className="flex items-baseline gap-2">
+            <span className="font-['Cormorant_Garamond'] text-xl font-light text-[#1A1118]">
+              {formatCurrency(finalPrice)}
+            </span>
+            {discountValue > 0 && (
+              <span className="text-xs text-[#9A7480] line-through font-['DM_Sans']">
+                {formatCurrency(product.price_original)}
+              </span>
+            )}
+          </div>
+          {saving > 0 && (
+            <p className="text-xs text-[#B85268] font-medium mt-0.5 font-['DM_Sans']">
+              Ahorro {formatCurrency(saving)}
+            </p>
+          )}
+        </div>
+
+        <button
+          onClick={() => onApply(product, discountValue)}
+          disabled={isApplying}
+          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#1A1118] text-[#FFF8F5] rounded-sm text-sm font-semibold font-['DM_Sans'] hover:bg-[#2D2030] disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+        >
+          {isApplying ? (
+            <>
+              <Spinner size="sm" />
+              Aplicando
+            </>
+          ) : (
+            'Aplicar descuento'
+          )}
+        </button>
+      </div>
+    </article>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Componente: ajuste reciente
+// ---------------------------------------------------------------------------
+
+const RecentAdjustmentCard = ({ product, onReadjust, onConfirm }) => {
+  const elapsedMinutes = Math.floor(
+    (Date.now() - new Date(product.appliedAt).getTime()) / 60_000
+  )
+  const timeLabel = elapsedMinutes < 1 ? 'hace un momento' : `hace ${elapsedMinutes} min`
+
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-white rounded-sm border border-[rgba(212,120,138,0.12)]">
+      <div className="flex items-center gap-3">
+        <img
+          src={product.image_url ?? 'https://placehold.co/48x48/F2C4CE/9A7480?text=KB'}
+          alt={product.name}
+          className="w-11 h-11 rounded-sm object-cover bg-[#FDF0F3] flex-shrink-0"
+          loading="lazy"
+        />
+        <div>
+          <p className="text-sm font-medium text-[#1A1118] font-['DM_Sans']">{product.name}</p>
+          <div className="flex items-center gap-2 text-xs text-[#9A7480] mt-0.5 font-['DM_Sans']">
+            <span className="line-through">-{product.previousDiscount}%</span>
+            <span>→</span>
+            <span className="text-[#B85268] font-semibold">-{product.discount_percent}%</span>
+            <span>·</span>
+            <span>{timeLabel}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex gap-2 flex-shrink-0">
+        <button
+          onClick={() => onReadjust(product)}
+          className="px-3 py-1.5 text-xs font-medium text-[#8A6520] bg-[#C9A84C]/10 border border-[#C9A84C]/20 rounded-sm hover:bg-[#C9A84C]/20 transition-colors font-['DM_Sans']"
+        >
+          Ajustar más
+        </button>
+        <button
+          onClick={() => onConfirm(product.id)}
+          className="px-3 py-1.5 text-xs font-medium text-[#FFF8F5] bg-[#1A1118] rounded-sm hover:bg-[#2D2030] transition-colors font-['DM_Sans']"
+        >
+          Listo
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Hook: carga de estadísticas del dashboard
+// ---------------------------------------------------------------------------
+
+const useDashboardStats = (onError) => {
+  const [stats, setStats] = useState({
+    totalProducts:      0,
+    totalOrders:        0,
+    outOfStockProducts: 0,
+    pendingOrders:      0,
+    weekRevenue:        0,
+    monthRevenue:       0,
+  })
+  const [isLoading, setIsLoading] = useState(true)
+
+  const load = useCallback(async () => {
+    try {
+      const oneWeekAgo  = new Date(Date.now() - 7  * 86_400_000).toISOString()
+      const oneMonthAgo = new Date(Date.now() - 30 * 86_400_000).toISOString()
+
+      const [
+        { count: totalProducts },
+        { count: outOfStockProducts },
+        { count: totalOrders },
+        { count: pendingOrders },
+        { data: weekOrders },
+        { data: monthOrders },
+      ] = await Promise.all([
+        supabase.from('products').select('*', { count: 'exact', head: true }),
+        supabase.from('products').select('*', { count: 'exact', head: true }).eq('stock', 0),
+        supabase.from('orders').select('*', { count: 'exact', head: true }),
+        supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pendiente'),
+        supabase.from('orders').select('total').gte('created_at', oneWeekAgo).eq('status', 'entregado'),
+        supabase.from('orders').select('total').gte('created_at', oneMonthAgo).eq('status', 'entregado'),
+      ])
+
+      const sumRevenue = (orders) =>
+        (orders ?? []).reduce((acc, o) => acc + Number(o.total ?? 0), 0)
+
+      setStats({
+        totalProducts:      totalProducts      ?? 0,
+        totalOrders:        totalOrders        ?? 0,
+        outOfStockProducts: outOfStockProducts ?? 0,
+        pendingOrders:      pendingOrders      ?? 0,
+        weekRevenue:        sumRevenue(weekOrders),
+        monthRevenue:       sumRevenue(monthOrders),
+      })
+    } catch {
+      onError()
+    } finally {
+      setIsLoading(false)
+    }
+  }, [onError])
 
   useEffect(() => {
-    cargarStats()
-    cargarEstancados()
-    
-    // 🔄 REALTIME: Escuchar cambios en productos y pedidos
-    const subscriptionProductos = supabase
-      .channel('dashboard-productos')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'products' }, 
-        () => {
-          cargarStats()
-        }
-      )
+    load()
+
+    const productChannel = supabase
+      .channel('dashboard-products')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, load)
       .subscribe()
 
-    const subscriptionPedidos = supabase
-      .channel('dashboard-pedidos')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'orders' }, 
-        () => {
-          cargarStats()
-        }
-      )
+    const orderChannel = supabase
+      .channel('dashboard-orders')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, load)
       .subscribe()
 
     return () => {
-      supabase.removeChannel(subscriptionProductos)
-      supabase.removeChannel(subscriptionPedidos)
+      supabase.removeChannel(productChannel)
+      supabase.removeChannel(orderChannel)
+    }
+  }, [load])
+
+  return { stats, isLoading, reload: load }
+}
+
+// ---------------------------------------------------------------------------
+// Hook: productos estancados + descuentos
+// ---------------------------------------------------------------------------
+
+const useStagnantProducts = (dayThreshold) => {
+  const [stagnantProducts, setStagnantProducts] = useState([])
+  const [discountMap, setDiscountMap]             = useState({})
+  const [applyingId, setApplyingId]               = useState(null)
+  const [recentAdjustments, setRecentAdjustments] = useState([])
+
+  const load = useCallback(async () => {
+    const cutoff = new Date(Date.now() - dayThreshold * 86_400_000).toISOString()
+
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .gt('stock', 0)
+      .or(`and(last_sale_date.is.null,created_at.lt.${cutoff}),last_sale_date.lt.${cutoff}`)
+      .order('created_at', { ascending: true })
+      .limit(20)
+
+    if (error || !data) return
+    setStagnantProducts(data)
+    setDiscountMap(buildInitialDiscountMap(data))
+  }, [dayThreshold])
+
+  useEffect(() => { load() }, [load])
+
+  const updateDiscount = useCallback((productId, rawValue) => {
+    setDiscountMap((prev) => ({ ...prev, [productId]: clampDiscount(rawValue) }))
+  }, [])
+
+  const applyDiscount = useCallback(async (product, rawValue) => {
+    const newDiscount = clampDiscount(rawValue)
+
+    setApplyingId(product.id)
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({ discount_percent: newDiscount, is_new: false })
+        .eq('id', product.id)
+
+      if (error) throw error
+
+      const adjusted = {
+        ...product,
+        discount_percent:  newDiscount,
+        is_new:            false,
+        appliedAt:         new Date().toISOString(),
+        previousDiscount:  product.discount_percent ?? 0,
+      }
+
+      setStagnantProducts((prev) => prev.filter((p) => p.id !== product.id))
+      setRecentAdjustments((prev) => [adjusted, ...prev])
+
+      return { success: true, product: adjusted }
+    } catch {
+      return { success: false }
+    } finally {
+      setApplyingId(null)
     }
   }, [])
 
-  const cargarStats = async () => {
-    try {
-      setError(null)
-      
-      // Total productos
-      const { count: totalProductos } = await supabase
-        .from('products')
-        .select('*', { count: 'exact', head: true })
+  const readjustProduct = useCallback((adjustedProduct) => {
+    const restored = { ...adjustedProduct, discount_percent: adjustedProduct.previousDiscount }
+    setStagnantProducts((prev) => [restored, ...prev])
+    setDiscountMap((prev) => ({ ...prev, [adjustedProduct.id]: adjustedProduct.discount_percent }))
+    setRecentAdjustments((prev) => prev.filter((p) => p.id !== adjustedProduct.id))
+  }, [])
 
-      // Productos agotados
-      const { count: productosAgotados } = await supabase
-        .from('products')
-        .select('*', { count: 'exact', head: true })
-        .eq('stock', 0)
+  const confirmAdjustment = useCallback((productId) => {
+    setRecentAdjustments((prev) => prev.filter((p) => p.id !== productId))
+  }, [])
 
-      // Total pedidos
-      const { count: totalPedidos } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
-
-      // Pedidos pendientes
-      const { count: pedidosPendientes } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pendiente')
-
-      // Ingresos semana
-      const haceUnaSemana = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-      const { data: pedidosSemana } = await supabase
-        .from('orders')
-        .select('total, status')
-        .gte('created_at', haceUnaSemana)
-        .eq('status', 'entregado')
-
-      const ingresosSemana = pedidosSemana?.reduce((sum, p) => sum + Number(p.total || 0), 0) || 0
-
-      // Ingresos mes
-      const haceUnMes = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
-      const { data: pedidosMes } = await supabase
-        .from('orders')
-        .select('total, status')
-        .gte('created_at', haceUnMes)
-        .eq('status', 'entregado')
-
-      const ingresosMes = pedidosMes?.reduce((sum, p) => sum + Number(p.total || 0), 0) || 0
-
-      setStats({
-        totalProductos: totalProductos || 0,
-        totalPedidos: totalPedidos || 0,
-        productosAgotados: productosAgotados || 0,
-        pedidosPendientes: pedidosPendientes || 0,
-        ingresosSemana,
-        ingresosMes,
-      })
-    } catch (err) {
-      console.error('Error al cargar estadísticas:', err)
-      setError('No se pudieron cargar las estadísticas')
-      agregarToast('Error al cargar estadísticas', 'error')
-    } finally {
-      setCargando(false)
-    }
+  return {
+    stagnantProducts,
+    discountMap,
+    applyingId,
+    recentAdjustments,
+    updateDiscount,
+    applyDiscount,
+    readjustProduct,
+    confirmAdjustment,
+    reload: load,
   }
+}
 
-  const cargarEstancados = async () => {
-    try {
-      const fechaLimite = new Date()
-      fechaLimite.setDate(fechaLimite.getDate() - filtroDias)
-      
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .gt('stock', 0)
-        .or(
-          `and(last_sale_date.is.null,created_at.lt.${fechaLimite.toISOString()}),last_sale_date.lt.${fechaLimite.toISOString()}`
-        )
-        .order('created_at', { ascending: true })
-        .limit(20)
+// ---------------------------------------------------------------------------
+// Componente principal
+// ---------------------------------------------------------------------------
 
-      if (error) throw error
-      
-      setProductosEstancados(data || [])
+const DashboardPage = () => {
+  const [hasError, setHasError]           = useState(false)
+  const [searchQuery, setSearchQuery]     = useState('')
+  const [dayThreshold, setDayThreshold]   = useState(15)
 
-      const initialManual = {}
-      data.forEach(p => {
-        const sugerido = calcularDescuentoRecomendado(p)
-        initialManual[p.id] = sugerido
-      })
-      setDescuentoManual(initialManual)
-    } catch (err) {
-      console.error('Error al cargar estancados:', err)
-    }
-  }
+  const { agregarToast, ToastContainer } = useAdminNotifications()
 
-  const calcularDescuentoRecomendado = (producto) => {
-    const diasEstancado = getDiasEstancado(producto)
-    const descuentoActual = producto.discount_percent || 0
-    
-    if (diasEstancado > 60) return Math.min(descuentoActual + 30, 50)
-    if (diasEstancado > 30) return Math.min(descuentoActual + 20, 50)
-    if (diasEstancado > 15) return Math.min(descuentoActual + 10, 50)
-    return Math.min(descuentoActual + 5, 50)
-  }
+  const onStatsError = useCallback(() => {
+    setHasError(true)
+    agregarToast('No se pudieron cargar las estadísticas', 'error')
+  }, [agregarToast])
 
-  const getDiasEstancado = (producto) => {
-    const fechaReferencia = producto.last_sale_date || producto.created_at
-    const dias = Math.floor((new Date() - new Date(fechaReferencia)) / (1000 * 60 * 60 * 24))
-    return dias
-  }
+  const { stats, isLoading, reload: reloadStats } = useDashboardStats(onStatsError)
 
-  const getNivelUrgencia = (dias) => {
-    if (dias > 60) return { nivel: 'Crítico', color: 'red', emoji: '🔴' }
-    if (dias > 30) return { nivel: 'Alto', color: 'orange', emoji: '🟠' }
-    if (dias > 15) return { nivel: 'Medio', color: 'yellow', emoji: '🟡' }
-    return { nivel: 'Bajo', color: 'green', emoji: '🟢' }
-  }
+  const {
+    stagnantProducts,
+    discountMap,
+    applyingId,
+    recentAdjustments,
+    updateDiscount,
+    applyDiscount,
+    readjustProduct,
+    confirmAdjustment,
+  } = useStagnantProducts(dayThreshold)
 
-  const handleDescuentoChange = (productoId, value) => {
-    let nuevoValor = parseInt(value, 10)
-    if (isNaN(nuevoValor)) nuevoValor = 0
-    nuevoValor = Math.min(99, Math.max(0, nuevoValor))
-    setDescuentoManual(prev => ({ ...prev, [productoId]: nuevoValor }))
-  }
+  const handleDayThresholdChange = useCallback((e) => {
+    setDayThreshold(Number(e.target.value))
+  }, [])
 
-  const aplicarDescuento = async (producto, descuentoPersonalizado) => {
-    let nuevoDescuento = parseInt(descuentoPersonalizado, 10)
-    
-    if (isNaN(nuevoDescuento)) {
-      agregarToast('Por favor ingresa un número válido', 'error')
-      return
-    }
+  const handleApplyDiscount = useCallback(async (product, discountValue) => {
+    const numericDiscount = clampDiscount(discountValue)
 
-    if (nuevoDescuento < 0 || nuevoDescuento > 99) {
-      agregarToast('El descuento debe estar entre 0% y 99%', 'error')
-      return
-    }
-
-    if (nuevoDescuento === producto.discount_percent) {
+    if (numericDiscount === (product.discount_percent ?? 0)) {
       agregarToast('Este producto ya tiene ese descuento', 'info')
       return
     }
 
-    setAplicandoDescuento(producto.id)
-    
-    try {
-      const { error } = await supabase
-        .from('products')
-        .update({
-          discount_percent: nuevoDescuento,
-          is_new: false,
-        })
-        .eq('id', producto.id)
+    const result = await applyDiscount(product, numericDiscount)
 
-      if (error) throw error
-
-      const productoActualizado = {
-        ...producto,
-        discount_percent: nuevoDescuento,
-        is_new: false,
-        descuentoAplicadoEn: new Date().toISOString(),
-        descuentoAnterior: producto.discount_percent || 0,
-      }
-
-      setProductosEstancados(prev => prev.filter(p => p.id !== producto.id))
-      setAjustesRecientes(prev => [productoActualizado, ...prev])
-
-      const precioAnterior = producto.price_original * (1 - (producto.discount_percent || 0) / 100)
-      const precioNuevo = producto.price_original * (1 - nuevoDescuento / 100)
-      const ahorro = precioAnterior - precioNuevo
-
+    if (result.success) {
+      const previousPrice = product.price_original * (1 - (product.discount_percent ?? 0) / 100)
+      const newPrice      = product.price_original * (1 - numericDiscount / 100)
+      const saving        = formatCurrency(previousPrice - newPrice)
       agregarToast(
-        `✅ ${producto.name}: ${producto.discount_percent || 0}% → ${nuevoDescuento}% (-S/${ahorro.toFixed(2)})`,
+        `${product.name}: ${product.discount_percent ?? 0}% → ${numericDiscount}% (${saving})`,
         'success'
       )
-    } catch (err) {
-      console.error('Error al aplicar descuento:', err)
-      agregarToast('❌ Error al aplicar el descuento', 'error')
-    } finally {
-      setAplicandoDescuento(null)
+    } else {
+      agregarToast('No se pudo aplicar el descuento', 'error')
     }
-  }
+  }, [applyDiscount, agregarToast])
 
-  const ajustarNuevamente = (productoAjustado) => {
-    const productoEnLista = {
-      ...productoAjustado,
-      discount_percent: productoAjustado.descuentoAnterior,
-    }
-    
-    setProductosEstancados(prev => [productoEnLista, ...prev])
-    setDescuentoManual(prev => ({ ...prev, [productoAjustado.id]: productoAjustado.discount_percent }))
-    setAjustesRecientes(prev => prev.filter(p => p.id !== productoAjustado.id))
+  const handleExportCSV = useCallback(() => {
+    exportStatsToCSV(stats)
+    agregarToast('Estadísticas exportadas', 'success')
+  }, [stats, agregarToast])
 
-    agregarToast('🔄 Producto movido para nuevo ajuste', 'info')
-  }
-
-  const confirmarAjuste = (productoId) => {
-    setAjustesRecientes(prev => prev.filter(p => p.id !== productoId))
-    agregarToast('✨ Ajuste confirmado', 'success')
-  }
-
-  const formatearMoneda = (monto) => {
-    return new Intl.NumberFormat('es-PE', {
-      style: 'currency',
-      currency: 'PEN',
-      minimumFractionDigits: 2
-    }).format(monto || 0)
-  }
-
-  const exportarEstadisticas = () => {
-    const csv = [
-      ['ESTADÍSTICAS DE VENTAS'],
-      ['Fecha de generación:', new Date().toLocaleString('es-PE')],
-      [],
-      ['MÉTRICA', 'VALOR'],
-      ['Total Productos', stats.totalProductos],
-      ['Total Pedidos', stats.totalPedidos],
-      ['Productos Agotados', stats.productosAgotados],
-      ['Pedidos Pendientes', stats.pedidosPendientes],
-      ['Ingresos Semana', formatearMoneda(stats.ingresosSemana)],
-      ['Ingresos Mes', formatearMoneda(stats.ingresosMes)],
-    ]
-    
-    const csvContent = csv.map(row => row.join(',')).join('\n')
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-    const link = document.createElement('a')
-    link.href = URL.createObjectURL(blob)
-    link.download = `estadisticas_${new Date().toISOString().split('T')[0]}.csv`
-    link.click()
-    
-    agregarToast('📊 Estadísticas exportadas', 'success')
-  }
-
-  const cards = [
-    {
-      title: 'Total Productos',
-      value: stats.totalProductos,
-      icon: '📦',
-      color: 'bg-blue-50 text-blue-700',
-      link: '/admin/productos',
-    },
-    {
-      title: 'Pedidos Totales',
-      value: stats.totalPedidos,
-      icon: '📋',
-      color: 'bg-green-50 text-green-700',
-      link: '/admin/pedidos',
-    },
-    {
-      title: 'Pedidos Pendientes',
-      value: stats.pedidosPendientes,
-      icon: '⏳',
-      color: 'bg-yellow-50 text-yellow-700',
-      link: '/admin/pedidos',
-    },
-    {
-      title: 'Productos Agotados',
-      value: stats.productosAgotados,
-      icon: '⚠️',
-      color: 'bg-red-50 text-red-700',
-      link: '/admin/productos',
-    },
-    {
-      title: 'Ingresos Semana',
-      value: formatearMoneda(stats.ingresosSemana),
-      icon: '💰',
-      color: 'bg-purple-50 text-purple-700',
-      link: '/admin/pedidos',
-    },
-    {
-      title: 'Ingresos Mes',
-      value: formatearMoneda(stats.ingresosMes),
-      icon: '📈',
-      color: 'bg-indigo-50 text-indigo-700',
-      link: '/admin/pedidos',
-    },
-  ]
-
-  // Filtrar productos estancados por búsqueda
-  const productosEstancadosFiltrados = productosEstancados.filter(p =>
-    p.name?.toLowerCase().includes(busquedaEstancados.toLowerCase()) ||
-    p.sku?.toLowerCase().includes(busquedaEstancados.toLowerCase())
+  const filteredStagnantProducts = useMemo(() =>
+    stagnantProducts.filter((p) => {
+      const term = searchQuery.toLowerCase()
+      return (
+        p.name?.toLowerCase().includes(term) ||
+        p.sku?.toLowerCase().includes(term)
+      )
+    }),
+    [stagnantProducts, searchQuery]
   )
 
+  const statCards = useMemo(() => [
+    {
+      title:  'Total productos',
+      value:  stats.totalProducts,
+      linkTo: '/admin/productos',
+      accent: false,
+    },
+    {
+      title:  'Pedidos totales',
+      value:  stats.totalOrders,
+      linkTo: '/admin/pedidos',
+      accent: false,
+    },
+    {
+      title:  'Pedidos pendientes',
+      value:  stats.pendingOrders,
+      linkTo: '/admin/pedidos',
+      accent: stats.pendingOrders > 0,
+    },
+    {
+      title:  'Productos agotados',
+      value:  stats.outOfStockProducts,
+      linkTo: '/admin/productos',
+      accent: stats.outOfStockProducts > 0,
+    },
+    {
+      title:  'Ingresos semana',
+      value:  formatCurrency(stats.weekRevenue),
+      linkTo: '/admin/pedidos',
+      accent: false,
+    },
+    {
+      title:  'Ingresos mes',
+      value:  formatCurrency(stats.monthRevenue),
+      linkTo: '/admin/pedidos',
+      accent: false,
+    },
+  ], [stats])
+
   return (
-    <div className="min-h-screen bg-[#FFF8F5] p-4 md:p-6">
+    <div className="min-h-screen bg-[#FFF8F5] p-4 md:p-8">
       <ToastContainer />
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
         <div>
-          <h1 className="font-['Cormorant_Garamond'] text-3xl font-light text-[#1A1118]">Dashboard</h1>
-          <p className="text-sm text-[#9A7480] font-['DM_Sans'] mt-1">Resumen general de tu tienda</p>
+          <p className="text-[10px] font-['DM_Sans'] uppercase tracking-[0.15em] text-[#9A7480] mb-2">
+            KB Dresses & More
+          </p>
+          <h1 className="font-['Cormorant_Garamond'] text-4xl font-light tracking-tight text-[#1A1118]">
+            Dashboard
+          </h1>
+          <p className="text-sm text-[#9A7480] font-['DM_Sans'] mt-1">
+            Resumen operativo de tu tienda
+          </p>
         </div>
-        <button
-          onClick={exportarEstadisticas}
-          className="px-4 py-2 border border-[rgba(212,120,138,0.3)] text-[#9A7480] rounded-sm text-sm font-['DM_Sans'] hover:bg-[#FDF0F3] transition-colors flex items-center gap-2"
-        >
-          📊 Exportar CSV
-        </button>
-      </div>
 
-      {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-sm mb-6">
-          <p className="text-sm text-red-700 font-['DM_Sans']">{error}</p>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleExportCSV}
+            className="px-4 py-2 border border-[rgba(212,120,138,0.25)] text-[#9A7480] rounded-sm text-sm font-['DM_Sans'] hover:bg-[#FDF0F3] hover:border-[rgba(212,120,138,0.4)] transition-all"
+          >
+            Exportar CSV
+          </button>
         </div>
+      </header>
+
+      {hasError && (
+        <ErrorBanner
+          message="No se pudieron cargar las estadísticas."
+          onRetry={() => { setHasError(false); reloadStats() }}
+        />
       )}
 
-      {cargando ? (
-        <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-3 border-[#D4788A] border-t-transparent rounded-full animate-spin"></div>
-        </div>
+      {isLoading ? (
+        <DashboardSkeleton />
       ) : (
-        <>
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-            {cards.map((card) => (
-              <Link
-                key={card.title}
-                to={card.link}
-                className="bg-white rounded-sm p-5 border border-[rgba(212,120,138,0.15)] shadow-sm hover:shadow-md transition-all"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-2xl">{card.icon}</span>
-                </div>
-                <p className="text-xs text-[#9A7480] font-['DM_Sans'] uppercase tracking-wide">{card.title}</p>
-                <p className="text-2xl font-bold text-[#1A1118] font-['Cormorant_Garamond'] mt-1">{card.value}</p>
-              </Link>
-            ))}
-          </div>
-
-          {/* Ajustes Recientes */}
-          {ajustesRecientes.length > 0 && (
-            <div className="mb-8 bg-white rounded-sm border border-[rgba(212,120,138,0.15)] shadow-sm p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h2 className="text-lg font-semibold text-[#1A1118] font-['Cormorant_Garamond'] flex items-center gap-2">
-                    <span>✨</span> Descuentos aplicados en esta sesión
-                  </h2>
-                  <p className="text-sm text-[#9A7480] font-['DM_Sans'] mt-1">
-                    Productos a los que ya les aplicaste descuento
-                  </p>
-                </div>
-                <span className="text-sm text-green-700 bg-green-100 px-3 py-1 rounded-sm font-['DM_Sans']">
-                  {ajustesRecientes.length} ajuste{ajustesRecientes.length !== 1 ? 's' : ''}
-                </span>
-              </div>
-
-              <div className="space-y-3">
-                {ajustesRecientes.map((producto) => {
-                  const tiempoTranscurrido = Math.floor(
-                    (new Date() - new Date(producto.descuentoAplicadoEn)) / 1000 / 60
-                  )
-                  const tiempoTexto = tiempoTranscurrido < 1 
-                    ? 'hace un momento' 
-                    : `hace ${tiempoTranscurrido} min`
-
-                  return (
-                    <div
-                      key={producto.id}
-                      className="p-4 bg-green-50 rounded-sm border border-green-200"
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={producto.image_url || 'https://placehold.co/48x48/e2e8f0/9ca3af?text=IMG'}
-                            alt={producto.name}
-                            className="w-12 h-12 rounded-sm object-cover bg-gray-100 flex-shrink-0"
-                          />
-                          <div>
-                            <p className="font-medium text-[#1A1118] text-sm font-['DM_Sans']">
-                              {producto.name}
-                            </p>
-                            <div className="flex items-center gap-2 text-xs text-gray-600 mt-1">
-                              <span className="line-through">-{producto.descuentoAnterior}%</span>
-                              <span className="text-gray-400">→</span>
-                              <span className="text-green-700 font-semibold">-{producto.discount_percent}%</span>
-                              <span className="text-gray-400">•</span>
-                              <span>{tiempoTexto}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => ajustarNuevamente(producto)}
-                            className="px-3 py-1.5 text-xs font-medium text-orange-700 bg-orange-100 rounded-sm hover:bg-orange-200 transition-colors font-['DM_Sans']"
-                          >
-                            🔄 Ajustar más
-                          </button>
-                          <button
-                            onClick={() => confirmarAjuste(producto.id)}
-                            className="px-3 py-1.5 text-xs font-medium text-white bg-green-600 rounded-sm hover:bg-green-700 transition-colors font-['DM_Sans']"
-                          >
-                            ✓ Listo
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
+        <div className="space-y-8">
+          {/* Stats grid */}
+          <section>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {statCards.map((card) => (
+                <StatCard key={card.title} {...card} />
+              ))}
             </div>
+          </section>
+
+          {/* Ajustes recientes */}
+          {recentAdjustments.length > 0 && (
+            <section className="bg-white rounded-sm border border-[rgba(212,120,138,0.12)] shadow-[0_1px_4px_rgba(26,17,24,0.03)] p-6">
+              <SectionHeader
+                title="Descuentos de esta sesión"
+                subtitle="Productos ajustados recientemente"
+                badge={
+                  <span className="text-xs font-medium text-[#B85268] bg-[#D4788A]/10 border border-[#D4788A]/20 px-2.5 py-1 rounded-full font-['DM_Sans']">
+                    {recentAdjustments.length} ajuste{recentAdjustments.length !== 1 ? 's' : ''}
+                  </span>
+                }
+              />
+              <div className="space-y-3">
+                {recentAdjustments.map((product) => (
+                  <RecentAdjustmentCard
+                    key={product.id}
+                    product={product}
+                    onReadjust={readjustProduct}
+                    onConfirm={confirmAdjustment}
+                  />
+                ))}
+              </div>
+            </section>
           )}
 
-          {/* Productos Estancados */}
-          {productosEstancadosFiltrados.length > 0 && (
-            <div className="mb-8 bg-white rounded-sm border border-[rgba(212,120,138,0.15)] shadow-sm p-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-                <div>
-                  <h2 className="text-lg font-semibold text-[#1A1118] font-['Cormorant_Garamond']">
-                    📦 Productos con baja rotación
-                  </h2>
-                  <p className="text-sm text-[#9A7480] font-['DM_Sans'] mt-1">
-                    Productos sin ventas hace más de {filtroDias} días
-                  </p>
-                </div>
-                
-                <div className="flex gap-2">
-                  <select
-                    value={filtroDias}
-                    onChange={(e) => {
-                      setFiltroDias(Number(e.target.value))
-                      setTimeout(() => cargarEstancados(), 100)
-                    }}
-                    className="px-3 py-1.5 border border-[rgba(212,120,138,0.25)] rounded-sm text-sm font-['DM_Sans'] bg-white"
-                  >
-                    <option value={15}>15 días</option>
-                    <option value={30}>30 días</option>
-                    <option value={60}>60 días</option>
-                  </select>
-                  
-                  <input
-                    type="text"
-                    placeholder="Buscar producto..."
-                    value={busquedaEstancados}
-                    onChange={(e) => setBusquedaEstancados(e.target.value)}
-                    className="px-3 py-1.5 border border-[rgba(212,120,138,0.25)] rounded-sm text-sm font-['DM_Sans'] bg-white"
-                  />
-                </div>
-              </div>
+          {/* Productos estancados */}
+          {filteredStagnantProducts.length > 0 && (
+            <section className="bg-white rounded-sm border border-[rgba(212,120,138,0.12)] shadow-[0_1px_4px_rgba(26,17,24,0.03)] p-6">
+              <SectionHeader
+                title="Baja rotación"
+                subtitle={`Sin ventas hace más de ${dayThreshold} días`}
+                badge={
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={dayThreshold}
+                      onChange={handleDayThresholdChange}
+                      className="px-3 py-1.5 border border-[rgba(212,120,138,0.2)] rounded-sm text-xs font-['DM_Sans'] text-[#1A1118] bg-white focus:outline-none focus:ring-1 focus:ring-[#D4788A]"
+                    >
+                      {DAY_FILTER_OPTIONS.map(({ value, label }) => (
+                        <option key={value} value={value}>{label}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="search"
+                      placeholder="Buscar producto..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="px-3 py-1.5 border border-[rgba(212,120,138,0.2)] rounded-sm text-xs font-['DM_Sans'] text-[#1A1118] bg-white placeholder:text-[#9A7480] focus:outline-none focus:ring-1 focus:ring-[#D4788A] w-40"
+                    />
+                  </div>
+                }
+              />
 
               <div className="space-y-4">
-                {productosEstancadosFiltrados.slice(0, 5).map((producto) => {
-                  const diasEstancado = getDiasEstancado(producto)
-                  const urgencia = getNivelUrgencia(diasEstancado)
-                  const recomendado = calcularDescuentoRecomendado(producto)
-                  const valorActual = descuentoManual[producto.id] !== undefined 
-                    ? descuentoManual[producto.id] 
-                    : recomendado
-                  const precioFinal = producto.price_original * (1 - valorActual / 100)
-
-                  return (
-                    <div
-                      key={producto.id}
-                      className="p-5 bg-gradient-to-r from-amber-50 to-orange-50 rounded-sm border border-amber-200"
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
-                        <div className="flex items-center gap-4">
-                          <img
-                            src={producto.image_url || 'https://placehold.co/60x60/e2e8f0/9ca3af?text=IMG'}
-                            alt={producto.name}
-                            className="w-16 h-16 rounded-sm object-cover bg-gray-100 flex-shrink-0"
-                          />
-                          <div>
-                            <h3 className="font-semibold text-[#1A1118] font-['DM_Sans']">
-                              {producto.name}
-                            </h3>
-                            <div className="flex items-center gap-2 mt-1 flex-wrap">
-                              <span className="text-xs text-[#9A7480] font-['DM_Sans']">
-                                Stock: {producto.stock}
-                              </span>
-                              <span className="text-xs text-gray-400">•</span>
-                              <span className="text-xs text-[#9A7480] font-['DM_Sans']">
-                                Precio: S/ {producto.price_original?.toFixed(2)}
-                              </span>
-                              {producto.discount_percent > 0 && (
-                                <>
-                                  <span className="text-xs text-gray-400">•</span>
-                                  <span className="text-xs text-red-500 font-medium font-['DM_Sans']">
-                                    -{producto.discount_percent}% actual
-                                  </span>
-                                </>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2 mt-2">
-                              <span className="text-lg">{urgencia.emoji}</span>
-                              <span className={`text-xs font-medium px-2 py-0.5 rounded-full bg-${urgencia.color}-100 text-${urgencia.color}-700 font-['DM_Sans']`}>
-                                {urgencia.nivel} • {diasEstancado} días sin ventas
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="bg-white rounded-sm p-4 mb-4 border-2 border-dashed border-blue-300">
-                        <div className="flex items-start gap-3">
-                          <div className="text-2xl">💡</div>
-                          <div className="flex-1">
-                            <p className="text-sm font-semibold text-[#1A1118] mb-1 font-['DM_Sans']">
-                              Recomendación: <span className="text-blue-600">-{recomendado}%</span>
-                            </p>
-                            <p className="text-xs text-gray-600 font-['DM_Sans']">
-                              {diasEstancado > 60 && 'Producto muy estancado. Descuento agresivo recomendado.'}
-                              {diasEstancado > 30 && diasEstancado <= 60 && 'Baja rotación. Descuento moderado ayudará.'}
-                              {diasEstancado > 15 && diasEstancado <= 30 && 'Recientemente estancado. Descuento conservador.'}
-                              {diasEstancado <= 15 && 'Pocas ventas. Pequeño descuento puede impulsar.'}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row sm:items-end gap-4">
-                        <div className="flex-1">
-                          <label className="block text-xs font-medium text-[#1A1118] mb-1 font-['DM_Sans']">
-                            Descuento personalizado:
-                          </label>
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="number"
-                              min="0"
-                              max="99"
-                              step="1"
-                              value={valorActual}
-                              onChange={(e) => handleDescuentoChange(producto.id, e.target.value)}
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded-sm text-sm focus:ring-2 focus:ring-[#D4788A] focus:border-transparent font-['DM_Sans']"
-                            />
-                            <span className="text-sm text-gray-500">%</span>
-                          </div>
-                        </div>
-
-                        <div className="bg-white rounded-sm p-3 border border-gray-200 min-w-[180px]">
-                          <p className="text-xs text-gray-500 mb-1 font-['DM_Sans']">Precio final:</p>
-                          <div className="flex items-baseline gap-2">
-                            <span className="text-xl font-bold text-[#1A1118] font-['Cormorant_Garamond']">
-                              S/ {precioFinal.toFixed(2)}
-                            </span>
-                            {valorActual > 0 && (
-                              <span className="text-sm text-gray-400 line-through">
-                                S/ {producto.price_original?.toFixed(2)}
-                              </span>
-                            )}
-                          </div>
-                          {valorActual > 0 && (
-                            <p className="text-xs text-green-600 font-medium mt-1 font-['DM_Sans']">
-                              Ahorras S/ {(producto.price_original - precioFinal).toFixed(2)}
-                            </p>
-                          )}
-                        </div>
-
-                        <button
-                          onClick={() => aplicarDescuento(producto, valorActual)}
-                          disabled={aplicandoDescuento === producto.id}
-                          className="px-6 py-2.5 bg-[#1A1118] text-white rounded-sm text-sm font-semibold hover:bg-gradient-to-r hover:from-[#D4788A] hover:to-[#B85268] transition-all disabled:bg-gray-300 disabled:cursor-not-allowed whitespace-nowrap font-['DM_Sans']"
-                        >
-                          {aplicandoDescuento === producto.id ? (
-                            <span className="flex items-center gap-2">
-                              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                              Aplicando...
-                            </span>
-                          ) : (
-                            'Aplicar Descuento'
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  )
-                })}
+                {filteredStagnantProducts.slice(0, 5).map((product) => (
+                  <StagnantProductCard
+                    key={product.id}
+                    product={product}
+                    discountValue={discountMap[product.id] ?? 0}
+                    onDiscountChange={updateDiscount}
+                    onApply={handleApplyDiscount}
+                    isApplying={applyingId === product.id}
+                  />
+                ))}
               </div>
-            </div>
+
+              {filteredStagnantProducts.length > 5 && (
+                <p className="text-xs text-[#9A7480] font-['DM_Sans'] text-center mt-5 pt-5 border-t border-[rgba(212,120,138,0.1)]">
+                  Mostrando 5 de {filteredStagnantProducts.length} productos. Ajusta los filtros para ver más.
+                </p>
+              )}
+            </section>
           )}
 
           {/* Acciones rápidas */}
-          <div className="bg-white rounded-sm border border-[rgba(212,120,138,0.15)] shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-[#1A1118] font-['Cormorant_Garamond'] mb-4">
-              Acciones rápidas
-            </h2>
+          <section className="bg-white rounded-sm border border-[rgba(212,120,138,0.12)] shadow-[0_1px_4px_rgba(26,17,24,0.03)] p-6">
+            <SectionHeader title="Acciones rápidas" />
             <div className="flex flex-wrap gap-3">
               <Link
                 to="/admin/productos"
-                className="px-4 py-2 bg-[#1A1118] text-white rounded-sm text-sm font-['DM_Sans'] font-medium hover:bg-gradient-to-r hover:from-[#D4788A] hover:to-[#B85268] transition-all"
+                className="px-4 py-2 bg-[#1A1118] text-[#FFF8F5] rounded-sm text-sm font-['DM_Sans'] font-medium hover:bg-[#2D2030] transition-colors"
               >
-                + Nuevo producto
+                Nuevo producto
               </Link>
               <Link
                 to="/admin/pedidos"
-                className="px-4 py-2 border border-[rgba(212,120,138,0.3)] text-[#9A7480] rounded-sm text-sm font-['DM_Sans'] font-medium hover:bg-[#FDF0F3] transition-colors"
+                className="px-4 py-2 border border-[rgba(212,120,138,0.25)] text-[#9A7480] rounded-sm text-sm font-['DM_Sans'] font-medium hover:bg-[#FDF0F3] transition-colors"
               >
                 Ver pedidos
               </Link>
@@ -648,13 +764,13 @@ const DashboardPage = () => {
                 to="/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-4 py-2 border border-[rgba(212,120,138,0.3)] text-[#9A7480] rounded-sm text-sm font-['DM_Sans'] font-medium hover:bg-[#FDF0F3] transition-colors"
+                className="px-4 py-2 border border-[rgba(212,120,138,0.25)] text-[#9A7480] rounded-sm text-sm font-['DM_Sans'] font-medium hover:bg-[#FDF0F3] transition-colors"
               >
-                Ver tienda →
+                Ver tienda
               </Link>
             </div>
-          </div>
-        </>
+          </section>
+        </div>
       )}
     </div>
   )
