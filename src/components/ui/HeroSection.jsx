@@ -1,844 +1,504 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const SLIDE_DURATION_MS = 6500
-const TRANSITION_DURATION_MS = 1100
-const HERO_MIN_HEIGHT = 'min(96vh, 900px)'
-
-// ─── Data transformation ──────────────────────────────────────────────────────
-// Pure function: maps raw Supabase row → normalized slide shape.
-// Keeping this outside the component makes it testable and readable.
-
-const normalizeSlide = (row) => {
-  const product = row.products
-  const productImages = product?.images_urls?.length > 0
-    ? product.images_urls
-    : product?.image_url
-      ? [product.image_url]
-      : []
-
-  const fallbackImage = 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1600&h=900&fit=crop&q=90'
-
-  if (!product) {
-    return {
-      id: row.id,
-      tag: row.tag_override || 'Colección',
-      title: row.title_override || 'Nueva',
-      titleAccent: row.title_accent_override || 'Colección',
-      subtitle: row.subtitle_override || 'Exclusiva',
-      description: row.description_override || 'Descubre nuestra selección importada',
-      image: row.image_override || fallbackImage,
-      category: 'todos',
-    }
-  }
-
-  return {
-    id: row.id,
-    tag: row.tag_override || product.brand || 'Nuevo',
-    title: row.title_override || product.name?.split(' ')[0] || 'Nueva',
-    titleAccent: row.title_accent_override || product.name?.split(' ').slice(1).join(' ') || 'Colección',
-    subtitle: row.subtitle_override || product.brand || 'Importado desde EE.UU.',
-    description: row.description_override || product.description || 'Diseño y elegancia en cada detalle',
-    image: row.image_override || productImages[0] || fallbackImage,
-    category: product.category || 'todos',
-  }
-}
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-// Skeleton loader that preserves the hero's exact layout during data fetch.
-// No spinner — a pulsing full-bleed surface is more cinematic and less disruptive.
-const HeroSkeleton = () => (
-  <section
-    aria-busy="true"
-    aria-label="Cargando hero"
-    style={{
-      position: 'relative',
-      minHeight: HERO_MIN_HEIGHT,
-      background: 'var(--color-kb-obsidian)',
-      overflow: 'hidden',
-    }}
-  >
-    <div
-      style={{
-        position: 'absolute',
-        inset: 0,
-        background: 'linear-gradient(110deg, #1A1118 25%, #2D2030 50%, #1A1118 75%)',
-        backgroundSize: '200% 100%',
-        animation: 'heroPulse 2.2s ease-in-out infinite',
-      }}
-    />
-    <style>{`
-      @keyframes heroPulse {
-        0%   { background-position: 200% center; }
-        100% { background-position: -200% center; }
-      }
-    `}</style>
-  </section>
-)
-
-// Slide background layer — full-bleed photograph with cinematic overlay system.
-// Three distinct overlay passes create depth that a single gradient cannot:
-//   1. Density layer: heavy darkening preserves text legibility at all times
-//   2. Directional layer: left-to-right fade creates asymmetric composition space
-//   3. Brand accent: radial rose glow on the right softens the photograph edge
-const SlideBackground = ({ slide, isActive }) => (
-  <div
-    aria-hidden
-    style={{
-      position: 'absolute',
-      inset: 0,
-      opacity: isActive ? 1 : 0,
-      transition: `opacity ${TRANSITION_DURATION_MS}ms cubic-bezier(0.4, 0, 0.2, 1)`,
-      zIndex: 0,
-    }}
-  >
-    {/* Photograph */}
-    <img
-      src={slide.image}
-      alt=""
-      style={{
-        position: 'absolute',
-        inset: 0,
-        width: '100%',
-        height: '100%',
-        objectFit: 'cover',
-        objectPosition: 'center 20%',
-        filter: 'brightness(0.45) saturate(0.75)',
-        transform: isActive ? 'scale(1.04)' : 'scale(1)',
-        transition: `transform ${TRANSITION_DURATION_MS * 3}ms cubic-bezier(0.16, 1, 0.3, 1)`,
-        willChange: 'transform',
-      }}
-      loading="eager"
-    />
-
-    {/* Overlay 1 — base density, makes text always legible */}
-    <div
-      style={{
-        position: 'absolute',
-        inset: 0,
-        background: 'rgba(26,17,24,0.38)',
-      }}
-    />
-
-    {/* Overlay 2 — directional: right panel stays photographic, left has text */}
-    <div
-      style={{
-        position: 'absolute',
-        inset: 0,
-        background: `linear-gradient(
-          100deg,
-          rgba(26,17,24,0.92) 0%,
-          rgba(26,17,24,0.72) 35%,
-          rgba(26,17,24,0.22) 62%,
-          rgba(26,17,24,0.05) 100%
-        )`,
-      }}
-    />
-
-    {/* Overlay 3 — brand rose accent, photographic glow on right */}
-    <div
-      style={{
-        position: 'absolute',
-        inset: 0,
-        background: 'radial-gradient(ellipse 55% 75% at 80% 55%, rgba(212,120,138,0.14) 0%, transparent 65%)',
-      }}
-    />
-  </div>
-)
-
-// Slide content — the editorial text panel.
-// Choreographed: each text layer has a different entry timing to create
-// a staggered reveal effect that reads as intentional, not mechanical.
-const SlideContent = ({ slide, isActive, onShop, onExplore }) => {
-  const contentRef = useRef(null)
-
-  return (
-    <div
-      ref={contentRef}
-      style={{
-        opacity: isActive ? 1 : 0,
-        transform: isActive ? 'translateY(0)' : 'translateY(32px)',
-        transition: `opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s, transform 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s`,
-        position: isActive ? 'relative' : 'absolute',
-        pointerEvents: isActive ? 'auto' : 'none',
-        maxWidth: '560px',
-      }}
-      aria-hidden={!isActive}
-    >
-      {/* Tag / eyebrow */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.75rem',
-          marginBottom: '1.75rem',
-          opacity: isActive ? 1 : 0,
-          transform: isActive ? 'translateY(0)' : 'translateY(16px)',
-          transition: 'opacity 0.7s ease 0.3s, transform 0.7s cubic-bezier(0.16,1,0.3,1) 0.3s',
-        }}
-      >
-        <span
-          style={{
-            fontFamily: 'var(--font-sans)',
-            fontSize: '0.58rem',
-            fontWeight: 500,
-            letterSpacing: '0.28em',
-            textTransform: 'uppercase',
-            color: 'var(--color-kb-rose)',
-          }}
-        >
-          {slide.tag}
-        </span>
-        <span
-          aria-hidden
-          style={{
-            flex: 1,
-            maxWidth: '48px',
-            height: '1px',
-            background: 'rgba(212,120,138,0.45)',
-          }}
-        />
-      </div>
-
-      {/* Headline — the typographic centrepiece of the hero */}
-      <h1
-        style={{
-          fontFamily: 'var(--font-display)',
-          fontSize: 'clamp(3.8rem, 9vw, 7.5rem)',
-          fontWeight: 300,
-          color: 'var(--color-kb-ivory)',
-          letterSpacing: '-0.025em',
-          lineHeight: 0.92,
-          marginBottom: '1.5rem',
-          opacity: isActive ? 1 : 0,
-          transform: isActive ? 'translateY(0)' : 'translateY(20px)',
-          transition: 'opacity 0.8s ease 0.2s, transform 0.8s cubic-bezier(0.16,1,0.3,1) 0.2s',
-        }}
-      >
-        {slide.title}
-        <br />
-        <span
-          style={{
-            fontStyle: 'italic',
-            background: 'linear-gradient(135deg, var(--color-kb-rose) 0%, var(--color-kb-soft-pink) 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-          }}
-        >
-          {slide.titleAccent}
-        </span>
-      </h1>
-
-      {/* Brand / subtitle line */}
-      <p
-        style={{
-          fontFamily: 'var(--font-sans)',
-          fontSize: '0.62rem',
-          fontWeight: 400,
-          letterSpacing: '0.24em',
-          textTransform: 'uppercase',
-          color: 'rgba(242,196,206,0.6)',
-          marginBottom: '1rem',
-          opacity: isActive ? 1 : 0,
-          transform: isActive ? 'translateY(0)' : 'translateY(14px)',
-          transition: 'opacity 0.7s ease 0.35s, transform 0.7s cubic-bezier(0.16,1,0.3,1) 0.35s',
-        }}
-      >
-        {slide.subtitle}
-      </p>
-
-      {/* Description */}
-      <p
-        style={{
-          fontFamily: 'var(--font-sans)',
-          fontSize: '0.9rem',
-          fontWeight: 300,
-          lineHeight: 1.72,
-          color: 'rgba(253,240,243,0.55)',
-          marginBottom: '2.5rem',
-          maxWidth: '400px',
-          opacity: isActive ? 1 : 0,
-          transform: isActive ? 'translateY(0)' : 'translateY(12px)',
-          transition: 'opacity 0.7s ease 0.45s, transform 0.7s cubic-bezier(0.16,1,0.3,1) 0.45s',
-        }}
-      >
-        {slide.description}
-      </p>
-
-      {/* CTA row */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '1.25rem',
-          opacity: isActive ? 1 : 0,
-          transform: isActive ? 'translateY(0)' : 'translateY(10px)',
-          transition: 'opacity 0.7s ease 0.55s, transform 0.7s cubic-bezier(0.16,1,0.3,1) 0.55s',
-        }}
-      >
-        <button
-          onClick={onShop}
-          className="btn-kb-accent"
-          style={{ padding: '0.9rem 2.4rem', fontSize: '0.65rem' }}
-        >
-          <span>Explorar colección</span>
-        </button>
-
-        <button
-          onClick={onExplore}
-          style={{
-            fontFamily: 'var(--font-sans)',
-            fontSize: '0.62rem',
-            fontWeight: 400,
-            letterSpacing: '0.2em',
-            textTransform: 'uppercase',
-            color: 'rgba(242,196,206,0.65)',
-            borderBottom: '1px solid rgba(212,120,138,0.35)',
-            paddingBottom: '3px',
-            background: 'none',
-            border: 'none',
-            borderBottom: '1px solid rgba(212,120,138,0.35)',
-            cursor: 'pointer',
-            transition: 'color 0.3s ease, border-color 0.3s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.color = 'var(--color-kb-rose-mist)'
-            e.currentTarget.style.borderBottomColor = 'var(--color-kb-rose)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.color = 'rgba(242,196,206,0.65)'
-            e.currentTarget.style.borderBottomColor = 'rgba(212,120,138,0.35)'
-          }}
-        >
-          Ver todo
-        </button>
-      </div>
-    </div>
-  )
-}
-
-// Right panel — the editorial image frame.
-// DESIGN DECISION: replaced the circle (startup/tech aesthetic) with a
-// tall editorial portrait crop. Fashion photography lives in 2:3 ratios —
-// that's how magazines present clothing. The shape communicates the category.
-// Asymmetric offset creates compositional tension that feels designed.
-const SlideImagePanel = ({ slides, currentSlide }) => (
-  <div
-    aria-hidden
-    style={{
-      position: 'relative',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-    }}
-  >
-    {/* Decorative vertical line — editorial breath mark */}
-    <div
-      style={{
-        position: 'absolute',
-        left: '-2rem',
-        top: '8%',
-        bottom: '8%',
-        width: '1px',
-        background: 'linear-gradient(180deg, transparent, rgba(212,120,138,0.25) 30%, rgba(212,120,138,0.25) 70%, transparent)',
-      }}
-    />
-
-    {/* Portrait frame — 2:3 editorial ratio */}
-    <div
-      style={{
-        position: 'relative',
-        width: 'clamp(260px, 28vw, 380px)',
-        aspectRatio: '2 / 3',
-        overflow: 'hidden',
-        borderRadius: '2px',
-        border: '1px solid rgba(212,120,138,0.2)',
-        boxShadow: '0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,120,138,0.08)',
-      }}
-    >
-      {slides.map((slide, index) => (
-        <img
-          key={slide.id}
-          src={slide.image}
-          alt={`${slide.title} ${slide.titleAccent}`}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            objectPosition: 'center 15%',
-            opacity: index === currentSlide ? 1 : 0,
-            transform: index === currentSlide ? 'scale(1.04)' : 'scale(1)',
-            transition: `opacity ${TRANSITION_DURATION_MS}ms cubic-bezier(0.4, 0, 0.2, 1), transform ${TRANSITION_DURATION_MS * 3}ms cubic-bezier(0.16, 1, 0.3, 1)`,
-          }}
-        />
-      ))}
-
-      {/* Inner vignette — makes the portrait feel photographic, not digital */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'linear-gradient(180deg, rgba(26,17,24,0) 50%, rgba(26,17,24,0.45) 100%)',
-          pointerEvents: 'none',
-        }}
-      />
-    </div>
-
-    {/* Floating brand accent — replaces the previous dynamic tag badge.
-        CHANGE: Removed the conditional `includes('20')` logic that was fragile
-        and semantically wrong. This is now a static brand mark: clean, intentional. */}
-    <div
-      style={{
-        position: 'absolute',
-        bottom: '-1rem',
-        left: '0.5rem',
-        background: 'rgba(26,17,24,0.9)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        border: '1px solid rgba(212,120,138,0.2)',
-        borderRadius: '2px',
-        padding: '1.1rem 1.5rem',
-        boxShadow: '0 12px 40px rgba(0,0,0,0.35)',
-        animation: 'floatBadge 5s ease-in-out infinite',
-      }}
-    >
-      <p
-        style={{
-          fontFamily: 'var(--font-sans)',
-          fontSize: '0.55rem',
-          fontWeight: 500,
-          letterSpacing: '0.24em',
-          textTransform: 'uppercase',
-          color: 'rgba(212,120,138,0.65)',
-          marginBottom: '0.3rem',
-        }}
-      >
-        Importado desde
-      </p>
-      <p
-        style={{
-          fontFamily: 'var(--font-display)',
-          fontSize: '1.45rem',
-          fontWeight: 300,
-          color: 'var(--color-kb-ivory)',
-          letterSpacing: '-0.01em',
-          lineHeight: 1,
-        }}
-      >
-        EE.UU.
-      </p>
-    </div>
-
-    {/* Decorative corner mark — editorial detail */}
-    <div
-      aria-hidden
-      style={{
-        position: 'absolute',
-        top: '-0.75rem',
-        right: '-0.75rem',
-        width: '28px',
-        height: '28px',
-        borderTop: '1px solid rgba(212,120,138,0.35)',
-        borderRight: '1px solid rgba(212,120,138,0.35)',
-      }}
-    />
-  </div>
-)
-
-// Slide navigator — vertical pill indicators on the right edge.
-// Accessible: role="tablist" with individual tab semantics per indicator.
-const SlideNavigator = ({ slides, currentSlide, onGoToSlide }) => (
-  <div
-    role="tablist"
-    aria-label="Navegar entre slides"
-    style={{
-      position: 'absolute',
-      right: '1.5rem',
-      top: '50%',
-      transform: 'translateY(-50%)',
-      zIndex: 20,
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '0.6rem',
-      alignItems: 'flex-end',
-    }}
-  >
-    {slides.map((slide, index) => {
-      const isActive = index === currentSlide
-      return (
-        <button
-          key={slide.id}
-          role="tab"
-          aria-selected={isActive}
-          aria-label={`Slide ${index + 1}: ${slide.title} ${slide.titleAccent}`}
-          onClick={() => onGoToSlide(index)}
-          style={{
-            background: 'none',
-            border: 'none',
-            padding: '4px 0',
-            cursor: isActive ? 'default' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-          }}
-        >
-          {/* Numeric label — visible on hover, communicates position */}
-          <span
-            style={{
-              fontFamily: 'var(--font-sans)',
-              fontSize: '0.52rem',
-              fontWeight: 400,
-              letterSpacing: '0.12em',
-              color: isActive ? 'rgba(242,196,206,0.8)' : 'rgba(242,196,206,0)',
-              transition: 'color 0.3s ease, opacity 0.3s ease',
-              userSelect: 'none',
-            }}
-          >
-            {String(index + 1).padStart(2, '0')}
-          </span>
-
-          {/* Pill indicator */}
-          <div
-            style={{
-              width: isActive ? '3px' : '2px',
-              height: isActive ? '44px' : '14px',
-              borderRadius: '99px',
-              background: isActive
-                ? 'linear-gradient(180deg, var(--color-kb-rose), var(--color-kb-soft-pink))'
-                : 'rgba(255,255,255,0.18)',
-              transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
-            }}
-          />
-        </button>
-      )
-    })}
-  </div>
-)
-
-// Progress bar — thin line at the very bottom of the hero.
-// Communicates autoplay timing without any text or explicit UI.
-// Resets and restarts cleanly on each slide transition.
-const SlideProgressBar = ({ duration, isActive, slideKey }) => (
-  <div
-    aria-hidden
-    style={{
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      height: '1px',
-      background: 'rgba(212,120,138,0.1)',
-      zIndex: 20,
-      overflow: 'hidden',
-    }}
-  >
-    <div
-      key={slideKey}
-      style={{
-        height: '100%',
-        background: 'linear-gradient(90deg, var(--color-kb-rose), var(--color-kb-soft-pink))',
-        width: isActive ? '100%' : '0%',
-        transition: isActive ? `width ${duration}ms linear` : 'none',
-        transformOrigin: 'left center',
-      }}
-    />
-  </div>
-)
-
-// Large ghost index number — decorative editorial detail.
-// Establishes position in the sequence. Extremely subtle (4% opacity).
-const SlideIndexGhost = ({ index }) => (
-  <div
-    aria-hidden
-    style={{
-      position: 'absolute',
-      bottom: '2rem',
-      left: '1.5rem',
-      zIndex: 5,
-      fontFamily: 'var(--font-display)',
-      fontSize: 'clamp(5rem, 12vw, 9rem)',
-      fontWeight: 300,
-      color: 'rgba(255,255,255,0.035)',
-      lineHeight: 1,
-      letterSpacing: '-0.06em',
-      userSelect: 'none',
-      pointerEvents: 'none',
-    }}
-  >
-    {String(index + 1).padStart(2, '0')}
-  </div>
-)
-
-// Mobile dot indicators — compact, touch-friendly.
-// Only shown on mobile where the vertical pill navigator is hidden.
-const MobileDotNavigator = ({ slides, currentSlide, onGoToSlide }) => (
-  <div
-    role="tablist"
-    aria-label="Navegar entre slides"
-    style={{
-      position: 'absolute',
-      bottom: '1.5rem',
-      left: '50%',
-      transform: 'translateX(-50%)',
-      zIndex: 20,
-      display: 'flex',
-      gap: '0.5rem',
-      alignItems: 'center',
-    }}
-  >
-    {slides.map((slide, index) => {
-      const isActive = index === currentSlide
-      return (
-        <button
-          key={slide.id}
-          role="tab"
-          aria-selected={isActive}
-          aria-label={`Slide ${index + 1}`}
-          onClick={() => onGoToSlide(index)}
-          style={{
-            background: 'none',
-            border: 'none',
-            padding: '4px',
-            cursor: 'pointer',
-          }}
-        >
-          <div
-            style={{
-              width: isActive ? '20px' : '5px',
-              height: '5px',
-              borderRadius: '99px',
-              background: isActive ? 'var(--color-kb-rose)' : 'rgba(255,255,255,0.25)',
-              transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-            }}
-          />
-        </button>
-      )
-    })}
-  </div>
-)
-
-// ─── Main component ───────────────────────────────────────────────────────────
+const trustItems = [
+  {
+    label: '100% Original',
+    icon: (
+      <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3 .708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+    ),
+  },
+  {
+    label: 'Envío Rápido',
+    icon: (
+      <>
+        <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+        <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1v-5h2v5a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H17a1 1 0 001-1V5a1 1 0 00-1-1H3z" />
+      </>
+    ),
+  },
+  {
+    label: 'Pago Seguro',
+    icon: (
+      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+    ),
+  },
+  {
+    label: 'Atención 24/7',
+    icon: (
+      <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+    ),
+  },
+]
 
 const HeroSection = () => {
   const [slides, setSlides] = useState([])
   const [currentSlide, setCurrentSlide] = useState(0)
+  const [prevSlide, setPrevSlide] = useState(null)
   const [isTransitioning, setIsTransitioning] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const autoplayRef = useRef(null)
+  const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
-  // ── Data ────────────────────────────────────────────────────────────────────
-
   useEffect(() => {
-    const fetchSlides = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('hero_slides')
-          .select(`
-            *,
-            products (
-              name,
-              description,
-              category,
-              brand,
-              images_urls,
-              image_url
-            )
-          `)
-          .eq('active', true)
-          .order('sort_order', { ascending: true })
-
-        if (error) throw error
-        setSlides((data || []).map(normalizeSlide))
-      } catch (err) {
-        // Fail silently: hero returns null, page still renders
-        console.error('[HeroSection] Failed to fetch slides:', err)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
     fetchSlides()
   }, [])
 
-  // ── Slide transition ─────────────────────────────────────────────────────────
-  // `useCallback` so the autoplay effect's dependency array stays stable.
+  useEffect(() => {
+    if (slides.length > 0) {
+      const timer = setInterval(() => {
+        goToSlide((currentSlide + 1) % slides.length)
+      }, 4000) // 🔥 REDUCIDO: De 6500ms a 4000ms (4 segundos)
+      return () => clearInterval(timer)
+    }
+  }, [currentSlide, slides])
 
-  const goToSlide = useCallback((index) => {
+  const fetchSlides = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('hero_slides')
+        .select(`
+          *,
+          products (
+            name,
+            description,
+            category,
+            gender,
+            brand,
+            images_urls,
+            image_url
+          )
+        `)
+        .eq('active', true)
+        .order('sort_order', { ascending: true })
+
+      if (error) throw error
+
+      const processedSlides = data.map((slide) => {
+        const product = slide.products
+        const images = product?.images_urls?.length > 0 
+          ? product.images_urls 
+          : product?.image_url 
+            ? [product.image_url] 
+            : []
+
+        if (!product) {
+          return {
+            id: slide.id,
+            title: slide.title_override || 'Colección',
+            titleAccent: slide.title_accent_override || 'Exclusiva',
+            subtitle: slide.subtitle_override || 'Nueva Colección',
+            description: slide.description_override || 'Descubre nuestra selección exclusiva',
+            image: slide.image_override || 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=1200&h=800&fit=crop',
+            category: 'todos',
+            tag: slide.tag_override || 'Nuevo',
+          }
+        }
+
+        return {
+          id: slide.id,
+          title: slide.title_override || product.name.split(' ')[0] || 'Colección',
+          titleAccent: slide.title_accent_override || product.name.split(' ').slice(1).join(' ') || 'Exclusiva',
+          subtitle: slide.subtitle_override || product.brand || 'Nueva Colección',
+          description: slide.description_override || product.description || 'Descubre nuestra selección exclusiva',
+          image: slide.image_override || images[0] || 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=1200&h=800&fit=crop',
+          category: product.category || 'todos',
+          tag: slide.tag_override || 'Nuevo', // ✅ AHORA USA tag_override
+        }
+      })
+
+      setSlides(processedSlides)
+    } catch (error) {
+      console.error('Error fetching slides:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const goToSlide = (index) => {
     if (isTransitioning || index === currentSlide) return
     setIsTransitioning(true)
+    setPrevSlide(currentSlide)
     setCurrentSlide(index)
-    setTimeout(() => setIsTransitioning(false), TRANSITION_DURATION_MS)
-  }, [isTransitioning, currentSlide])
+    setTimeout(() => {
+      setPrevSlide(null)
+      setIsTransitioning(false)
+    }, 900)
+  }
 
-  // ── Autoplay ─────────────────────────────────────────────────────────────────
-  // CHANGE from original: 4000ms → 6500ms.
-  // Rationale: 4s is editorial panic. Fashion brands use 5–8s because
-  // the viewer needs time to feel desire, not just register information.
-  // 6.5s is deliberate, confident, premium.
+  const handleKeyDown = (e) => {
+    if (e.key === 'ArrowLeft') goToSlide((currentSlide - 1 + slides.length) % slides.length)
+    if (e.key === 'ArrowRight') goToSlide((currentSlide + 1) % slides.length)
+  }
 
-  useEffect(() => {
-    if (slides.length < 2) return
+  const handleComprarAhora = (categoria) => navigate(`/?categoria=${categoria}`)
 
-    autoplayRef.current = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length)
-    }, SLIDE_DURATION_MS)
+  if (loading) {
+    return (
+      <section className="relative min-h-[92vh] flex items-center justify-center bg-[#1A1118]">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-[#D4788A] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-[#F2C4CE] font-['DM_Sans'] text-sm tracking-widest">Cargando...</p>
+        </div>
+      </section>
+    )
+  }
 
-    return () => clearInterval(autoplayRef.current)
-  }, [slides.length])
-
-  // Pause autoplay while user is navigating manually
-  const pauseAndResumeAutoplay = useCallback((nextIndex) => {
-    clearInterval(autoplayRef.current)
-    goToSlide(nextIndex)
-    if (slides.length < 2) return
-    autoplayRef.current = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length)
-    }, SLIDE_DURATION_MS)
-  }, [goToSlide, slides.length])
-
-  // ── Keyboard navigation ──────────────────────────────────────────────────────
-
-  const handleKeyDown = useCallback((e) => {
-    if (e.key === 'ArrowLeft') {
-      pauseAndResumeAutoplay((currentSlide - 1 + slides.length) % slides.length)
-    }
-    if (e.key === 'ArrowRight') {
-      pauseAndResumeAutoplay((currentSlide + 1) % slides.length)
-    }
-  }, [currentSlide, slides.length, pauseAndResumeAutoplay])
-
-  // ── Navigation handlers ──────────────────────────────────────────────────────
-
-  const handleShop = useCallback((category) => {
-    navigate(`/?categoria=${category}`)
-  }, [navigate])
-
-  const handleExploreAll = useCallback(() => {
-    navigate('/')
-  }, [navigate])
-
-  // ── Render states ────────────────────────────────────────────────────────────
-
-  if (isLoading) return <HeroSkeleton />
-  if (slides.length === 0) return null
+  if (slides.length === 0) {
+    return null
+  }
 
   return (
-    <>
-      <style>{`
-        @keyframes floatBadge {
-          0%, 100% { transform: translateY(0px); }
-          50%       { transform: translateY(-6px); }
-        }
-      `}</style>
-
-      <section
-        role="region"
-        aria-label="Productos destacados"
-        tabIndex={0}
-        onKeyDown={handleKeyDown}
-        style={{
-          position: 'relative',
-          overflow: 'hidden',
-          background: 'var(--color-kb-obsidian)',
-          minHeight: HERO_MIN_HEIGHT,
-          outline: 'none',
-        }}
-      >
-        {/* ── Background layers ── */}
+    <section
+      className="relative overflow-hidden"
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+      role="region"
+      aria-label="Carrusel de productos destacados"
+      style={{ background: 'var(--color-kb-ivory)' }}
+    >
+      <div className="relative min-h-[92vh] md:min-h-[88vh] flex items-center">
         {slides.map((slide, index) => (
-          <SlideBackground
+          <div
             key={slide.id}
-            slide={slide}
-            isActive={index === currentSlide}
-          />
+            className="absolute inset-0 transition-opacity duration-1000"
+            style={{ opacity: index === currentSlide ? 1 : 0, zIndex: 0 }}
+            aria-hidden
+          >
+            <img
+              src={slide.image}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ filter: 'brightness(0.22) saturate(0.6)' }}
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `
+                  linear-gradient(105deg,
+                    rgba(26,17,24,0.96) 0%,
+                    rgba(26,17,24,0.75) 38%,
+                    rgba(26,17,24,0.15) 65%,
+                    transparent 100%
+                  )
+                `,
+              }}
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background: 'radial-gradient(ellipse 60% 80% at 75% 50%, rgba(212,120,138,0.08) 0%, transparent 70%)',
+              }}
+            />
+          </div>
         ))}
 
-        {/* ── Main content grid ── */}
-        <div
-          style={{
-            position: 'relative',
-            zIndex: 10,
-            minHeight: HERO_MIN_HEIGHT,
-            display: 'flex',
-            alignItems: 'center',
-            maxWidth: '1280px',
-            margin: '0 auto',
-            padding: 'clamp(5rem, 10vh, 7rem) 1.5rem clamp(4rem, 8vh, 6rem)',
-          }}
-        >
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr',
-              gap: '4rem',
-              width: '100%',
-              alignItems: 'center',
-            }}
-            className="lg:grid-cols-[1fr_auto]"
-          >
-            {/* Left: text content */}
-            <div style={{ position: 'relative' }}>
+        <div className="relative z-10 max-w-screen-xl mx-auto px-6 lg:px-10 w-full py-20">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div>
               {slides.map((slide, index) => (
-                <SlideContent
+                <div
                   key={slide.id}
-                  slide={slide}
-                  isActive={index === currentSlide}
-                  onShop={() => handleShop(slide.category)}
-                  onExplore={handleExploreAll}
-                />
+                  className="transition-all duration-700"
+                  style={{
+                    opacity: index === currentSlide ? 1 : 0,
+                    transform: index === currentSlide ? 'translateY(0)' : 'translateY(24px)',
+                    position: index === currentSlide ? 'relative' : 'absolute',
+                    pointerEvents: index === currentSlide ? 'auto' : 'none',
+                  }}
+                  aria-hidden={index !== currentSlide}
+                >
+                  <div className="flex items-center gap-3 mb-7">
+                    <span
+                      className="text-editorial"
+                      style={{ color: 'var(--color-kb-rose)', letterSpacing: '0.22em' }}
+                    >
+                      {slide.tag}
+                    </span>
+                    <span
+                      className="flex-1 h-px max-w-[60px]"
+                      style={{ background: 'rgba(212,120,138,0.4)' }}
+                    />
+                  </div>
+
+                  <h1
+                    className="mb-5 leading-[0.95]"
+                    style={{
+                      fontFamily: 'var(--font-display)',
+                      fontSize: 'clamp(3.5rem, 8vw, 7rem)',
+                      fontWeight: 300,
+                      color: 'var(--color-kb-ivory)',
+                      letterSpacing: '-0.02em',
+                    }}
+                  >
+                    {slide.title}{' '}
+                    <span
+                      style={{
+                        fontStyle: 'italic',
+                        background: 'linear-gradient(135deg, var(--color-kb-rose) 0%, var(--color-kb-soft-pink) 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
+                      }}
+                    >
+                      {slide.titleAccent}
+                    </span>
+                  </h1>
+
+                  <p
+                    className="mb-4 text-editorial"
+                    style={{ color: 'rgba(242,196,206,0.65)', letterSpacing: '0.2em' }}
+                  >
+                    {slide.subtitle}
+                  </p>
+
+                  <p
+                    className="mb-10 leading-relaxed max-w-md"
+                    style={{
+                      color: 'rgba(253,240,243,0.6)',
+                      fontSize: '0.95rem',
+                      fontWeight: 300,
+                    }}
+                  >
+                    {slide.description}
+                  </p>
+
+                  <div className="flex items-baseline gap-2 mb-10">
+                    <span
+                      className="text-editorial"
+                      style={{ color: 'rgba(242,196,206,0.5)' }}
+                    >
+                      Desde
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-display)',
+                        fontSize: '2.2rem',
+                        fontWeight: 300,
+                        color: 'var(--color-kb-ivory)',
+                        letterSpacing: '-0.02em',
+                      }}
+                    >
+                      S/ 45
+                    </span>
+                    <span style={{ color: 'rgba(242,196,206,0.4)', fontSize: '0.8rem' }}>.00</span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-4">
+                    <button
+                      onClick={() => handleComprarAhora(slide.category)}
+                      className="btn-kb-accent"
+                      style={{ padding: '0.9rem 2.2rem', fontSize: '0.7rem' }}
+                    >
+                      <span>Comprar Ahora</span>
+                    </button>
+                    <button
+                      onClick={() => navigate('/?genero=mujer')}
+                      className="text-editorial transition-all duration-300"
+                      style={{
+                        color: 'rgba(242,196,206,0.7)',
+                        borderBottom: '1px solid rgba(212,120,138,0.3)',
+                        paddingBottom: '2px',
+                        letterSpacing: '0.18em',
+                        fontSize: '0.7rem',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = 'var(--color-kb-rose-mist)'
+                        e.currentTarget.style.borderBottomColor = 'var(--color-kb-rose)'
+                        e.currentTarget.style.letterSpacing = '0.24em'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = 'rgba(242,196,206,0.7)'
+                        e.currentTarget.style.borderBottomColor = 'rgba(212,120,138,0.3)'
+                        e.currentTarget.style.letterSpacing = '0.18em'
+                      }}
+                    >
+                      Ver Catálogo
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
 
-            {/* Right: editorial portrait — hidden on mobile */}
-            <div className="hidden lg:block">
-              <SlideImagePanel
-                slides={slides}
-                currentSlide={currentSlide}
+            <div className="hidden lg:flex justify-center items-center relative">
+              <div
+                className="absolute rounded-full"
+                style={{
+                  width: '460px',
+                  height: '460px',
+                  border: '1px solid rgba(212,120,138,0.12)',
+                }}
               />
+              <div
+                className="absolute rounded-full"
+                style={{
+                  width: '380px',
+                  height: '380px',
+                  border: '1px solid rgba(212,120,138,0.2)',
+                }}
+              />
+
+              <div
+                className="relative overflow-hidden rounded-full"
+                style={{
+                  width: '320px',
+                  height: '320px',
+                  border: '2px solid rgba(212,120,138,0.3)',
+                  boxShadow: '0 0 80px rgba(212,120,138,0.15), 0 24px 64px rgba(0,0,0,0.4)',
+                }}
+              >
+                {slides.map((slide, index) => (
+                  <img
+                    key={slide.id}
+                    src={slide.image}
+                    alt={slide.title}
+                    className="absolute inset-0 w-full h-full object-cover transition-all duration-1000"
+                    style={{
+                      opacity: index === currentSlide ? 1 : 0,
+                      transform: index === currentSlide ? 'scale(1.05)' : 'scale(1)',
+                    }}
+                    loading="eager"
+                  />
+                ))}
+              </div>
+
+              {/* ✅ BADGE DINÁMICO: Muestra el tag del slide actual */}
+              <div
+                className="absolute bottom-6 right-6 animate-float"
+                style={{
+                  background: 'rgba(26,17,24,0.85)',
+                  backdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(212,120,138,0.25)',
+                  borderRadius: '12px',
+                  padding: '1rem 1.4rem',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                }}
+              >
+                <p
+                  className="text-editorial mb-1"
+                  style={{ color: 'rgba(212,120,138,0.7)', fontSize: '0.6rem' }}
+                >
+                  {slides[currentSlide]?.tag?.includes('20') ? 'Colección' : 'Tag'}
+                </p>
+                <p
+                  style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: '1.6rem',
+                    fontWeight: 300,
+                    color: 'var(--color-kb-ivory)',
+                    lineHeight: 1,
+                    letterSpacing: '-0.02em',
+                  }}
+                >
+                  {slides[currentSlide]?.tag || '2025'}
+                </p>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* ── Decorative ghost index — desktop only ── */}
-        <div className="hidden md:block">
-          <SlideIndexGhost index={currentSlide} />
+        <div
+          className="absolute right-6 top-1/2 -translate-y-1/2 z-20 hidden md:flex flex-col gap-3"
+          role="tablist"
+          aria-label="Navegación de slides"
+        >
+          {slides.map((slide, index) => (
+            <button
+              key={slide.id}
+              onClick={() => goToSlide(index)}
+              className="group relative flex items-center justify-end gap-2"
+              role="tab"
+              aria-selected={index === currentSlide}
+              aria-label={`${slide.title} ${slide.titleAccent}`}
+            >
+              <span
+                className="text-editorial opacity-0 group-hover:opacity-100 transition-all duration-300"
+                style={{
+                  color: 'rgba(242,196,206,0.6)',
+                  fontSize: '0.58rem',
+                  letterSpacing: '0.18em',
+                  transform: 'translateX(4px)',
+                }}
+              >
+                {String(index + 1).padStart(2, '0')}
+              </span>
+              <div
+                className="transition-all duration-500"
+                style={{
+                  width: index === currentSlide ? '3px' : '2px',
+                  height: index === currentSlide ? '40px' : '16px',
+                  borderRadius: '99px',
+                  background: index === currentSlide
+                    ? 'linear-gradient(180deg, var(--color-kb-rose), var(--color-kb-soft-pink))'
+                    : 'rgba(255,255,255,0.2)',
+                }}
+              />
+            </button>
+          ))}
         </div>
 
-        {/* ── Vertical pill navigator — desktop only ── */}
-        <div className="hidden md:block">
-          <SlideNavigator
-            slides={slides}
-            currentSlide={currentSlide}
-            onGoToSlide={pauseAndResumeAutoplay}
-          />
+        <div className="absolute bottom-8 left-6 lg:left-10 z-20 hidden md:flex items-end gap-3">
+          <span
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: '3.5rem',
+              fontWeight: 300,
+              color: 'rgba(255,255,255,0.06)',
+              lineHeight: 1,
+              letterSpacing: '-0.04em',
+              userSelect: 'none',
+            }}
+          >
+            {String(currentSlide + 1).padStart(2, '0')}
+          </span>
         </div>
+      </div>
 
-        {/* ── Mobile dot navigator — mobile only ── */}
-        <div className="md:hidden">
-          <MobileDotNavigator
-            slides={slides}
-            currentSlide={currentSlide}
-            onGoToSlide={pauseAndResumeAutoplay}
-          />
+      <div
+        style={{
+          background: 'var(--color-kb-obsidian)',
+          borderTop: '1px solid rgba(212,120,138,0.1)',
+        }}
+      >
+        <div className="max-w-screen-xl mx-auto px-6 lg:px-10 py-7">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {trustItems.map((item) => (
+              <div key={item.label} className="flex items-center gap-3 group">
+                <div
+                  className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-105"
+                  style={{
+                    background: 'rgba(212,120,138,0.08)',
+                    border: '1px solid rgba(212,120,138,0.18)',
+                  }}
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    style={{ color: 'var(--color-kb-rose)' }}
+                  >
+                    {item.icon}
+                  </svg>
+                </div>
+                <span
+                  className="text-editorial"
+                  style={{
+                    color: 'rgba(242,196,206,0.55)',
+                    fontSize: '0.62rem',
+                    letterSpacing: '0.18em',
+                    transition: 'color 0.3s ease',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(242,196,206,0.9)'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(242,196,206,0.55)'}
+                >
+                  {item.label}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
-
-        {/* ── Progress bar ── */}
-        <SlideProgressBar
-          duration={SLIDE_DURATION_MS}
-          isActive
-          slideKey={`progress-${currentSlide}`}
-        />
-      </section>
-    </>
+      </div>
+    </section>
   )
 }
 
