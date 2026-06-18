@@ -1,8 +1,26 @@
 import { useState } from 'react'
 
+// ─── Paleta Aurora Bloom ─────────────────────────────────────────────────────
+const p = {
+  rose: '#E891A8',
+  roseDeep: '#C9607F',
+  roseVivid: '#FF5C8A',
+  roseBlush: '#FFC2D4',
+  roseMist: '#FFE8EF',
+  champagne: '#E8D5B7',
+  champagneLt: '#F5EBD9',
+  ivory: '#FDF8F4',
+  cream: '#FAF3ED',
+  gold: '#C9A961',
+  goldSoft: '#D4B87A',
+  coral: '#FF8E72',
+  ink: '#2D1F26',
+  textMain: '#4A3340',
+  textSoft: '#8B6F7A',
+}
+
 const categorias = [
   { value: '', label: 'Todo' },
-  { value: 'carteras', label: 'Carteras' },
   { value: 'vestidos', label: 'Vestidos' },
   { value: 'billeteras', label: 'Billeteras' },
   { value: 'zapatos', label: 'Zapatos' },
@@ -51,17 +69,68 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
 
   const filtrosActivos = filtros.categoria || filtros.marca || filtros.genero || filtros.precioMin || filtros.precioMax
 
+  // 🔧 CAMBIO: Estilo refinado para selectores
+  const selectStyle = {
+    width: '100%',
+    fontSize: '0.85rem',
+    fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+    background: 'transparent',
+    border: 'none',
+    borderBottom: `1.5px solid ${p.roseBlush}40`,
+    padding: '0.5rem 0',
+    color: p.textMain,
+    outline: 'none',
+    transition: 'all 0.3s ease',
+    cursor: 'pointer',
+  }
+
+  const labelStyle = {
+    display: 'block',
+    fontSize: '0.58rem',
+    letterSpacing: '0.25em',
+    textTransform: 'uppercase',
+    fontWeight: 600,
+    color: p.textSoft,
+    marginBottom: '0.4rem',
+    fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+  }
+
   return (
-    <div className="mb-12 border-b border-border/50 pb-6">
+    <div
+      style={{
+        marginBottom: '3rem',
+        borderBottom: `1px solid ${p.roseBlush}25`,
+        paddingBottom: '1.5rem',
+      }}
+    >
       {/* Header: Ordenamiento + Mobile Toggle */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <span className="text-[10px] font-mono tracking-wider text-muted-foreground uppercase">
+          <span
+            style={{
+              fontSize: '0.6rem',
+              letterSpacing: '0.25em',
+              textTransform: 'uppercase',
+              fontWeight: 600,
+              color: p.textSoft,
+              fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+            }}
+          >
             Filtrar
           </span>
           <button
             onClick={() => setMostrarFiltros(!mostrarFiltros)}
-            className="md:hidden text-xs text-foreground/60 hover:text-foreground transition-colors"
+            className="md:hidden transition-colors duration-300"
+            style={{
+              fontSize: '0.7rem',
+              color: p.textSoft,
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = p.roseDeep)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = p.textSoft)}
             aria-expanded={mostrarFiltros}
             aria-controls="filtros-panel"
             aria-label={mostrarFiltros ? 'Ocultar filtros' : 'Mostrar filtros'}
@@ -69,12 +138,25 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
             {mostrarFiltros ? 'Ocultar' : 'Mostrar'} filtros
           </button>
         </div>
-        
+
         <div className="flex items-center gap-3">
           {filtrosActivos && (
             <button
               onClick={limpiarFiltros}
-              className="text-[10px] font-mono text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+              className="transition-colors duration-300 flex items-center gap-1.5"
+              style={{
+                fontSize: '0.6rem',
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                fontWeight: 600,
+                color: p.textSoft,
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = p.roseVivid)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = p.textSoft)}
               aria-label="Limpiar todos los filtros"
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,11 +165,33 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
               Limpiar
             </button>
           )}
-          
+
           <select
             value={`${filtros.orden}`}
             onChange={(e) => handleChange('orden', e.target.value)}
-            className="text-xs font-mono bg-muted border-none rounded-full px-3 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-foreground/20"
+            style={{
+              fontSize: '0.65rem',
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase',
+              fontWeight: 600,
+              fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+              background: p.roseMist,
+              border: `1.5px solid ${p.roseBlush}40`,
+              borderRadius: '50px',
+              padding: '0.45rem 1rem',
+              color: p.roseDeep,
+              outline: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = p.roseVivid
+              e.currentTarget.style.boxShadow = `0 0 0 3px ${p.roseBlush}30`
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = `${p.roseBlush}40`
+              e.currentTarget.style.boxShadow = 'none'
+            }}
             aria-label="Ordenar productos"
           >
             {ordenamientos.map((op) => (
@@ -100,21 +204,29 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
       </div>
 
       {/* Filtros (colapsables) */}
-      <div 
+      <div
         id="filtros-panel"
         className={`${mostrarFiltros ? 'block' : 'hidden'} md:block mt-6`}
       >
         <div className="flex flex-wrap gap-6 items-end">
           {/* Categoría */}
           <div className="min-w-[120px]">
-            <label htmlFor="filtro-categoria" className="block text-[9px] font-mono text-muted-foreground uppercase tracking-wider mb-1">
+            <label htmlFor="filtro-categoria" style={labelStyle}>
               Categoría
             </label>
             <select
               id="filtro-categoria"
               value={filtros.categoria}
               onChange={(e) => handleChange('categoria', e.target.value)}
-              className="w-full text-sm font-mono bg-transparent border-b border-border focus:border-foreground py-1.5 focus:outline-none transition-colors"
+              style={selectStyle}
+              onFocus={(e) => {
+                e.currentTarget.style.borderBottomColor = p.roseVivid
+                e.currentTarget.style.boxShadow = `0 2px 8px ${p.roseBlush}30`
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderBottomColor = `${p.roseBlush}40`
+                e.currentTarget.style.boxShadow = 'none'
+              }}
             >
               {categorias.map((cat) => (
                 <option key={cat.value} value={cat.value}>
@@ -126,14 +238,22 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
 
           {/* Marca */}
           <div className="min-w-[140px]">
-            <label htmlFor="filtro-marca" className="block text-[9px] font-mono text-muted-foreground uppercase tracking-wider mb-1">
+            <label htmlFor="filtro-marca" style={labelStyle}>
               Marca
             </label>
             <select
               id="filtro-marca"
               value={filtros.marca}
               onChange={(e) => handleChange('marca', e.target.value)}
-              className="w-full text-sm font-mono bg-transparent border-b border-border focus:border-foreground py-1.5 focus:outline-none transition-colors"
+              style={selectStyle}
+              onFocus={(e) => {
+                e.currentTarget.style.borderBottomColor = p.roseVivid
+                e.currentTarget.style.boxShadow = `0 2px 8px ${p.roseBlush}30`
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderBottomColor = `${p.roseBlush}40`
+                e.currentTarget.style.boxShadow = 'none'
+              }}
             >
               {marcas.map((marca) => (
                 <option key={marca.value} value={marca.value}>
@@ -145,14 +265,22 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
 
           {/* Género */}
           <div className="min-w-[100px]">
-            <label htmlFor="filtro-genero" className="block text-[9px] font-mono text-muted-foreground uppercase tracking-wider mb-1">
+            <label htmlFor="filtro-genero" style={labelStyle}>
               Género
             </label>
             <select
               id="filtro-genero"
               value={filtros.genero}
               onChange={(e) => handleChange('genero', e.target.value)}
-              className="w-full text-sm font-mono bg-transparent border-b border-border focus:border-foreground py-1.5 focus:outline-none transition-colors"
+              style={selectStyle}
+              onFocus={(e) => {
+                e.currentTarget.style.borderBottomColor = p.roseVivid
+                e.currentTarget.style.boxShadow = `0 2px 8px ${p.roseBlush}30`
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderBottomColor = `${p.roseBlush}40`
+                e.currentTarget.style.boxShadow = 'none'
+              }}
             >
               {generos.map((gen) => (
                 <option key={gen.value} value={gen.value}>
@@ -164,16 +292,27 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
 
           {/* Precio mínimo */}
           <div className="w-[100px]">
-            <label htmlFor="filtro-precio-min" className="block text-[9px] font-mono text-muted-foreground uppercase tracking-wider mb-1">
+            <label htmlFor="filtro-precio-min" style={labelStyle}>
               Precio min
             </label>
             <input
               id="filtro-precio-min"
               type="number"
-              placeholder="$0"
+              placeholder="S/ 0"
               value={filtros.precioMin}
               onChange={(e) => handleChange('precioMin', e.target.value)}
-              className="w-full text-sm font-mono bg-transparent border-b border-border focus:border-foreground py-1.5 focus:outline-none transition-colors placeholder:text-muted-foreground/40"
+              style={{
+                ...selectStyle,
+                width: '100%',
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderBottomColor = p.roseVivid
+                e.currentTarget.style.boxShadow = `0 2px 8px ${p.roseBlush}30`
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderBottomColor = `${p.roseBlush}40`
+                e.currentTarget.style.boxShadow = 'none'
+              }}
               min="0"
               step="0.01"
             />
@@ -181,20 +320,54 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
 
           {/* Precio máximo */}
           <div className="w-[100px]">
-            <label htmlFor="filtro-precio-max" className="block text-[9px] font-mono text-muted-foreground uppercase tracking-wider mb-1">
+            <label htmlFor="filtro-precio-max" style={labelStyle}>
               Precio max
             </label>
             <input
               id="filtro-precio-max"
               type="number"
-              placeholder="$999"
+              placeholder="S/ 999"
               value={filtros.precioMax}
               onChange={(e) => handleChange('precioMax', e.target.value)}
-              className="w-full text-sm font-mono bg-transparent border-b border-border focus:border-foreground py-1.5 focus:outline-none transition-colors placeholder:text-muted-foreground/40"
+              style={{
+                ...selectStyle,
+                width: '100%',
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderBottomColor = p.roseVivid
+                e.currentTarget.style.boxShadow = `0 2px 8px ${p.roseBlush}30`
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderBottomColor = `${p.roseBlush}40`
+                e.currentTarget.style.boxShadow = 'none'
+              }}
               min="0"
               step="0.01"
             />
           </div>
+          {/* Búsqueda por nombre */}
+<div className="w-full min-w-[200px]">
+  <label style={labelStyle}>Buscar producto</label>
+  <input
+    type="text"
+    placeholder="Escribe el nombre..."
+    value={filtros.busqueda || ''}
+    onChange={(e) => handleChange('busqueda', e.target.value)}
+    style={{
+      ...selectStyle,
+      width: '100%',
+      padding: '0.5rem 0.5rem 0.5rem 0',
+    }}
+    onFocus={(e) => {
+      e.currentTarget.style.borderBottomColor = p.roseVivid
+      e.currentTarget.style.boxShadow = `0 2px 8px ${p.roseBlush}30`
+    }}
+    onBlur={(e) => {
+      e.currentTarget.style.borderBottomColor = `${p.roseBlush}40`
+      e.currentTarget.style.boxShadow = 'none'
+    }}
+  />
+</div>
         </div>
       </div>
     </div>

@@ -504,7 +504,7 @@ const HeroSection = () => {
   useEffect(() => {
     if (slides.length > 1) {
       setAnimateIn(false)
-      const t = setTimeout(() => setAnimateIn(true), 50)
+      const t = setTimeout(() => setAnimateIn(true), 10)
       return () => clearTimeout(t)
     }
   }, [currentSlide, slides.length])
