@@ -2,145 +2,185 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 
-// ─── Constants ──────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+//  KB DRESSES & MORE — HERO SECTION V2.1
+//  "Aurora Bloom" — Luz, color, feminidad y celebración
+//  Paleta inspirada en el logo: rosas cálidos, melocotón, coral, dorado suave
+//  NADA DE OSCURO. Todo es luz, aire, flores y alegría.
+// ═══════════════════════════════════════════════════════════════════════════════
+
 const SLIDE_DURATION_MS = 5000
-const TRANSITION_DURATION_MS = 800
-const HERO_HEIGHT = '80vh' // Ligeramente más alto para más presencia
+const TRANSITION_DURATION_MS = 900
 
 const FALLBACK_IMAGE =
-  'https://images.unsplash.com/photo-1445205170230-053b83016050?w=1600&h=900&fit=crop&q=85'
+  'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=1600&h=1000&fit=crop&q=85'
 
-// ─── Paleta Ethereal Editorial – versión vibrante ──────────────────────────
-const palette = {
-  obsidian: '#1A1118',      // Fondo principal
-  obsidianDeep: '#120B10',  // Fondo más profundo para overlays
-  blush: '#D4788A',         // Rosa principal – acentos, botones, líneas
-  rose: '#B85268',          // Rosa profundo – hover, gradientes
-  petal: '#F2C4CE',         // Rosa suave – textos secundarios, fondos sutiles
-  ivory: '#FFF8F5',         // Blanco cálido – textos principales
-  gold: '#C9A84C',          // Dorado – toques de lujo (estrellas, badges)
-  goldLight: '#E8D08A',     // Dorado claro – gradientes
-  softGlow: 'rgba(212,120,138,0.15)',
-  roseGlow: 'rgba(184,82,104,0.25)',
+// ─── Paleta Aurora Bloom — Clara, cálida, vibrante ───────────────────────────
+const p = {
+  rose: '#E891A8',
+  roseDeep: '#D46A8A',
+  roseVivid: '#FF6B9D',
+  roseBlush: '#FFB8D0',
+  roseMist: '#FFE4EC',
+  peach: '#FFB088',
+  coral: '#FF8E72',
+  coralSoft: '#FFA78E',
+  apricot: '#FFCBA4',
+  cream: '#FFF5F0',
+  ivory: '#FFFAF8',
+  gold: '#E8C547',
+  goldLight: '#F5E6A3',
+  goldMist: '#FFF8E1',
+  mint: '#A8E6CF',
+  lavender: '#E2D5F8',
+  warmWhite: '#FFF9F7',
+  warmGray: '#B8A9A0',
+  textMain: '#5A3D4A',
+  textSoft: '#8B6F7A',
 }
 
-// ─── Trust items ────────────────────────────────────────────────────────────
+// ─── Trust items — ahora solo el path (sin SVG anidado) ────────────────────
 const trustItems = [
   {
-    label: '100% Original',
-    icon: (
-      <path
-        fillRule="evenodd"
-        d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3l.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-        clipRule="evenodd"
-      />
-    ),
+    label: '100% Originales',
+    sub: 'Marcas de USA',
+    path: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z',
+    viewBox: '0 0 24 24',
   },
   {
-    label: 'Envío Rápido',
-    icon: (
-      <>
-        <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
-        <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1v-5h2v5a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H17a1 1 0 001-1V5a1 1 0 00-1-1H3z" />
-      </>
-    ),
+    label: 'Envío a Todo el Perú',
+    sub: 'Rápido y seguro',
+    path: 'M5 9l2 2 4-4 M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v4z',
+    viewBox: '0 0 24 24',
+  },
+  {
+    label: 'Atención Personalizada',
+    sub: 'Te ayudamos a elegir',
+    path: 'M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z',
+    viewBox: '0 0 24 24',
   },
   {
     label: 'Pago Seguro',
-    icon: (
-      <path
-        fillRule="evenodd"
-        d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-        clipRule="evenodd"
-      />
-    ),
-  },
-  {
-    label: 'Atención 24/7',
-    icon: (
-      <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-    ),
+    sub: 'Yape, Plin, Tarjeta',
+    path: 'M3 11h18v11H3z M7 11V7a5 5 0 0110 0v4',
+    viewBox: '0 0 24 24',
   },
 ]
 
-// ─── Helper: truncar texto ──────────────────────────────────────────────────
-const truncateText = (text, maxLength = 85) => {
+// ─── Floating petals decoration ──────────────────────────────────────────────
+const Petal = ({ delay, left, size, color }) => (
+  <div
+    className="absolute pointer-events-none"
+    style={{
+      left: `${left}%`,
+      top: '-20px',
+      width: size,
+      height: size,
+      borderRadius: '50% 0 50% 50%',
+      background: color,
+      opacity: 0.4,
+      animation: `petalFall 12s linear infinite`,
+      animationDelay: `${delay}s`,
+      filter: 'blur(1px)',
+    }}
+  />
+)
+
+// ─── Helper: truncar texto ───────────────────────────────────────────────────
+const truncateText = (text, maxLength = 90) => {
   if (!text) return ''
   return text.length > maxLength ? text.slice(0, maxLength) + '...' : text
 }
 
-// ─── Main Component ──────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+//  MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════════
 const HeroSection = () => {
   const [slides, setSlides] = useState([])
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [loading, setLoading] = useState(true)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const [isHovered, setIsHovered] = useState(false)
   const timerRef = useRef(null)
+  const transitionTimeoutRef = useRef(null)
   const sectionRef = useRef(null)
   const navigate = useNavigate()
 
-  // ── Data fetch ─────────────────────────────────────────────────────────────
+  // ── Data fetch ──────────────────────────────────────────────────────────────
   useEffect(() => {
     const fetchSlides = async () => {
       try {
         const { data, error } = await supabase
           .from('hero_slides')
           .select(
-            `*, products(name, description, category, gender, brand, images_urls, image_url)`
+            `*, products(name, description, category, gender, brand, images_urls, image_url, price_final, price_original, stock)`
           )
           .eq('active', true)
           .order('sort_order', { ascending: true })
 
         if (error) throw error
 
-        const processedSlides = data.map((slide) => {
-          const product = slide.products
-          const images =
-            product?.images_urls?.length > 0
-              ? product.images_urls
-              : product?.image_url
-              ? [product.image_url]
-              : []
+        const processedSlides = data
+          .map((slide) => {
+            const product = slide.products
+            const images =
+              product?.images_urls?.length > 0
+                ? product.images_urls
+                : product?.image_url
+                ? [product.image_url]
+                : []
 
-          const rawDescription =
-            slide.description_override || product?.description || ''
-          const truncatedDescription = truncateText(rawDescription, 85)
+            const rawDescription =
+              slide.description_override || product?.description || ''
+            const truncatedDescription = truncateText(rawDescription, 90)
 
-          if (!product) {
+            if (product && product.stock === 0) {
+              return null
+            }
+
+            if (!product) {
+              return {
+                id: slide.id,
+                title: slide.title_override || 'Colección',
+                titleAccent: slide.title_accent_override || 'Exclusiva',
+                subtitle: slide.subtitle_override || 'Nueva Colección',
+                description: truncatedDescription,
+                image: slide.image_override || FALLBACK_IMAGE,
+                category: 'todos',
+                tag: slide.tag_override || 'Nuevo',
+                price: null,
+              }
+            }
+
+            const price = product.price_final ?? product.price_original ?? null
+
             return {
               id: slide.id,
-              title: slide.title_override || 'Colección',
-              titleAccent: slide.title_accent_override || 'Exclusiva',
-              subtitle: slide.subtitle_override || 'Nueva Colección',
+              title:
+                slide.title_override ||
+                product.name?.split(' ')[0] ||
+                'Colección',
+              titleAccent:
+                slide.title_accent_override ||
+                product.name?.split(' ').slice(1).join(' ') ||
+                'Exclusiva',
+              subtitle: slide.subtitle_override || product.brand || 'Nueva Colección',
               description: truncatedDescription,
-              image: slide.image_override || FALLBACK_IMAGE,
-              category: 'todos',
+              image: slide.image_override || images[0] || FALLBACK_IMAGE,
+              category: product.category || 'todos',
               tag: slide.tag_override || 'Nuevo',
+              price: price,
+              stock: product?.stock ?? null,
             }
-          }
-
-          return {
-            id: slide.id,
-            title:
-              slide.title_override ||
-              product.name?.split(' ')[0] ||
-              'Colección',
-            titleAccent:
-              slide.title_accent_override ||
-              product.name?.split(' ').slice(1).join(' ') ||
-              'Exclusiva',
-            subtitle: slide.subtitle_override || product.brand || 'Nueva Colección',
-            description: truncatedDescription,
-            image: slide.image_override || images[0] || FALLBACK_IMAGE,
-            category: product.category || 'todos',
-            tag: slide.tag_override || 'Nuevo',
-          }
-        })
+          })
+          .filter(slide => slide !== null)
 
         setSlides(processedSlides)
       } catch (error) {
-        console.error('Error fetching slides:', error)
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('Error fetching slides:', error)
+        }
       } finally {
         setLoading(false)
       }
@@ -149,7 +189,7 @@ const HeroSection = () => {
     fetchSlides()
   }, [])
 
-  // ── Precarga de imágenes ──────────────────────────────────────────────────
+  // ── Precarga de imágenes ────────────────────────────────────────────────────
   useEffect(() => {
     if (slides.length === 0) return
     slides.forEach((slide) => {
@@ -160,7 +200,7 @@ const HeroSection = () => {
     })
   }, [slides])
 
-  // ── Mouse tracking for parallax ───────────────────────────────────────────
+  // ── Mouse tracking for parallax ─────────────────────────────────────────────
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!sectionRef.current) return
@@ -177,15 +217,15 @@ const HeroSection = () => {
     }
   }, [])
 
-  // ── Autoplay ───────────────────────────────────────────────────────────────
+  // ── Autoplay with pause on hover ────────────────────────────────────────────
   useEffect(() => {
-    if (slides.length < 2) return
+    if (slides.length < 2 || isHovered) return
     timerRef.current = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length)
     }, SLIDE_DURATION_MS)
 
     return () => clearInterval(timerRef.current)
-  }, [slides.length])
+  }, [slides.length, isHovered])
 
   const goToSlide = useCallback(
     (index) => {
@@ -193,20 +233,28 @@ const HeroSection = () => {
       clearInterval(timerRef.current)
       setIsTransitioning(true)
       setCurrentSlide(index)
-      setTimeout(() => setIsTransitioning(false), TRANSITION_DURATION_MS)
 
-      if (slides.length > 1) {
+      if (transitionTimeoutRef.current) {
+        clearTimeout(transitionTimeoutRef.current)
+      }
+      transitionTimeoutRef.current = setTimeout(() => {
+        setIsTransitioning(false)
+        transitionTimeoutRef.current = null
+      }, TRANSITION_DURATION_MS)
+
+      if (slides.length > 1 && !isHovered) {
         timerRef.current = setInterval(() => {
           setCurrentSlide((prev) => (prev + 1) % slides.length)
         }, SLIDE_DURATION_MS)
       }
     },
-    [isTransitioning, currentSlide, slides.length]
+    [isTransitioning, currentSlide, slides.length, isHovered]
   )
 
-  // ── Keyboard navigation ──────────────────────────────────────────────────
+  // ── Keyboard navigation ─────────────────────────────────────────────────────
   useEffect(() => {
     const handleKeyDown = (e) => {
+      if (!sectionRef.current || !sectionRef.current.contains(document.activeElement)) return
       if (slides.length < 2) return
       if (e.key === 'ArrowLeft') {
         e.preventDefault()
@@ -227,128 +275,116 @@ const HeroSection = () => {
   const handleComprarAhora = (categoria) => navigate(`/?categoria=${categoria}`)
   const handleVerTodo = () => navigate('/')
 
-  // ── Skeleton con shimmer cinematográfico ──────────────────────────────────
+  // ── Generar pétalos aleatorios ──────────────────────────────────────────────
+  const petals = useRef(
+    Array.from({ length: 12 }, (_, i) => ({
+      delay: i * 1.2,
+      left: 5 + (i * 7.5) % 90,
+      size: 8 + ((i * 3) % 13),
+      color: [p.roseBlush, p.peach, p.coralSoft, p.roseMist, p.goldLight][i % 5],
+    }))
+  ).current
+
+  // ── SKELETON LOADER ────────────────────────────────────────────────────────
   if (loading) {
     return (
       <section
         className="relative overflow-hidden"
         style={{
-          height: HERO_HEIGHT,
-          background: `linear-gradient(135deg, ${palette.obsidianDeep} 0%, ${palette.obsidian} 100%)`,
+          minHeight: '88vh',
+          background: `linear-gradient(135deg, ${p.cream} 0%, ${p.roseMist} 50%, ${p.peach}30 100%)`,
         }}
       >
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 pointer-events-none">
           <div
-            className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl animate-shimmer-slow"
-            style={{
-              background: `radial-gradient(circle, ${palette.blush}22 0%, transparent 70%)`,
-            }}
+            className="absolute -top-20 -right-20 w-96 h-96 rounded-full blur-3xl animate-pulse-soft"
+            style={{ background: `radial-gradient(circle, ${p.roseBlush}60 0%, transparent 70%)` }}
           />
           <div
-            className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full blur-3xl animate-shimmer-slow"
+            className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full blur-3xl animate-pulse-soft"
             style={{
-              background: `radial-gradient(circle, ${palette.gold}18 0%, transparent 70%)`,
-              animationDelay: '1.5s',
+              background: `radial-gradient(circle, ${p.peach}50 0%, transparent 70%)`,
+              animationDelay: '1s',
             }}
           />
         </div>
 
         <div className="relative z-10 max-w-screen-2xl mx-auto px-6 lg:px-12 h-full flex items-center">
-          <div className="w-full max-w-2xl">
+          <div className="w-full max-w-2xl py-20">
             <div
-              className="h-3 w-20 rounded-sm mb-6 animate-shimmer-line"
-              style={{
-                background: `linear-gradient(90deg, ${palette.blush}15 0%, ${palette.petal}25 50%, ${palette.blush}15 100%)`,
-                backgroundSize: '200% 100%',
-              }}
+              className="h-3 w-24 rounded-full mb-6 animate-shimmer-skeleton"
+              style={{ background: `linear-gradient(90deg, ${p.roseBlush}40 0%, ${p.peach}60 50%, ${p.roseBlush}40 100%)`, backgroundSize: '200% 100%' }}
             />
             <div className="space-y-3 mb-6">
               <div
-                className="h-10 w-full rounded-sm animate-shimmer-line"
-                style={{
-                  background: `linear-gradient(90deg, ${palette.obsidianDeep} 0%, ${palette.blush}12 50%, ${palette.obsidianDeep} 100%)`,
-                  backgroundSize: '200% 100%',
-                }}
+                className="h-12 w-full rounded-xl animate-shimmer-skeleton"
+                style={{ background: `linear-gradient(90deg, ${p.roseMist} 0%, ${p.roseBlush}50 50%, ${p.roseMist} 100%)`, backgroundSize: '200% 100%' }}
               />
               <div
-                className="h-10 w-3/4 rounded-sm animate-shimmer-line"
-                style={{
-                  background: `linear-gradient(90deg, ${palette.obsidianDeep} 0%, ${palette.gold}15 50%, ${palette.obsidianDeep} 100%)`,
-                  backgroundSize: '200% 100%',
-                  animationDelay: '0.2s',
-                }}
+                className="h-12 w-3/4 rounded-xl animate-shimmer-skeleton"
+                style={{ background: `linear-gradient(90deg, ${p.roseMist} 0%, ${p.peach}50 50%, ${p.roseMist} 100%)`, backgroundSize: '200% 100%', animationDelay: '0.2s' }}
               />
             </div>
             <div
-              className="h-2 w-32 rounded-sm mb-4 animate-shimmer-line"
-              style={{
-                background: `linear-gradient(90deg, ${palette.blush}10 0%, ${palette.petal}20 50%, ${palette.blush}10 100%)`,
-                backgroundSize: '200% 100%',
-                animationDelay: '0.4s',
-              }}
+              className="h-2 w-40 rounded-full mb-4 animate-shimmer-skeleton"
+              style={{ background: `linear-gradient(90deg, ${p.roseBlush}30 0%, ${p.peach}50 50%, ${p.roseBlush}30 100%)`, backgroundSize: '200% 100%', animationDelay: '0.4s' }}
             />
             <div className="space-y-2 mb-8">
               <div
-                className="h-2 w-full rounded-sm animate-shimmer-line"
-                style={{
-                  background: `linear-gradient(90deg, ${palette.obsidianDeep} 0%, ${palette.blush}08 50%, ${palette.obsidianDeep} 100%)`,
-                  backgroundSize: '200% 100%',
-                  animationDelay: '0.6s',
-                }}
+                className="h-2 w-full rounded-full animate-shimmer-skeleton"
+                style={{ background: `linear-gradient(90deg, ${p.cream} 0%, ${p.roseBlush}30 50%, ${p.cream} 100%)`, backgroundSize: '200% 100%', animationDelay: '0.6s' }}
               />
               <div
-                className="h-2 w-5/6 rounded-sm animate-shimmer-line"
-                style={{
-                  background: `linear-gradient(90deg, ${palette.obsidianDeep} 0%, ${palette.petal}10 50%, ${palette.obsidianDeep} 100%)`,
-                  backgroundSize: '200% 100%',
-                  animationDelay: '0.8s',
-                }}
+                className="h-2 w-5/6 rounded-full animate-shimmer-skeleton"
+                style={{ background: `linear-gradient(90deg, ${p.cream} 0%, ${p.peach}30 50%, ${p.cream} 100%)`, backgroundSize: '200% 100%', animationDelay: '0.8s' }}
               />
             </div>
             <div className="flex gap-3">
               <div
-                className="h-12 w-44 rounded-sm animate-shimmer-line"
-                style={{
-                  background: `linear-gradient(90deg, ${palette.blush}20 0%, ${palette.gold}25 50%, ${palette.blush}20 100%)`,
-                  backgroundSize: '200% 100%',
-                  animationDelay: '1s',
-                }}
+                className="h-14 w-48 rounded-2xl animate-shimmer-skeleton"
+                style={{ background: `linear-gradient(90deg, ${p.roseBlush}50 0%, ${p.peach}60 50%, ${p.roseBlush}50 100%)`, backgroundSize: '200% 100%', animationDelay: '1s' }}
               />
               <div
-                className="h-12 w-24 rounded-sm animate-shimmer-line"
-                style={{
-                  background: `linear-gradient(90deg, ${palette.blush}10 0%, ${palette.petal}15 50%, ${palette.blush}10 100%)`,
-                  backgroundSize: '200% 100%',
-                  animationDelay: '1.2s',
-                }}
+                className="h-14 w-32 rounded-2xl animate-shimmer-skeleton"
+                style={{ background: `linear-gradient(90deg, ${p.roseMist} 0%, ${p.roseBlush}40 50%, ${p.roseMist} 100%)`, backgroundSize: '200% 100%', animationDelay: '1.2s' }}
               />
             </div>
           </div>
         </div>
 
         <style>{`
-          @keyframes shimmer-line {
+          @keyframes shimmer-skeleton {
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
           }
-          @keyframes shimmer-slow {
-            0%, 100% { opacity: 0.3; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.1); }
+          .animate-shimmer-skeleton {
+            animation: shimmer-skeleton 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
           }
-          .animate-shimmer-line {
-            animation: shimmer-line 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+          @keyframes pulse-soft {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.05); }
           }
-          .animate-shimmer-slow {
-            animation: shimmer-slow 4s ease-in-out infinite;
-          }
+          .animate-pulse-soft {
+            animation: pulse-soft 4s ease-in-out infinite; }
         `}</style>
       </section>
     )
   }
 
-  if (slides.length === 0) return null
+  if (slides.length === 0) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center bg-[#FFF5F0] rounded-2xl">
+        <div className="text-center p-8">
+          <p className="text-xl font-serif text-[#D46A8A]">✨ Pronto nuevas colecciones</p>
+          <p className="text-sm text-[#8B6F7A] mt-2">Estamos actualizando nuestros productos</p>
+        </div>
+      </div>
+    )
+  }
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════════════
+  //  RENDER PRINCIPAL — Aurora Bloom
+  // ═══════════════════════════════════════════════════════════════════════════════
   return (
     <section
       ref={sectionRef}
@@ -356,40 +392,89 @@ const HeroSection = () => {
       tabIndex={0}
       role="region"
       aria-label="Carrusel de productos destacados"
-      style={{ background: palette.obsidianDeep, outline: 'none' }}
+      style={{ outline: 'none' }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      {/* ── Ambient background effects ── */}
-      <div className="absolute inset-0 pointer-events-none">
+      {/* ════════════════════════════════════════════════════════════════════════
+          FONDO — Gradientes vivos, múltiples capas, todo CLARO y CÁLIDO
+      ════════════════════════════════════════════════════════════════════════ */}
+      <div className="absolute inset-0" style={{ background: p.cream }}>
         <div
-          className="absolute top-0 left-0 w-full h-full opacity-40"
+          className="absolute inset-0"
           style={{
-            background: `radial-gradient(ellipse 80% 50% at 20% 40%, ${palette.blush}18 0%, transparent 50%)`,
-            transform: `translate(${mousePosition.x * 20}px, ${mousePosition.y * 20}px)`,
-            transition: 'transform 0.3s ease-out',
+            background: `linear-gradient(135deg, ${p.ivory} 0%, ${p.roseMist} 30%, ${p.peach}25 60%, ${p.cream} 100%)`,
           }}
         />
+
         <div
-          className="absolute top-0 left-0 w-full h-full opacity-30"
+          className="absolute -top-32 -right-32 w-[600px] h-[600px] rounded-full blur-3xl animate-float-slow"
           style={{
-            background: `radial-gradient(ellipse 60% 60% at 80% 60%, ${palette.gold}15 0%, transparent 50%)`,
-            transform: `translate(${mousePosition.x * -15}px, ${mousePosition.y * -15}px)`,
-            transition: 'transform 0.3s ease-out',
+            background: `radial-gradient(circle, ${p.roseBlush}50 0%, ${p.peach}30 40%, transparent 70%)`,
+            animationDuration: '20s',
+          }}
+        />
+
+        <div
+          className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full blur-3xl animate-float-slow"
+          style={{
+            background: `radial-gradient(circle, ${p.peach}45 0%, ${p.coralSoft}25 50%, transparent 70%)`,
+            animationDuration: '25s',
+            animationDelay: '3s',
+            animationDirection: 'reverse',
+          }}
+        />
+
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full blur-3xl animate-pulse-glow"
+          style={{
+            background: `radial-gradient(circle, ${p.goldLight}35 0%, ${p.roseBlush}15 50%, transparent 70%)`,
+          }}
+        />
+
+        <div
+          className="absolute bottom-0 right-0 w-[350px] h-[350px] rounded-full blur-3xl animate-float-slow"
+          style={{
+            background: `radial-gradient(circle, ${p.roseVivid}20 0%, transparent 70%)`,
+            animationDuration: '18s',
+            animationDelay: '5s',
+          }}
+        />
+
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `radial-gradient(circle, ${p.roseDeep} 1px, transparent 1px)`,
+            backgroundSize: '40px 40px',
+          }}
+        />
+
+        <div
+          className="absolute inset-0 pointer-events-none transition-transform duration-500 ease-out"
+          style={{
+            background: `radial-gradient(ellipse 50% 50% at ${50 + mousePosition.x * 20}% ${50 + mousePosition.y * 20}%, ${p.roseBlush}20 0%, transparent 60%)`,
           }}
         />
       </div>
 
-      <div className="relative flex items-center" style={{ height: HERO_HEIGHT }}>
-        {/* ── Background images with cinematic effect ── */}
+      {petals.map((petal, i) => (
+        <Petal key={i} {...petal} />
+      ))}
+
+      {/* ════════════════════════════════════════════════════════════════════════
+          CONTENIDO PRINCIPAL
+      ════════════════════════════════════════════════════════════════════════ */}
+      <div className="relative z-10" style={{ minHeight: '88vh' }}>
         {slides.map((slide, index) => (
           <div
-            key={slide.id}
+            key={`${slide.id}-bg`}
             className="absolute inset-0 transition-all"
             style={{
               opacity: index === currentSlide ? 1 : 0,
               transform:
                 index === currentSlide
-                  ? `scale(${1 + mousePosition.x * 0.02}) translate(${mousePosition.x * -10}px, ${mousePosition.y * -10}px)`
-                  : 'scale(1.05)',
+                  ? `scale(1) translate(${mousePosition.x * -8}px, ${mousePosition.y * -8}px)`
+                  : 'scale(1.08)',
               transitionDuration: `${TRANSITION_DURATION_MS}ms`,
               transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
             }}
@@ -400,76 +485,37 @@ const HeroSection = () => {
               alt=" "
               className="absolute inset-0 w-full h-full object-cover"
               style={{
-                filter:
-                  'brightness(0.35) saturate(0.9) contrast(1.1) hue-rotate(-5deg)',
+                filter: 'brightness(0.92) saturate(1.1) contrast(1.02)',
+                maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0) 70%)',
+                WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0) 70%)',
               }}
-              loading="eager"
-            />
-
-            {/* Cinematic gradient overlays - con más calidez */}
-            <div
-              className="absolute inset-0"
-              style={{
-                background: `
-                  linear-gradient(135deg, 
-                    ${palette.obsidianDeep}FA 0%, 
-                    ${palette.obsidianDeep}D9 25%, 
-                    ${palette.obsidianDeep}99 50%, 
-                    ${palette.obsidianDeep}4D 75%, 
-                    transparent 100%
-                  )
-                `,
-              }}
-            />
-            <div
-              className="absolute inset-0"
-              style={{
-                background: `
-                  radial-gradient(ellipse 100% 80% at 50% 100%, 
-                    ${palette.obsidianDeep}E6 0%, 
-                    transparent 60%
-                  )
-                `,
-              }}
-            />
-            <div
-              className="absolute inset-0"
-              style={{
-                background: `
-                  radial-gradient(circle at 70% 30%, 
-                    ${palette.blush}12 0%, 
-                    ${palette.gold}08 40%, 
-                    transparent 60%
-                  )
-                `,
-              }}
-            />
-
-            {/* Animated grain texture */}
-            <div
-              className="absolute inset-0 opacity-[0.015] mix-blend-overlay"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-              }}
+              loading={index === currentSlide ? 'eager' : 'lazy'}
             />
           </div>
         ))}
 
-        {/* ── Content ── */}
-        <div className="relative z-10 max-w-screen-2xl mx-auto px-6 lg:px-12 w-full py-8 md:py-12">
-          <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-            {/* Left: text content */}
-            <div className="lg:col-span-7">
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(180deg, ${p.ivory}00 0%, ${p.cream}80 50%, ${p.cream}F2 100%)`,
+          }}
+        />
+
+        <div className="relative z-10 max-w-screen-2xl mx-auto px-6 lg:px-12 pt-16 pb-8 md:pt-24 md:pb-12">
+          <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center min-h-[70vh]">
+
+            {/* LEFT: Text content */}
+            <div className="lg:col-span-7 relative">
               {slides.map((slide, index) => (
                 <div
-                  key={slide.id}
+                  key={`${slide.id}-text`}
                   className="transition-all"
                   style={{
                     opacity: index === currentSlide ? 1 : 0,
                     transform:
                       index === currentSlide
                         ? 'translateY(0) scale(1)'
-                        : 'translateY(40px) scale(0.98)',
+                        : 'translateY(30px) scale(0.97)',
                     position: index === currentSlide ? 'relative' : 'absolute',
                     pointerEvents: index === currentSlide ? 'auto' : 'none',
                     transitionDuration: `${TRANSITION_DURATION_MS}ms`,
@@ -477,48 +523,41 @@ const HeroSection = () => {
                   }}
                   aria-hidden={index !== currentSlide}
                 >
-                  {/* Tag with animated line - más vibrante */}
-                  <div className="flex items-center gap-4 mb-6">
+                  <div className="flex items-center gap-3 mb-5">
                     <div className="relative">
                       <span
-                        className="inline-block px-4 py-1.5 rounded-sm text-[0.65rem] tracking-[0.3em] uppercase font-medium"
+                        className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-[0.65rem] tracking-[0.25em] uppercase font-semibold"
                         style={{
-                          color: palette.ivory,
-                          background: `linear-gradient(135deg, ${palette.blush}33 0%, ${palette.gold}22 100%)`,
-                          border: `1px solid ${palette.blush}44`,
-                          backdropFilter: 'blur(10px)',
-                          WebkitBackdropFilter: 'blur(10px)',
+                          color: p.ivory,
+                          background: `linear-gradient(135deg, ${p.roseVivid} 0%, ${p.coral} 100%)`,
+                          boxShadow: `0 4px 20px ${p.roseVivid}50, 0 2px 8px ${p.coral}30`,
                           fontFamily: 'var(--font-sans, system-ui)',
                         }}
                       >
+                        <span
+                          className="w-1.5 h-1.5 rounded-full animate-pulse"
+                          style={{ background: p.ivory, boxShadow: `0 0 8px ${p.ivory}` }}
+                        />
                         {slide.tag}
                       </span>
-                      <div
-                        className="absolute -top-1 -right-1 w-2 h-2 rounded-full animate-pulse"
-                        style={{
-                          background: `linear-gradient(135deg, ${palette.blush}, ${palette.gold})`,
-                          boxShadow: `0 0 12px ${palette.blush}AA`,
-                        }}
-                      />
                     </div>
                     <div
-                      className="flex-1 h-px max-w-[60px]"
+                      className="flex-1 h-px max-w-[80px]"
                       style={{
-                        background: `linear-gradient(90deg, ${palette.blush}88 0%, ${palette.gold}44 50%, transparent 100%)`,
+                        background: `linear-gradient(90deg, ${p.roseBlush} 0%, ${p.peach}60 50%, transparent 100%)`,
                       }}
                     />
                   </div>
 
-                  {/* Headline - Ethereal Editorial typography + gradiente vivo */}
                   <h1
-                    className="leading-[0.88] mb-6"
+                    className="leading-[0.92] mb-5"
                     style={{
-                      fontFamily: "'Cormorant Garamond', 'EB Garamond', Georgia, serif",
-                      fontSize: 'clamp(2.8rem, 7vw, 6rem)',
-                      fontWeight: 300,
-                      color: palette.ivory,
-                      letterSpacing: '-0.01em',
-                      textShadow: '0 4px 24px rgba(0,0,0,0.3)',
+                      fontFamily: "'Playfair Display', 'Cormorant Garamond', Georgia, serif",
+                      fontSize: 'clamp(2.8rem, 7vw, 5.5rem)',
+                      fontWeight: 700,
+                      color: p.textMain,
+                      letterSpacing: '-0.03em',
+                      textShadow: '0 2px 20px rgba(255,255,255,0.8)',
                     }}
                   >
                     {slide.title}{' '}
@@ -526,38 +565,36 @@ const HeroSection = () => {
                       className="inline-block"
                       style={{
                         fontStyle: 'italic',
-                        fontWeight: 300,
-                        background: `linear-gradient(135deg, ${palette.blush} 0%, ${palette.rose} 40%, ${palette.gold} 80%, ${palette.blush} 100%)`,
+                        fontWeight: 400,
+                        background: `linear-gradient(135deg, ${p.roseVivid} 0%, ${p.coral} 30%, ${p.roseDeep} 60%, ${p.gold} 100%)`,
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
                         backgroundClip: 'text',
                         backgroundSize: '300% 300%',
-                        animation: 'gradientShift 8s ease infinite',
-                        filter: `drop-shadow(0 2px 16px ${palette.blush}66)`,
+                        animation: 'gradientShift 6s ease infinite',
+                        filter: `drop-shadow(0 2px 12px ${p.roseBlush}66)`,
                       }}
                     >
                       {slide.titleAccent}
                     </span>
                   </h1>
 
-                  {/* Subtitle */}
                   <p
-                    className="text-[0.7rem] tracking-[0.35em] uppercase mb-4 font-medium"
+                    className="text-[0.75rem] tracking-[0.3em] uppercase mb-4 font-semibold"
                     style={{
-                      color: `${palette.petal}CC`,
+                      color: p.roseDeep,
                       fontFamily: 'var(--font-sans, system-ui)',
                     }}
                   >
                     {slide.subtitle}
                   </p>
 
-                  {/* Description - truncada via JS */}
                   <p
                     className="leading-relaxed max-w-lg mb-8"
                     style={{
-                      color: `${palette.ivory}B3`,
-                      fontSize: 'clamp(0.9rem, 1vw, 1.05rem)',
-                      fontWeight: 300,
+                      color: p.textSoft,
+                      fontSize: 'clamp(0.95rem, 1.1vw, 1.1rem)',
+                      fontWeight: 400,
                       fontFamily: 'var(--font-sans, system-ui)',
                       lineHeight: 1.7,
                     }}
@@ -565,247 +602,295 @@ const HeroSection = () => {
                     {slide.description}
                   </p>
 
-                  {/* CTAs - premium y vibrantes */}
+                  <div className="flex items-baseline gap-3 mb-8">
+                    <span
+                      style={{
+                        fontFamily: "'Playfair Display', Georgia, serif",
+                        fontSize: '1.1rem',
+                        fontWeight: 400,
+                        color: p.textSoft,
+                        letterSpacing: '0.1em',
+                      }}
+                    >
+                      Desde
+                    </span>
+                    {slide.price ? (
+                      <span
+                        style={{
+                          fontFamily: "'Playfair Display', Georgia, serif",
+                          fontSize: '2.8rem',
+                          fontWeight: 700,
+                          color: p.roseDeep,
+                          letterSpacing: '-0.03em',
+                          lineHeight: 1,
+                        }}
+                      >
+                        S/ {slide.price.toFixed(2)}
+                      </span>
+                    ) : (
+                      <span
+                        style={{
+                          fontFamily: "'Playfair Display', Georgia, serif",
+                          fontSize: '1.8rem',
+                          fontWeight: 400,
+                          color: p.textSoft,
+                          letterSpacing: '-0.01em',
+                        }}
+                      >
+                        Precio bajo consulta
+                      </span>
+                    )}
+                    {slide.price && <span style={{ color: p.roseBlush, fontSize: '1rem', fontWeight: 300 }}>.00</span>}
+                  </div>
+
                   <div className="flex flex-wrap gap-4">
                     <button
                       onClick={() => handleComprarAhora(slide.category)}
                       className="group relative overflow-hidden transition-all duration-500"
                       style={{
                         fontFamily: 'var(--font-sans, system-ui)',
-                        fontSize: 'clamp(0.7rem, 0.75vw, 0.8rem)',
-                        fontWeight: 600,
-                        letterSpacing: '0.25em',
+                        fontSize: 'clamp(0.72rem, 0.8vw, 0.85rem)',
+                        fontWeight: 700,
+                        letterSpacing: '0.2em',
                         textTransform: 'uppercase',
-                        color: palette.ivory,
-                        background: palette.obsidian,
-                        padding: '1rem 2.5rem',
-                        border: `1px solid ${palette.blush}60`,
-                        borderRadius: '2px',
+                        color: p.ivory,
+                        background: `linear-gradient(135deg, ${p.roseVivid} 0%, ${p.coral} 50%, ${p.roseDeep} 100%)`,
+                        padding: '1.1rem 2.8rem',
+                        borderRadius: '50px',
                         cursor: 'pointer',
-                        minHeight: '52px',
-                        boxShadow: `0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px ${palette.blush}20`,
+                        minHeight: '56px',
+                        boxShadow: `0 8px 32px ${p.roseVivid}50, 0 4px 16px ${p.coral}30`,
+                        border: 'none',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.transform =
-                          'translateY(-3px) scale(1.02)'
-                        e.currentTarget.style.boxShadow = `0 16px 48px ${palette.blush}88, 0 4px 16px rgba(0,0,0,0.4)`
-                        e.currentTarget.style.background = `linear-gradient(135deg, ${palette.blush} 0%, ${palette.rose} 50%, ${palette.gold} 100%)`
-                        e.currentTarget.style.borderColor = palette.gold
-                        e.currentTarget.style.color = palette.ivory
+                        e.currentTarget.style.transform = 'translateY(-4px) scale(1.03)'
+                        e.currentTarget.style.boxShadow = `0 16px 48px ${p.roseVivid}70, 0 8px 24px ${p.coral}40`
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'scale(1)'
-                        e.currentTarget.style.boxShadow = `0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px ${palette.blush}20`
-                        e.currentTarget.style.background = palette.obsidian
-                        e.currentTarget.style.borderColor = `${palette.blush}60`
-                        e.currentTarget.style.color = palette.ivory
+                        e.currentTarget.style.transform = 'translateY(0) scale(1)'
+                        e.currentTarget.style.boxShadow = `0 8px 32px ${p.roseVivid}50, 0 4px 16px ${p.coral}30`
                       }}
                     >
-                      <span className="relative z-10">Descubrir Colección</span>
+                      <span className="relative z-10 flex items-center gap-2">
+                        Descubrir Colección
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                      </span>
                       <div
-                        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700"
                         style={{
-                          background:
-                            'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%)',
+                          background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%)',
+                          transform: 'translateX(-100%)',
+                          animation: 'shine 2s ease-in-out infinite',
                         }}
                       />
                     </button>
 
                     <button
                       onClick={handleVerTodo}
-                      className="group relative transition-all duration-500"
+                      className="group relative transition-all duration-500 flex items-center gap-2"
                       style={{
                         fontFamily: 'var(--font-sans, system-ui)',
-                        fontSize: 'clamp(0.65rem, 0.7vw, 0.75rem)',
-                        fontWeight: 500,
-                        letterSpacing: '0.3em',
+                        fontSize: 'clamp(0.7rem, 0.75vw, 0.8rem)',
+                        fontWeight: 600,
+                        letterSpacing: '0.2em',
                         textTransform: 'uppercase',
-                        color: `${palette.petal}CC`,
-                        background: 'none',
-                        border: 'none',
-                        borderBottom: `2px solid ${palette.blush}66`,
-                        padding: '0.5rem 0',
+                        color: p.roseDeep,
+                        background: 'transparent',
+                        border: `2px solid ${p.roseBlush}`,
+                        padding: '1.1rem 2.2rem',
+                        borderRadius: '50px',
                         cursor: 'pointer',
-                        minHeight: '52px',
+                        minHeight: '56px',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.color = palette.gold
-                        e.currentTarget.style.borderBottomColor = palette.gold
-                        e.currentTarget.style.transform = 'translateX(6px) scale(1.02)'
+                        e.currentTarget.style.background = p.roseMist
+                        e.currentTarget.style.borderColor = p.roseVivid
+                        e.currentTarget.style.color = p.roseDeep
+                        e.currentTarget.style.transform = 'translateY(-2px)'
+                        e.currentTarget.style.boxShadow = `0 8px 24px ${p.roseBlush}50`
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.color = `${palette.petal}CC`
-                        e.currentTarget.style.borderBottomColor = `${palette.blush}66`
-                        e.currentTarget.style.transform = 'translateX(0) scale(1)'
+                        e.currentTarget.style.background = 'transparent'
+                        e.currentTarget.style.borderColor = p.roseBlush
+                        e.currentTarget.style.color = p.roseDeep
+                        e.currentTarget.style.transform = 'translateY(0)'
+                        e.currentTarget.style.boxShadow = 'none'
                       }}
                     >
-                      Ver Todo →
+                      Ver Todo
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300 group-hover:translate-x-1">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                      </svg>
                     </button>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Right: portrait panel - desktop only */}
+            {/* RIGHT: Product showcase — Desktop */}
             <div className="hidden lg:flex lg:col-span-5 justify-center items-center relative">
-              {/* Animated rings - más brillo */}
               <div
                 className="absolute rounded-full animate-spin-slow"
                 style={{
-                  width: '420px',
-                  height: '420px',
-                  border: `1px solid ${palette.blush}22`,
-                  animationDuration: '30s',
+                  width: '400px',
+                  height: '400px',
+                  border: `2px dashed ${p.roseBlush}50`,
+                  animationDuration: '40s',
                 }}
               />
               <div
                 className="absolute rounded-full animate-spin-slow"
                 style={{
-                  width: '360px',
-                  height: '360px',
-                  border: `1px solid ${palette.gold}22`,
-                  animationDuration: '25s',
+                  width: '340px',
+                  height: '340px',
+                  border: `2px dashed ${p.peach}40`,
+                  animationDuration: '30s',
                   animationDirection: 'reverse',
                 }}
               />
+
               <div
-                className="absolute rounded-full animate-spin-slow"
+                className="absolute rounded-full blur-3xl animate-pulse-glow"
                 style={{
                   width: '300px',
                   height: '300px',
-                  border: `1px solid ${palette.blush}33`,
-                  animationDuration: '20s',
+                  background: `radial-gradient(circle, ${p.roseBlush}50 0%, ${p.peach}30 40%, transparent 70%)`,
                 }}
               />
 
-              {/* Glow effect - más intenso */}
               <div
-                className="absolute rounded-full blur-3xl"
+                className="relative overflow-hidden"
                 style={{
-                  width: '280px',
-                  height: '280px',
-                  background: `radial-gradient(circle, ${palette.blush}44 0%, ${palette.gold}22 40%, transparent 70%)`,
-                  animation: 'pulse 4s ease-in-out infinite',
-                }}
-              />
-
-              {/* Main portrait container */}
-              <div
-                className="relative overflow-hidden rounded-full"
-                style={{
-                  width: '280px',
-                  height: '280px',
-                  border: `2px solid ${palette.blush}55`,
+                  width: '320px',
+                  height: '420px',
+                  borderRadius: '24px',
+                  border: `3px solid ${p.ivory}`,
                   boxShadow: `
-                    0 0 80px ${palette.blush}55,
-                    0 32px 80px rgba(0,0,0,0.5),
-                    inset 0 0 40px ${palette.blush}15
+                    0 24px 80px ${p.roseBlush}40,
+                    0 8px 32px ${p.peach}30,
+                    inset 0 0 60px ${p.roseMist}20
                   `,
-                  transform: `rotate(${mousePosition.x * 5}deg)`,
-                  transition: 'transform 0.3s ease-out',
+                  transform: `perspective(1000px) rotateY(${mousePosition.x * 8}deg) rotateX(${mousePosition.y * -6}deg)`,
+                  transition: 'transform 0.4s ease-out',
                 }}
               >
                 {slides.map((slide, index) => (
                   <img
-                    key={slide.id}
+                    key={`${slide.id}-img`}
                     src={slide.image || FALLBACK_IMAGE}
                     alt={slide.title}
                     className="absolute inset-0 w-full h-full object-cover transition-all"
                     style={{
                       opacity: index === currentSlide ? 1 : 0,
                       transform:
-                        index === currentSlide ? 'scale(1.1)' : 'scale(1)',
+                        index === currentSlide ? 'scale(1)' : 'scale(1.1)',
                       transitionDuration: `${TRANSITION_DURATION_MS}ms`,
                       transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
                     }}
-                    loading="eager"
+                    loading={index === currentSlide ? 'eager' : 'lazy'}
                   />
                 ))}
 
-                {/* Inner gradient overlay - toque dorado */}
                 <div
                   className="absolute inset-0"
                   style={{
-                    background: `radial-gradient(circle at 30% 30%, ${palette.blush}22 0%, ${palette.gold}11 40%, transparent 70%)`,
+                    background: `linear-gradient(180deg, transparent 60%, ${p.roseMist}40 100%)`,
                   }}
                 />
               </div>
 
-              {/* Floating badge - más glamour */}
               <div
-                className="absolute bottom-8 right-8 group"
+                className="absolute -bottom-4 -right-4 group cursor-default"
                 style={{
-                  background: `${palette.obsidianDeep}E6`,
-                  backdropFilter: 'blur(20px)',
-                  WebkitBackdropFilter: 'blur(20px)',
-                  border: `1px solid ${palette.blush}55`,
-                  borderRadius: '2px',
-                  padding: '0.8rem 1.2rem',
-                  boxShadow: `0 12px 48px rgba(0,0,0,0.4), 0 0 24px ${palette.blush}33`,
-                  transition: 'all 0.3s ease',
+                  background: p.ivory,
+                  border: `2px solid ${p.roseBlush}`,
+                  borderRadius: '20px',
+                  padding: '1rem 1.4rem',
+                  boxShadow: `0 12px 40px ${p.roseBlush}40, 0 4px 16px ${p.peach}20`,
+                  transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px) scale(1.05)'
-                  e.currentTarget.style.borderColor = palette.gold
-                  e.currentTarget.style.boxShadow = `0 16px 56px rgba(0,0,0,0.4), 0 0 40px ${palette.gold}44`
+                  e.currentTarget.style.transform = 'translateY(-6px) scale(1.05)'
+                  e.currentTarget.style.boxShadow = `0 20px 56px ${p.roseVivid}50, 0 8px 24px ${p.peach}30`
+                  e.currentTarget.style.borderColor = p.roseVivid
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                  e.currentTarget.style.borderColor = `${palette.blush}55`
-                  e.currentTarget.style.boxShadow = `0 12px 48px rgba(0,0,0,0.4), 0 0 24px ${palette.blush}33`
+                  e.currentTarget.style.boxShadow = `0 12px 40px ${p.roseBlush}40, 0 4px 16px ${p.peach}20`
+                  e.currentTarget.style.borderColor = p.roseBlush
                 }}
               >
-                <p
-                  className="text-[0.5rem] tracking-[0.3em] uppercase mb-1"
-                  style={{
-                    color: `${palette.blush}CC`,
-                    fontFamily: 'var(--font-sans, system-ui)',
-                  }}
-                >
-                  Importado desde
-                </p>
-                <p
-                  style={{
-                    fontFamily: "'Cormorant Garamond', Georgia, serif",
-                    fontSize: '1.3rem',
-                    fontWeight: 300,
-                    fontStyle: 'italic',
-                    color: palette.ivory,
-                    lineHeight: 1,
-                    letterSpacing: '-0.02em',
-                    background: `linear-gradient(135deg, ${palette.ivory} 0%, ${palette.gold} 100%)`,
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                  }}
-                >
-                  EE.UU.
-                </p>
+                <div className="flex items-center gap-2">
+                  <span style={{ fontSize: '1.4rem' }}>✨</span>
+                  <div>
+                    <p
+                      className="text-[0.55rem] tracking-[0.25em] uppercase font-semibold"
+                      style={{
+                        color: p.roseDeep,
+                        fontFamily: 'var(--font-sans, system-ui)',
+                      }}
+                    >
+                      Importado desde
+                    </p>
+                    <p
+                      style={{
+                        fontFamily: "'Playfair Display', Georgia, serif",
+                        fontSize: '1.2rem',
+                        fontWeight: 700,
+                        fontStyle: 'italic',
+                        color: p.roseVivid,
+                        lineHeight: 1.1,
+                        letterSpacing: '-0.01em',
+                      }}
+                    >
+                      EE.UU.
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              {/* Decorative dots - más brillo */}
               <div
-                className="absolute top-12 left-12 w-2 h-2 rounded-full"
+                className="absolute -top-6 left-8 animate-float-gentle"
                 style={{
-                  background: `linear-gradient(135deg, ${palette.blush}, ${palette.gold})`,
-                  boxShadow: `0 0 16px ${palette.blush}AA`,
-                  animation: 'float 6s ease-in-out infinite',
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  background: `linear-gradient(135deg, ${p.roseBlush}60 0%, ${p.peach}40 100%)`,
+                  boxShadow: `0 8px 24px ${p.roseBlush}30`,
+                  animationDelay: '0s',
                 }}
               />
               <div
-                className="absolute bottom-16 left-16 w-1.5 h-1.5 rounded-full"
+                className="absolute top-20 -right-6 animate-float-gentle"
                 style={{
-                  background: palette.gold,
-                  boxShadow: `0 0 12px ${palette.gold}AA`,
-                  animation: 'float 5s ease-in-out infinite',
-                  animationDelay: '1s',
+                  width: '30px',
+                  height: '30px',
+                  borderRadius: '50%',
+                  background: `linear-gradient(135deg, ${p.goldLight}70 0%, ${p.peach}50 100%)`,
+                  boxShadow: `0 6px 20px ${p.gold}30`,
+                  animationDelay: '2s',
+                }}
+              />
+              <div
+                className="absolute bottom-20 left-0 animate-float-gentle"
+                style={{
+                  width: '20px',
+                  height: '20px',
+                  borderRadius: '50%',
+                  background: `linear-gradient(135deg, ${p.coralSoft}60 0%, ${p.roseBlush}40 100%)`,
+                  boxShadow: `0 4px 16px ${p.coral}25`,
+                  animationDelay: '4s',
                 }}
               />
             </div>
           </div>
         </div>
 
-        {/* ── Navigation pills - Right side ── */}
+        {/* ════════════════════════════════════════════════════════════════════════
+            NAVEGACIÓN — Pills con color
+        ════════════════════════════════════════════════════════════════════════ */}
         <div
           className="absolute right-8 top-1/2 -translate-y-1/2 z-20 hidden md:flex flex-col gap-3"
           role="tablist"
@@ -822,21 +907,14 @@ const HeroSection = () => {
               style={{ minHeight: '44px' }}
             >
               <span
-                className="transition-all duration-500"
+                className="transition-all duration-500 font-semibold"
                 style={{
                   fontFamily: 'var(--font-sans, system-ui)',
-                  fontSize: '0.6rem',
+                  fontSize: '0.65rem',
                   letterSpacing: '0.15em',
-                  fontWeight: 500,
-                  color:
-                    index === currentSlide
-                      ? `${palette.petal}DD`
-                      : 'transparent',
+                  color: index === currentSlide ? p.roseDeep : 'transparent',
                   userSelect: 'none',
-                  transform:
-                    index === currentSlide
-                      ? 'translateX(0)'
-                      : 'translateX(10px)',
+                  transform: index === currentSlide ? 'translateX(0)' : 'translateX(10px)',
                 }}
               >
                 {String(index + 1).padStart(2, '0')}
@@ -845,23 +923,18 @@ const HeroSection = () => {
                 className="transition-all duration-700 rounded-full relative overflow-hidden"
                 style={{
                   width: index === currentSlide ? '4px' : '3px',
-                  height: index === currentSlide ? '40px' : '16px',
-                  background:
-                    index === currentSlide
-                      ? `linear-gradient(180deg, ${palette.blush}, ${palette.gold})`
-                      : `${palette.ivory}33`,
-                  boxShadow:
-                    index === currentSlide
-                      ? `0 0 20px ${palette.blush}AA`
-                      : 'none',
+                  height: index === currentSlide ? '36px' : '14px',
+                  background: index === currentSlide
+                    ? `linear-gradient(180deg, ${p.roseVivid}, ${p.coral})`
+                    : `${p.roseBlush}50`,
+                  boxShadow: index === currentSlide ? `0 0 16px ${p.roseVivid}60` : 'none',
                 }}
               >
                 {index === currentSlide && (
                   <div
-                    className="absolute inset-0 animate-shimmer"
+                    className="absolute inset-0 animate-shimmer-vertical"
                     style={{
-                      background:
-                        'linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)',
+                      background: 'linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.5) 50%, transparent 100%)',
                     }}
                   />
                 )}
@@ -870,9 +943,8 @@ const HeroSection = () => {
           ))}
         </div>
 
-        {/* ── Mobile dots ── */}
         <div
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex md:hidden gap-2 items-center"
+          className="absolute bottom-24 left-1/2 -translate-x-1/2 z-20 flex md:hidden gap-3 items-center"
           role="tablist"
           aria-label="Navegación de slides"
         >
@@ -886,7 +958,7 @@ const HeroSection = () => {
               style={{
                 background: 'none',
                 border: 'none',
-                padding: '8px 4px',
+                padding: '8px',
                 cursor: 'pointer',
                 minWidth: '44px',
                 minHeight: '44px',
@@ -898,123 +970,134 @@ const HeroSection = () => {
               <div
                 className="transition-all duration-500 rounded-full"
                 style={{
-                  width: index === currentSlide ? '24px' : '6px',
-                  height: '4px',
-                  background:
-                    index === currentSlide
-                      ? `linear-gradient(90deg, ${palette.blush}, ${palette.gold})`
-                      : `${palette.ivory}40`,
-                  boxShadow:
-                    index === currentSlide
-                      ? `0 0 16px ${palette.blush}AA`
-                      : 'none',
+                  width: index === currentSlide ? '28px' : '8px',
+                  height: '8px',
+                  borderRadius: index === currentSlide ? '12px' : '50%',
+                  background: index === currentSlide
+                    ? `linear-gradient(90deg, ${p.roseVivid}, ${p.coral})`
+                    : `${p.roseBlush}60`,
+                  boxShadow: index === currentSlide ? `0 0 16px ${p.roseVivid}50` : 'none',
                 }}
               />
             </button>
           ))}
         </div>
 
-        {/* ── Ghost index ── */}
         <div
           aria-hidden
           className="absolute bottom-8 left-8 lg:left-12 z-20 hidden md:flex items-end gap-4"
         >
           <span
             style={{
-              fontFamily: "'Cormorant Garamond', Georgia, serif",
-              fontSize: 'clamp(3rem, 8vw, 5rem)',
-              fontWeight: 300,
+              fontFamily: "'Playfair Display', Georgia, serif",
+              fontSize: 'clamp(3.5rem, 8vw, 6rem)',
+              fontWeight: 700,
               fontStyle: 'italic',
-              color: `${palette.ivory}0A`,
+              color: `${p.roseBlush}30`,
               lineHeight: 1,
               letterSpacing: '-0.05em',
               userSelect: 'none',
-              textShadow: `0 0 40px ${palette.blush}15`,
             }}
           >
             {String(currentSlide + 1).padStart(2, '0')}
           </span>
+          <span
+            style={{
+              fontFamily: 'var(--font-sans, system-ui)',
+              fontSize: '0.7rem',
+              letterSpacing: '0.2em',
+              color: `${p.roseBlush}60`,
+              marginBottom: '1rem',
+            }}
+          >
+            / {String(slides.length).padStart(2, '0')}
+          </span>
         </div>
 
-        {/* ── Progress bar ── */}
         <div
           aria-hidden
           className="absolute bottom-0 left-0 right-0 z-20 overflow-hidden"
-          style={{
-            height: '3px',
-            background: `${palette.blush}22`,
-          }}
+          style={{ height: '4px', background: `${p.roseBlush}25` }}
         >
           <div
             key={`progress-${currentSlide}`}
             style={{
               height: '100%',
-              background: `linear-gradient(90deg, ${palette.blush} 0%, ${palette.rose} 40%, ${palette.gold} 70%, ${palette.blush} 100%)`,
-              animation: `progressAdvance ${SLIDE_DURATION_MS}ms cubic-bezier(0.4, 0, 0.2, 1) forwards`,
-              boxShadow: `0 0 20px ${palette.blush}AA`,
+              background: `linear-gradient(90deg, ${p.roseVivid} 0%, ${p.coral} 40%, ${p.gold} 70%, ${p.roseVivid} 100%)`,
+              animation: `progressAdvance ${SLIDE_DURATION_MS}ms linear forwards`,
+              boxShadow: `0 0 16px ${p.roseVivid}50`,
             }}
           />
         </div>
       </div>
 
-      {/* ── Trust bar ── */}
+      {/* ════════════════════════════════════════════════════════════════════════
+          TRUST BAR — Con iconos corregidos
+      ════════════════════════════════════════════════════════════════════════ */}
       <div
         style={{
-          background: `linear-gradient(180deg, ${palette.obsidianDeep}F2 0%, ${palette.obsidianDeep} 100%)`,
-          borderTop: `1px solid ${palette.blush}22`,
-          padding: '0.8rem 0',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
+          background: `linear-gradient(180deg, ${p.cream} 0%, ${p.ivory} 100%)`,
+          borderTop: `1px solid ${p.roseBlush}30`,
+          position: 'relative',
+          zIndex: 20,
         }}
       >
-        <div className="max-w-screen-2xl mx-auto px-6 lg:px-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+        <div className="max-w-screen-2xl mx-auto px-6 lg:px-12 py-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
             {trustItems.map((item) => (
               <div
                 key={item.label}
-                className="flex items-center gap-3 group cursor-default"
+                className="flex items-center gap-4 group cursor-default"
               >
                 <div
-                  className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:rotate-6"
+                  className="flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:rotate-3"
                   style={{
-                    background: `linear-gradient(135deg, ${palette.blush}22 0%, ${palette.gold}18 100%)`,
-                    border: `1px solid ${palette.blush}44`,
-                    boxShadow: `0 4px 16px rgba(0,0,0,0.2), 0 0 12px ${palette.blush}22`,
+                    background: `linear-gradient(135deg, ${p.roseMist} 0%, ${p.peach}30 100%)`,
+                    border: `2px solid ${p.roseBlush}40`,
+                    boxShadow: `0 4px 16px ${p.roseBlush}20`,
                   }}
                 >
                   <svg
-                    className="w-4 h-4 transition-transform duration-500 group-hover:scale-110"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                    style={{
-                      color: palette.blush,
-                      filter: `drop-shadow(0 0 8px ${palette.blush}88)`,
-                    }}
+                    className="w-6 h-6 transition-all duration-500 group-hover:scale-110"
+                    fill="none"
+                    stroke={p.roseDeep}
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    viewBox={item.viewBox || '0 0 24 24'}
                   >
-                    {item.icon}
+                    <path d={item.path} />
                   </svg>
                 </div>
-                <span
-                  className="text-[0.6rem] tracking-[0.2em] uppercase transition-all duration-500 font-medium"
-                  style={{
-                    fontFamily: 'var(--font-sans, system-ui)',
-                    color: `${palette.petal}99`,
-                  }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.color = `${palette.petal}FF`)
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.color = `${palette.petal}99`)
-                  }
-                >
-                  {item.label}
-                </span>
+                <div>
+                  <span
+                    className="block text-[0.7rem] tracking-[0.15em] uppercase font-bold"
+                    style={{
+                      fontFamily: 'var(--font-sans, system-ui)',
+                      color: p.textMain,
+                    }}
+                  >
+                    {item.label}
+                  </span>
+                  <span
+                    className="block text-[0.6rem] tracking-[0.1em]"
+                    style={{
+                      fontFamily: 'var(--font-sans, system-ui)',
+                      color: p.textSoft,
+                    }}
+                  >
+                    {item.sub}
+                  </span>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </div>
 
+      {/* ════════════════════════════════════════════════════════════════════════
+          KEYFRAMES — Todas las animaciones con duraciones por defecto
+      ════════════════════════════════════════════════════════════════════════ */}
       <style>{`
         @keyframes progressAdvance {
           from { width: 0%; }
@@ -1026,19 +1109,40 @@ const HeroSection = () => {
           50% { background-position: 100% 50%; }
         }
 
-        @keyframes float {
-          0%, 100% { transform: translateY(0px) translateX(0px); }
-          50% { transform: translateY(-20px) translateX(10px); }
+        @keyframes float-slow {
+          0%, 100% { transform: translate(0, 0) rotate(0deg); }
+          25% { transform: translate(20px, -30px) rotate(5deg); }
+          50% { transform: translate(-10px, -50px) rotate(-3deg); }
+          75% { transform: translate(30px, -20px) rotate(8deg); }
         }
 
-        @keyframes pulse {
-          0%, 100% { opacity: 0.4; transform: scale(1); }
-          50% { opacity: 0.6; transform: scale(1.1); }
+        @keyframes float-gentle {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          33% { transform: translateY(-12px) rotate(3deg); }
+          66% { transform: translateY(-6px) rotate(-2deg); }
         }
 
-        @keyframes shimmer {
+        @keyframes pulse-glow {
+          0%, 100% { opacity: 0.5; transform: scale(1); }
+          50% { opacity: 0.8; transform: scale(1.15); }
+        }
+
+        @keyframes shimmer-vertical {
           0% { transform: translateY(-100%); }
           100% { transform: translateY(100%); }
+        }
+
+        @keyframes shine {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(200%); }
+        }
+
+        @keyframes petalFall {
+          0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 0.4; }
+          25% { transform: translateY(25vh) rotate(90deg) scale(0.9); opacity: 0.5; }
+          50% { transform: translateY(50vh) rotate(180deg) scale(0.8); opacity: 0.3; }
+          75% { transform: translateY(75vh) rotate(270deg) scale(0.7); opacity: 0.2; }
+          100% { transform: translateY(110vh) rotate(360deg) scale(0.5); opacity: 0; }
         }
 
         @keyframes spin-slow {
@@ -1046,12 +1150,24 @@ const HeroSection = () => {
           to { transform: rotate(360deg); }
         }
 
-        .animate-spin-slow {
-          animation: spin-slow linear infinite;
+        .animate-float-slow {
+          animation: float-slow 20s linear infinite;
         }
 
-        .animate-shimmer {
-          animation: shimmer 2s ease-in-out infinite;
+        .animate-float-gentle {
+          animation: float-gentle 6s ease-in-out infinite;
+        }
+
+        .animate-pulse-glow {
+          animation: pulse-glow 4s ease-in-out infinite;
+        }
+
+        .animate-spin-slow {
+          animation: spin-slow 30s linear infinite;
+        }
+
+        .animate-shimmer-vertical {
+          animation: shimmer-vertical 2s ease-in-out infinite;
         }
       `}</style>
     </section>
