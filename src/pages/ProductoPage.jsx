@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import ProductCard from '../components/producto/ProductCard'
 import { supabase } from '../lib/supabase'
 import useCartStore from '../store/cartStore'
 import WhatsAppButton from '../components/ui/WhatsAppButton'
@@ -57,6 +58,7 @@ const ProductoPage = () => {
   const [avgRating, setAvgRating] = useState(null)
   const [colores, setColores] = useState([])
   const [tallas, setTallas] = useState([])
+  const [relatedProducts, setRelatedProducts] = useState([])
   
   // Estado para el formulario de reseña
   const [mostrarFormularioReview, setMostrarFormularioReview] = useState(false)
@@ -116,7 +118,25 @@ const ProductoPage = () => {
     window.scrollTo(0, 0)
     return () => { cancelled = true }
   }, [id])
-
+// Cargar productos relacionados (misma categoría)
+useEffect(() => {
+  if (!producto) return
+  const fetchRelated = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('category', producto.category)
+        .neq('id', producto.id)
+        .gt('stock', 0)
+        .limit(4)
+      if (!error && data) setRelatedProducts(data)
+    } catch (e) {
+      // Silencioso, no afecta la experiencia principal
+    }
+  }
+  fetchRelated()
+}, [producto])
   const handleAgregar = async () => {
     if (!selectedSize && tallas.length > 0) { alert('Por favor selecciona una talla'); return }
     if (producto.stock && cantidad > producto.stock) { alert(`Solo quedan ${producto.stock} unidades`); return }
@@ -464,7 +484,54 @@ const ProductoPage = () => {
                 dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(producto.description) }}
               />
             )}
-
+{/* ── PREVIEW DE RESEÑAS ── */}
+{reviews.length > 0 && (
+  <div className="mb-6">
+    <div className="flex items-center gap-2 mb-2">
+      <Stars rating={parseFloat(avgRating)} size={14} />
+      <span style={{ fontSize: '0.75rem', color: 'var(--color-kb-mauve)', fontWeight: 300 }}>
+        {avgRating} · {reviews.length} reseña{reviews.length !== 1 ? 's' : ''}
+        <span 
+          onClick={() => {
+            const el = document.getElementById('seccion-resenas')
+            if (el) el.scrollIntoView({ behavior: 'smooth' })
+          }}
+          style={{ 
+            color: 'var(--color-kb-rose)', 
+            cursor: 'pointer',
+            marginLeft: '0.5rem',
+            fontSize: '0.65rem',
+            letterSpacing: '0.05em',
+            borderBottom: '1px solid var(--color-kb-rose)'
+          }}
+        >
+          Ver todas →
+        </span>
+      </span>
+    </div>
+    {/* Mostrar las 2 últimas reseñas (resumidas) */}
+    <div className="space-y-2">
+      {reviews.slice(0, 2).map((r) => (
+        <div key={r.id} style={{
+          background: 'var(--color-kb-blush)',
+          padding: '0.6rem 1rem',
+          borderRadius: '2px',
+          borderLeft: '2px solid var(--color-kb-rose)'
+        }}>
+          <div className="flex items-center justify-between">
+            <span style={{ fontSize: '0.7rem', fontWeight: 500, color: 'var(--color-kb-charcoal)' }}>
+              {r.customer_name}
+            </span>
+            <Stars rating={r.rating} size={10} />
+          </div>
+          <p style={{ fontSize: '0.75rem', color: 'var(--color-kb-mauve)', marginTop: '0.2rem', lineHeight: 1.4 }}>
+            “{r.comment.length > 60 ? r.comment.slice(0, 60) + '...' : r.comment}”
+          </p>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
             <div style={{ height: '1px', background: 'rgba(212,120,138,0.1)', margin: '1.5rem 0' }} />
 
             {colores.length > 0 && (
@@ -633,7 +700,29 @@ const ProductoPage = () => {
             </div>
           </div>
         </div>
-
+{/* ── PRODUCTOS RELACIONADOS ── */}
+{relatedProducts.length > 0 && (
+  <div className="mt-20 pt-8" style={{ borderTop: '1px solid rgba(212,120,138,0.1)' }}>
+    <div className="flex items-center gap-4 mb-6">
+      <span style={{ width: '24px', height: '1px', background: 'var(--color-kb-rose)' }} />
+      <h2 style={{
+        fontFamily: 'var(--font-display)',
+        fontSize: '1.4rem',
+        fontWeight: 300,
+        fontStyle: 'italic',
+        color: 'var(--color-kb-charcoal)',
+        letterSpacing: '-0.01em'
+      }}>
+        También te puede gustar
+      </h2>
+    </div>
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+      {relatedProducts.map((p) => (
+        <ProductCard key={p.id} product={p} />
+      ))}
+    </div>
+  </div>
+)}
         {/* SECCION RESEÑAS CON VER MAS */}
         <div className="mt-24 pt-12" style={{ borderTop: '1px solid rgba(212,120,138,0.1)' }}>
 
