@@ -139,10 +139,55 @@ const CheckoutPage = () => {
         })),
         total, payment_method: formData.metodoPago, status: 'pendiente',
       }
+          // 1. Guardar el pedido en la base de datos
+      console.log("Intentando guardar el pedido con estos datos:", pedido);
       const { data, error } = await supabase.from('orders').insert([pedido]).select('id').single()
       if (error) throw error
+            console.log("¡Pedido guardado exitosamente! ID:", data.id);
+      
+      // 2. Reducir el stock
       for (const item of items)
         await supabase.rpc('decrementar_stock', { product_id: item.id, cantidad: item.quantity })
+
+      // 3. Notificación híbrida: Correo electrónico + WhatsApp (opcional)
+      const numeroVendedora = '51906877812' // Número de la tienda
+      
+      const listaProductos = items.map(item => 
+        `• ${item.name} ${item.selectedSize ? `(Talla ${item.selectedSize})` : ''} x ${item.quantity} = S/ ${(item.price * item.quantity).toFixed(2)}`
+      ).join('\n')
+
+      const textoNotificacion = 
+        `🛍️ *NUEVO PEDIDO* 🛍️\n\n` +
+        `Cliente: ${pedido.customer_name}\n` +
+        `Teléfono: ${pedido.customer_phone}\n` +
+        `Dirección: ${pedido.customer_address}, ${pedido.customer_city}\n` +
+        `Método de pago: ${pedido.payment_method.toUpperCase()}\n\n` +
+        `Productos:\n${listaProductos}\n\n` +
+        `Total: S/ ${pedido.total.toFixed(2)}`
+
+      // --- A) Correo Electrónico (MÁS SEGURO) ---
+      // Esto usa el servicio de correos de Supabase (Edge Functions) para enviar un email al dueño
+      // Simulamos el llamado aquí. (Requiere configurar una Edge Function, pero es gratis y no abre pestañas).
+      // Por ahora, como plan B, usaremos el método de WhatsApp.
+      
+          // --- B) WhatsApp (Versión mejorada sin bloqueos) ---
+      // Construimos la URL de WhatsApp
+      const waUrl = `https://wa.me/${numeroVendedora}?text=${encodeURIComponent(textoNotificacion)}`;
+
+      // Verificamos si es un celular
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+      if (isMobile) {
+        // En celulares, abrir la app nativa
+        window.location.href = waUrl;
+      } else {
+        // En escritorio, NO hacemos click automático. 
+        // Simplemente abrimos en una nueva pestaña permitida por el navegador.
+        // El navegador permite "window.open" si se hace inmediatamente después de un clic real del usuario.
+        window.open(waUrl, '_blank');
+      }
+
+      // 4. Mostrar la pantalla de éxito al cliente
       setPedidoExitoso({ id: data.id, ...pedido })
       clearCart()
     } catch (err) {

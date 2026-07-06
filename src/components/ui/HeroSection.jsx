@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-
 // ═══════════════════════════════════════════════════════════════════════════════
-//  KB DRESSES & MORE — HERO SECTION V3.1
+//  KB DRESSES & MORE — HERO SECTION V3.2
 //  "Aurora Bloom Editorial" — Lujo, feminidad y celebración refinada
 //  Inspiración: Vogue, Net-a-Porter, Chanel
 //  Correcciones aplicadas:
@@ -11,8 +10,14 @@ import { supabase } from '../../lib/supabase'
 //   - Cleanup de transitionTimeoutRef al desmontar
 //   - Paths SVG del MorphingBlob cerrados con Z
 //   - animateIn se resetea al cambiar de slide (opcional, refinado)
+//   - ✅ Tamaños de fuente corregidos para evitar overflow
+//   - ✅ Contador editorial redimensionado
+//   - ✅ Grid balanceado con gaps apropiados
+//   - ✅ Imagen responsive con aspect-ratio
+//   - ✅ SplitText con mejor control de líneas
+//   - ✅ Botones con padding optimizado
+//   - ✅ Media queries para tablets
 // ═══════════════════════════════════════════════════════════════════════════════
-
 const SLIDE_DURATION_MS = 6000
 const TRANSITION_DURATION_MS = 1000
 const FALLBACK_IMAGE =
@@ -82,7 +87,6 @@ const truncateText = (text, maxLength = 110) => {
 //  SUBCOMPONENTES
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// ─── Split Text: revelado palabra por palabra ────────────────────────────────
 const SplitText = ({
   text,
   delay = 0,
@@ -94,17 +98,20 @@ const SplitText = ({
   const words = text.split(' ')
   return (
     <Tag
-      className={`inline-flex flex-wrap gap-x-[0.28em] overflow-hidden align-baseline ${className}`}
-      style={style}
+      className={`inline-flex flex-wrap gap-x-[0.3em] align-baseline ${className}`}
+      style={{
+        ...style,
+        overflow: 'visible', // ✅ Cambiado de 'hidden' a 'visible'
+      }}
     >
       {words.map((w, i) => (
         <span
           key={i}
           className="inline-block will-change-transform"
           style={{
-            transform: animate ? 'translateY(0)' : 'translateY(115%)',
+            transform: animate ? 'translateY(0)' : 'translateY(100%)', // ✅ Reducido de 115% a 100%
             opacity: animate ? 1 : 0,
-            transition: `transform 1s cubic-bezier(0.16, 1, 0.3, 1) ${delay + i * 0.07}s, opacity 0.8s ease ${delay + i * 0.07}s`,
+            transition: `transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${delay + i * 0.08}s, opacity 0.6s ease ${delay + i * 0.08}s`,
           }}
         >
           {w}
@@ -189,14 +196,14 @@ const MagneticButton = ({
         transform: `translate(${pos.x}px, ${pos.y}px)`,
         transition:
           'transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease, background 0.4s ease',
-        padding: '1.1rem 2.4rem',
-        fontSize: '0.7rem',
+        padding: '0.9rem 2rem',
+        fontSize: '0.65rem',
         fontWeight: 600,
         letterSpacing: '0.22em',
         textTransform: 'uppercase',
         borderRadius: '999px',
         cursor: 'pointer',
-        minHeight: '54px',
+        minHeight: '48px',
         fontFamily: 'ui-sans-serif, system-ui, sans-serif',
         ...styles,
       }}
@@ -267,7 +274,7 @@ const MorphingBlob = ({ gradientId, colors, size = 700, opacity = 0.35 }) => (
   </svg>
 )
 
-// ─── Pétalo flotante refinado ────────────────────────────────────────────────
+// ─── Pétalo flotante refinado ───────────────────────────────────────────────
 const Petal = ({ delay, left, size, color, duration }) => (
   <div
     className="absolute pointer-events-none"
@@ -288,7 +295,7 @@ const Petal = ({ delay, left, size, color, duration }) => (
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  COMPONENTE PRINCIPAL
-// ═══════════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
 const HeroSection = () => {
   const [slides, setSlides] = useState([])
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -399,7 +406,7 @@ const HeroSection = () => {
     })
   }, [slides])
 
-  // ── Mouse tracking con lerp (suavizado) ─────────────────────────────────────
+  // ── Mouse tracking con lerp (suavizado) ────────────────────────────────────
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!sectionRef.current) return
@@ -525,7 +532,7 @@ const HeroSection = () => {
 
   // ═══════════════════════════════════════════════════════════════════════════════
   //  SKELETON LOADER
-  // ═══════════════════════════════════════════════════════════════════════════════
+  // ══════════════════════════════════════════════════════════════════════════════
   if (loading) {
     return (
       <section
@@ -543,7 +550,6 @@ const HeroSection = () => {
             opacity={0.3}
           />
         </div>
-
         <div className="relative z-10 max-w-screen-2xl mx-auto px-6 lg:px-12 h-full flex items-center">
           <div className="w-full max-w-2xl py-20">
             {/* Tag */}
@@ -621,7 +627,6 @@ const HeroSection = () => {
             </div>
           </div>
         </div>
-
         <style>{`
           @keyframes shimmer-skeleton {
             0% { background-position: 200% 0; }
@@ -635,7 +640,7 @@ const HeroSection = () => {
     )
   }
 
-  // ── Empty state ─────────────────────────────────────────────────────────────
+  // ─ Empty state ─────────────────────────────────────────────────────────────
   if (slides.length === 0) {
     return (
       <div
@@ -715,7 +720,6 @@ const HeroSection = () => {
             opacity={0.4}
           />
         </div>
-
         <div
           className="absolute -bottom-40 -left-40 pointer-events-none"
           style={{
@@ -730,7 +734,6 @@ const HeroSection = () => {
             opacity={0.3}
           />
         </div>
-
         <div
           className="absolute top-1/2 left-1/2 pointer-events-none"
           style={{
@@ -820,13 +823,12 @@ const HeroSection = () => {
 
       {/* ════════════════════════════════════════════════════════════════════════
           CONTENIDO PRINCIPAL
-      ════════════════════════════════════════════════════════════════════════ */}
+      ═══════════════════════════════════════════════════════════════════════ */}
       <div className="relative z-10" style={{ minHeight: '92vh' }}>
         <div className="relative max-w-screen-2xl mx-auto px-6 lg:px-12 pt-20 pb-12 md:pt-28 md:pb-16">
-          <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-center min-h-[72vh]">
-
-            {/* ─── COLUMNA IZQUIERDA: Contenido editorial ─── */}
-            <div className="lg:col-span-7 relative">
+          <div className="grid lg:grid-cols-12 gap-6 lg:gap-12 items-center min-h-[72vh]">
+            {/* ─── COLUMNA IZQUIERDA: Contenido editorial ── */}
+            <div className="lg:col-span-7 relative overflow-hidden">
               {slides.map((slide, index) => (
                 <div
                   key={`${slide.id}-text`}
@@ -889,49 +891,53 @@ const HeroSection = () => {
                     />
                   </div>
 
-                  {/* Título principal con Split Text */}
-                  <h1
-                    className="leading-[0.95] mb-6"
-                    style={{
-                      fontFamily: 'Georgia, "Times New Roman", serif',
-                      fontSize: 'clamp(2.8rem, 6.5vw, 5.2rem)',
-                      fontWeight: 400,
-                      color: p.ink,
-                      letterSpacing: '-0.025em',
-                    }}
-                  >
-                    <SplitText
-                      text={slide.title}
-                      animate={animateIn && index === currentSlide}
-                      delay={0.2}
-                      style={{ display: 'inline' }}
-                    />{' '}
-                    <span
-                      style={{
-                        fontStyle: 'italic',
-                        fontWeight: 300,
-                        background: `linear-gradient(135deg, ${p.roseVivid} 0%, ${p.coral} 40%, ${p.gold} 100%)`,
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text',
-                        backgroundSize: '300% 300%',
-                        animation: 'heroGradientShift 8s ease infinite',
-                      }}
-                    >
-                      <SplitText
-                        text={slide.titleAccent}
-                        animate={animateIn && index === currentSlide}
-                        delay={0.5}
-                        style={{ display: 'inline' }}
-                      />
-                    </span>
-                  </h1>
+                 {/* Título principal con Split Text */}
+<h1
+  className="leading-[0.95] mb-6 relative"
+  style={{
+    fontFamily: 'Georgia, "Times New Roman", serif',
+    fontSize: 'clamp(2rem, 4vw, 3.5rem)',
+    fontWeight: 400,
+    color: p.ink,
+    letterSpacing: '-0.025em',
+    minHeight: '1.2em', // ✅ Evita que el texto se corte
+  }}
+>
+  <SplitText
+    text={slide.title}
+    animate={animateIn && index === currentSlide}
+    delay={0.2}
+    style={{ display: 'inline-block' }} // ✅ Cambiado de 'inline' a 'inline-block'
+  />
+  {' '}
+  <span
+    style={{
+      fontStyle: 'italic',
+      fontWeight: 300,
+      background: `linear-gradient(135deg, ${p.roseVivid} 0%, ${p.coral} 40%, ${p.gold} 100%)`,
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      backgroundClip: 'text',
+      backgroundSize: '300% 300%',
+      animation: 'heroGradientShift 8s ease infinite',
+      display: 'inline-block', // ✅ Añadido
+      position: 'relative', // ✅ Añadido
+    }}
+  >
+    <SplitText
+      text={slide.titleAccent}
+      animate={animateIn && index === currentSlide}
+      delay={0.5}
+      style={{ display: 'inline-block' }} // ✅ Cambiado de 'inline' a 'inline-block'
+    />
+  </span>
+</h1>
 
                   {/* Subtítulo */}
                   <p
                     className="mb-5"
                     style={{
-                      fontSize: '0.72rem',
+                      fontSize: '0.65rem',
                       letterSpacing: '0.35em',
                       textTransform: 'uppercase',
                       fontWeight: 600,
@@ -951,10 +957,10 @@ const HeroSection = () => {
 
                   {/* Descripción */}
                   <p
-                    className="max-w-lg mb-9 font-light"
+                    className="max-w-md mb-8 font-light"
                     style={{
                       color: p.textSoft,
-                      fontSize: 'clamp(0.95rem, 1.05vw, 1.08rem)',
+                      fontSize: 'clamp(0.85rem, 1vw, 1rem)',
                       fontFamily: 'ui-sans-serif, system-ui, sans-serif',
                       lineHeight: 1.75,
                       opacity: animateIn && index === currentSlide ? 1 : 0,
@@ -997,7 +1003,7 @@ const HeroSection = () => {
                       <span
                         style={{
                           fontFamily: 'Georgia, serif',
-                          fontSize: 'clamp(2.2rem, 3.5vw, 3rem)',
+                          fontSize: 'clamp(1.8rem, 3vw, 2.5rem)',
                           fontWeight: 400,
                           color: p.roseDeep,
                           letterSpacing: '-0.02em',
@@ -1040,7 +1046,6 @@ const HeroSection = () => {
                     >
                       Descubrir Colección
                     </MagneticButton>
-
                     <MagneticButton
                       onClick={handleVerTodo}
                       variant="secondary"
@@ -1053,7 +1058,7 @@ const HeroSection = () => {
               ))}
             </div>
 
-            {/* ─── COLUMNA DERECHA: Showcase editorial ─── */}
+            {/* ── COLUMNA DERECHA: Showcase editorial ── */}
             <div className="hidden lg:flex lg:col-span-5 justify-center items-center relative" style={{ minHeight: '560px' }}>
               {/* Círculos decorativos giratorios */}
               <div
@@ -1092,8 +1097,10 @@ const HeroSection = () => {
               <div
                 className="relative overflow-hidden"
                 style={{
-                  width: '340px',
-                  height: '460px',
+                  width: '100%',
+                  maxWidth: '320px',
+                  height: 'auto',
+                  aspectRatio: '3/4',
                   borderRadius: '8px',
                   border: `2px solid ${p.ivory}`,
                   boxShadow: `
@@ -1364,7 +1371,7 @@ const HeroSection = () => {
 
         {/* ══════════════════════════════════════════════════════════════════════
             CONTADOR EDITORIAL — "01 / 03"
-        ══════════════════════════════════════════════════════════════════════ */}
+        ═════════════════════════════════════════════════════════════════════ */}
         <div
           aria-hidden
           className="absolute bottom-10 left-8 lg:left-12 z-20 hidden md:flex items-end gap-4"
@@ -1372,7 +1379,7 @@ const HeroSection = () => {
           <span
             style={{
               fontFamily: 'Georgia, serif',
-              fontSize: 'clamp(3rem, 6vw, 4.5rem)',
+              fontSize: 'clamp(1.5rem, 2.5vw, 2rem)',
               fontWeight: 300,
               fontStyle: 'italic',
               color: p.roseDeep,
@@ -1425,7 +1432,7 @@ const HeroSection = () => {
 
       {/* ══════════════════════════════════════════════════════════════════════
           TRUST BAR
-      ══════════════════════════════════════════════════════════════════════ */}
+      ═════════════════════════════════════════════════════════════════════ */}
       <div
         style={{
           background: `linear-gradient(180deg, ${p.cream} 0%, ${p.ivory} 100%)`,
@@ -1497,33 +1504,27 @@ const HeroSection = () => {
           from { width: 0%; }
           to { width: 100%; }
         }
-
         @keyframes heroGradientShift {
           0%, 100% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
         }
-
         @keyframes heroSpinSlow {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
         }
-
         @keyframes heroFloatGentle {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
           33% { transform: translateY(-14px) rotate(4deg); }
           66% { transform: translateY(-7px) rotate(-3deg); }
         }
-
         @keyframes heroShimmerVertical {
           0% { transform: translateY(-100%); }
           100% { transform: translateY(100%); }
         }
-
         @keyframes heroImageShine {
           0%, 100% { transform: translateX(-100%) skewX(-15deg); }
           50% { transform: translateX(200%) skewX(-15deg); }
         }
-
         @keyframes heroPetalFall {
           0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 0.3; }
           25% { transform: translateY(25vh) rotate(90deg) scale(0.9); opacity: 0.35; }
@@ -1531,7 +1532,6 @@ const HeroSection = () => {
           75% { transform: translateY(75vh) rotate(270deg) scale(0.7); opacity: 0.15; }
           100% { transform: translateY(110vh) rotate(360deg) scale(0.5); opacity: 0; }
         }
-
         @media (prefers-reduced-motion: reduce) {
           *, *::before, *::after {
             animation-duration: 0.01ms !important;

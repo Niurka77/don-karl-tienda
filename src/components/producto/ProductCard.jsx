@@ -94,10 +94,10 @@ const ProductCard = ({ product }) => {
     return () => { cancelled = true }
   }, [product.id])
 
-  const {
+    const {
     id, name,
     price_original, discount_percent, price_final,
-    image_url, is_new, sku, brand, color,
+    image_url, is_new, sku, brand, color, stock, // <--- Agregué 'stock' aquí
   } = product
 
   const tieneDescuento = discount_percent > 0
@@ -150,8 +150,30 @@ const ProductCard = ({ product }) => {
             }}
           />
 
-          {/* ── BADGES superiores ── */}
+                   {/* ── BADGES superiores ── */}
           <div className="absolute top-3 left-3 z-20 flex flex-col gap-1.5">
+            
+            {/* 1. BADGE DE STOCK BAJO (NUEVO) */}
+            {stock > 0 && stock <= 2 && (
+              <span
+                className="animate-fade-in"
+                style={{
+                  fontSize: '0.55rem',
+                  padding: '0.25rem 0.65rem',
+                  letterSpacing: '0.18em',
+                  textTransform: 'uppercase',
+                  fontWeight: 700,
+                  color: '#FFFFFF',
+                  background: `linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%)`, // Rojo elegante para urgencia
+                  borderRadius: '3px',
+                  boxShadow: `0 4px 14px rgba(211, 47, 47, 0.4)`,
+                }}
+              >
+                ¡Solo quedan {stock}!
+              </span>
+            )}
+
+            {/* 2. BADGE DE NUEVO (YA EXISTÍA) */}
             {is_new && (
               <span
                 className="animate-fade-in"
@@ -170,6 +192,8 @@ const ProductCard = ({ product }) => {
                 Nuevo
               </span>
             )}
+
+            {/* 3. BADGE DE DESCUENTO (YA EXISTÍA) */}
             {tieneDescuento && (
               <span
                 className="animate-fade-in"
