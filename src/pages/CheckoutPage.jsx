@@ -146,8 +146,21 @@ const CheckoutPage = () => {
             console.log("¡Pedido guardado exitosamente! ID:", data.id);
       
       // 2. Reducir el stock
-      for (const item of items)
-        await supabase.rpc('decrementar_stock', { product_id: item.id, cantidad: item.quantity })
+      // El pedido ya se guardó, así que no interrumpimos el flujo si falla el
+      // descuento de stock, pero registramos cada error para no perderlo.
+      const stockErrors = []
+      for (const item of items) {
+        const { error: stockError } = await supabase.rpc('decrementar_stock', {
+          product_id: item.id,
+          cantidad: item.quantity,
+        })
+        if (stockError) {
+          console.error(`Error al descontar stock del producto ${item.id}:`, stockError)
+          stockErrors.push({ productId: item.id, error: stockError })
+        }
+      }
+      if (stockErrors.length > 0)
+        console.error(`El pedido ${data.id} se guardó pero ${stockErrors.length} producto(s) no pudieron descontar stock.`)
 
       // 3. Notificación híbrida: Correo electrónico + WhatsApp (opcional)
       const numeroVendedora = '51906877812' // Número de la tienda

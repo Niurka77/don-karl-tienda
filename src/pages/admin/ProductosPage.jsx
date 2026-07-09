@@ -492,7 +492,12 @@ const ProductosPage = () => {
     const storagePath = extractStoragePath(product.image_url)
 
     if (storagePath) {
-      await supabase.storage.from('productos').remove([storagePath])
+      const { error: storageError } = await supabase.storage
+        .from('productos')
+        .remove([storagePath])
+      if (storageError) {
+        console.error('Error al eliminar la imagen del almacenamiento:', storageError)
+      }
     }
 
     const { error } = await supabase.from('products').delete().eq('id', product.id)
