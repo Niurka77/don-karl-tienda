@@ -1,8 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { escapeLike } from '../../lib/security'
 import ProductCard from './ProductCard'
 import FilterBar from './FilterBar'
+
+// Columnas permitidas para ordenar (evita pasar entrada arbitraria del usuario)
+const SORT_COLUMNS = ['created_at', 'price_original', 'price_final', 'name']
 
 // ─── Paleta Aurora Bloom ─────────────────────────────────────────────────────
 const p = {
@@ -233,17 +237,18 @@ const ProductGrid = () => {
       let query = supabase.from('products').select('*', { count: 'exact' })
 
       if (filtros.categoria) query = query.eq('category', filtros.categoria)
-      if (filtros.marca) query = query.ilike('brand', `%${filtros.marca}%`)
+      if (filtros.marca) query = query.ilike('brand', `%${escapeLike(filtros.marca)}%`)
       if (filtros.genero) query = query.eq('gender', filtros.genero)
       if (filtros.precioMin) query = query.gte('price_original', parseFloat(filtros.precioMin))
       if (filtros.precioMax) query = query.lte('price_original', parseFloat(filtros.precioMax))
       if (filtros.busqueda) {
-      query = query.ilike('name', `%${filtros.busqueda}%`)
+      query = query.ilike('name', `%${escapeLike(filtros.busqueda)}%`)
       }
 
       query = query.gt('stock', 0)
 
-      const [campo, dir] = filtros.orden.split('-')
+      const [campoRaw, dir] = filtros.orden.split('-')
+      const campo = SORT_COLUMNS.includes(campoRaw) ? campoRaw : 'created_at'
       query = query.order(campo, { ascending: dir === 'asc' })
 
       const inicio = (paginaActual - 1) * productosPorPagina

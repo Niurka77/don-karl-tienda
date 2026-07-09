@@ -140,10 +140,8 @@ const CheckoutPage = () => {
         total, payment_method: formData.metodoPago, status: 'pendiente',
       }
           // 1. Guardar el pedido en la base de datos
-      console.log("Intentando guardar el pedido con estos datos:", pedido);
       const { data, error } = await supabase.from('orders').insert([pedido]).select('id').single()
       if (error) throw error
-            console.log("¡Pedido guardado exitosamente! ID:", data.id);
       
       // 2. Reducir el stock
       for (const item of items)

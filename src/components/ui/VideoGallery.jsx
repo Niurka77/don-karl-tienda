@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { sanitizeUrl } from '../../lib/security'
 
 const VIDEOS_POR_PAGINA = 6
 
@@ -95,6 +96,7 @@ const VideoGallery = ({ limit, showTitle = true }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
           {videosToShow.map((video, index) => {
             const isHovered = hoveredIndex === index
+            const safeTiktokUrl = sanitizeUrl(video.tiktok_url)
             return (
               <div
                 key={video.id}
@@ -149,17 +151,19 @@ const VideoGallery = ({ limit, showTitle = true }) => {
                     </p>
                   )}
                   <div className="w-12 h-px bg-[#D4788A]/30 my-4" />
-                  <a
-                    href={video.tiktok_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-sm font-['DM_Sans'] font-medium text-[#D4788A] hover:text-[#B85268] transition-all duration-300 group/link"
-                  >
-                    <span className="border-b border-[#D4788A]/30 group-hover/link:border-[#B85268] pb-0.5">Ver en TikTok</span>
-                    <svg className="w-4 h-4 transform group-hover/link:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                  </a>
+                  {safeTiktokUrl && (
+                    <a
+                      href={safeTiktokUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-sm font-['DM_Sans'] font-medium text-[#D4788A] hover:text-[#B85268] transition-all duration-300 group/link"
+                    >
+                      <span className="border-b border-[#D4788A]/30 group-hover/link:border-[#B85268] pb-0.5">Ver en TikTok</span>
+                      <svg className="w-4 h-4 transform group-hover/link:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                  )}
                 </div>
 
                 {/* ── Borde brillante en hover ── */}
