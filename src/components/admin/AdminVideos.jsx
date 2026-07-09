@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { formatDate } from '../../lib/format'
 
 const AdminVideos = () => {
   const [videos, setVideos] = useState([])
@@ -318,7 +319,7 @@ const AdminVideos = () => {
                     </span>
                   </td>
                   <td className="py-3 text-xs text-[#9A7480] font-['DM_Sans']">
-                    {new Date(video.created_at).toLocaleDateString('es-PE')}
+                    {formatDate(video.created_at)}
                   </td>
                   <td className="py-3 text-right">
                     <div className="flex gap-2 justify-end">

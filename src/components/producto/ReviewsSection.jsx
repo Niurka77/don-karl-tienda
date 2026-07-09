@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { formatDate } from '../../lib/format'
 
 const Stars = ({ rating, onRate, interactive = false, size = 'md' }) => {
   const sizeClasses = {
@@ -146,7 +147,7 @@ const ReviewsSection = ({ productId, onReviewAdded }) => {
                   </p>
                   
                   <span className="text-xs text-gray-400 mt-3 block">
-                    {new Date(review.created_at).toLocaleDateString('es-PE', {
+                    {formatDate(review.created_at, {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric'

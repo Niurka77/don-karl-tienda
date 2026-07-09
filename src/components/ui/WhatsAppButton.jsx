@@ -1,11 +1,12 @@
 import { useState } from 'react'
+import { STORE_PHONE, buildWhatsAppUrl } from '../../lib/whatsapp'
 
 const WhatsAppButton = ({
-  phoneNumber = '51999999999',
+  phoneNumber = STORE_PHONE,
   message = 'Hola, vi un producto en KB Dresses & More y me gustaría más información.',
 }) => {
   const [hovered, setHovered] = useState(false)
-  const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
+  const url = buildWhatsAppUrl(phoneNumber, message)
 
   return (
     <a

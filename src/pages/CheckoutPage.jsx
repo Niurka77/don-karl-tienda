@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import useCartStore from '../store/cartStore'
 import { supabase } from '../lib/supabase'
+import { formatPrice } from '../lib/format'
+import { STORE_PHONE, buildWhatsAppUrl } from '../lib/whatsapp'
 
 /* ─────────────────────────────────────────
    Input base con línea inferior editorial
@@ -150,10 +152,10 @@ const CheckoutPage = () => {
         await supabase.rpc('decrementar_stock', { product_id: item.id, cantidad: item.quantity })
 
       // 3. Notificación híbrida: Correo electrónico + WhatsApp (opcional)
-      const numeroVendedora = '51906877812' // Número de la tienda
+      const numeroVendedora = STORE_PHONE // Número de la tienda
       
       const listaProductos = items.map(item => 
-        `• ${item.name} ${item.selectedSize ? `(Talla ${item.selectedSize})` : ''} x ${item.quantity} = S/ ${(item.price * item.quantity).toFixed(2)}`
+        `• ${item.name} ${item.selectedSize ? `(Talla ${item.selectedSize})` : ''} x ${item.quantity} = ${formatPrice(item.price * item.quantity)}`
       ).join('\n')
 
       const textoNotificacion = 
@@ -163,7 +165,7 @@ const CheckoutPage = () => {
         `Dirección: ${pedido.customer_address}, ${pedido.customer_city}\n` +
         `Método de pago: ${pedido.payment_method.toUpperCase()}\n\n` +
         `Productos:\n${listaProductos}\n\n` +
-        `Total: S/ ${pedido.total.toFixed(2)}`
+        `Total: ${formatPrice(pedido.total)}`
 
       // --- A) Correo Electrónico (MÁS SEGURO) ---
       // Esto usa el servicio de correos de Supabase (Edge Functions) para enviar un email al dueño
@@ -172,7 +174,7 @@ const CheckoutPage = () => {
       
           // --- B) WhatsApp (Versión mejorada sin bloqueos) ---
       // Construimos la URL de WhatsApp
-      const waUrl = `https://wa.me/${numeroVendedora}?text=${encodeURIComponent(textoNotificacion)}`;
+      const waUrl = buildWhatsAppUrl(numeroVendedora, textoNotificacion);
 
       // Verificamos si es un celular
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -406,7 +408,7 @@ const CheckoutPage = () => {
               style={{ fontSize: '0.68rem', padding: '1.1rem', opacity: enviando ? 0.6 : 1 }}
             >
               <span>
-                {enviando ? 'Procesando…' : `Confirmar pedido — S/ ${total.toFixed(2)}`}
+                {enviando ? 'Procesando…' : `Confirmar pedido — ${formatPrice(total)}`}
               </span>
             </button>
           </form>
@@ -456,7 +458,7 @@ const CheckoutPage = () => {
                         fontFamily: 'var(--font-display)', fontSize: '0.95rem', fontWeight: 400,
                         color: 'var(--color-kb-rose-deep)', letterSpacing: '-0.01em',
                       }}>
-                        S/ {(item.price * item.quantity).toFixed(2)}
+                        {formatPrice(item.price * item.quantity)}
                       </p>
                     </div>
                   </div>
@@ -467,7 +469,7 @@ const CheckoutPage = () => {
               <div style={{ borderTop: '1px solid rgba(212,120,138,0.1)', paddingTop: '1.2rem' }}>
                 <div className="flex justify-between items-center mb-2">
                   <span style={{ fontSize: '0.75rem', fontWeight: 300, color: 'var(--color-kb-mauve)' }}>Subtotal</span>
-                  <span style={{ fontSize: '0.82rem', fontWeight: 300, color: 'var(--color-kb-charcoal)' }}>S/ {total.toFixed(2)}</span>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 300, color: 'var(--color-kb-charcoal)' }}>{formatPrice(total)}</span>
                 </div>
                 <div className="flex justify-between items-center mb-5">
                   <span style={{ fontSize: '0.75rem', fontWeight: 300, color: 'var(--color-kb-mauve)' }}>Envío</span>
@@ -484,7 +486,7 @@ const CheckoutPage = () => {
                     fontWeight: 300, letterSpacing: '-0.03em',
                     color: 'var(--color-kb-rose-deep)',
                   }}>
-                    S/ {total.toFixed(2)}
+                    {formatPrice(total)}
                   </span>
                 </div>
               </div>

@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
+import { formatPrice, formatDate } from '../../lib/format'
+import { buildWhatsAppUrl } from '../../lib/whatsapp'
 import { useAdminNotifications } from '../../hooks/useAdminNotifications'
 
 const PedidosPage = () => {
@@ -175,9 +177,8 @@ const PedidosPage = () => {
       return
     }
     
-    const mensaje = `Hola ${pedido.customer_name}, te contactamos sobre tu pedido #${String(pedido.id).substring(0, 8).toUpperCase()}. Estado actual: ${pedido.status}. Total: S/ ${Number(pedido.total || 0).toFixed(2)}`
-    const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`
-    window.open(url, '_blank')
+    const mensaje = `Hola ${pedido.customer_name}, te contactamos sobre tu pedido #${String(pedido.id).substring(0, 8).toUpperCase()}. Estado actual: ${pedido.status}. Total: ${formatPrice(pedido.total || 0)}`
+    window.open(buildWhatsAppUrl(telefono, mensaje), '_blank')
   }
 
   const getEstadoColor = (status) => {
@@ -248,17 +249,13 @@ const PedidosPage = () => {
     paginaActual * POR_PAGINA
   )
 
-  const formatearFecha = (fechaISO) => {
-    if (!fechaISO) return '-'
-    const fecha = new Date(fechaISO)
-    return fecha.toLocaleDateString('es-PE', { 
-      day: '2-digit', 
-      month: '2-digit', 
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
+  const formatearFecha = (fechaISO) => formatDate(fechaISO, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 
   const formatearMoneda = (monto) => {
     return new Intl.NumberFormat('es-PE', {

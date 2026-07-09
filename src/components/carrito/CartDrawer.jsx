@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import useCartStore from '../../store/cartStore'
+import { formatPrice } from '../../lib/format'
 
 const CartDrawer = () => {
   const navigate = useNavigate()
@@ -136,7 +137,7 @@ const CartDrawer = () => {
                     {/* Precio y cantidad */}
                     <div className="flex items-center justify-between mt-3">
                       <span className="font-semibold text-foreground text-sm">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        {formatPrice(item.price * item.quantity, { currency: '$', separator: '' })}
                       </span>
                       
                       <div className="flex items-center gap-1.5">
@@ -170,7 +171,7 @@ const CartDrawer = () => {
               <div className="space-y-1.5">
                 <div className="flex justify-between text-xs font-mono text-muted-foreground">
                   <span>Subtotal</span>
-                  <span>${totalPrice.toFixed(2)}</span>
+                  <span>{formatPrice(totalPrice, { currency: '$', separator: '' })}</span>
                 </div>
                 <div className="flex justify-between text-xs font-mono text-muted-foreground">
                   <span>Envío</span>
@@ -178,7 +179,7 @@ const CartDrawer = () => {
                 </div>
                 <div className="flex justify-between text-base font-semibold pt-2 border-t border-border/30">
                   <span>Total</span>
-                  <span className="text-foreground">${totalPrice.toFixed(2)}</span>
+                  <span className="text-foreground">{formatPrice(totalPrice, { currency: '$', separator: '' })}</span>
                 </div>
               </div>
               
