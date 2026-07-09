@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
+import { formatPrice, computeFinalPrice } from '../../lib/format'
 import { useAdminNotifications } from '../../hooks/useAdminNotifications'
 
 const categorias = ['vestidos', 'bolsos', 'zapatos', 'Billeteras']
@@ -644,7 +645,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
   }
 
   const precioFinal = formData.price_original && formData.discount_percent > 0
-    ? parseFloat(formData.price_original) * (1 - parseInt(formData.discount_percent) / 100)
+    ? computeFinalPrice(formData.price_original, formData.discount_percent)
     : null
 
   return (
@@ -898,8 +899,8 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
               {precioFinal !== null && precioFinal < parseFloat(formData.price_original || 0) && (
                 <div className="bg-[#FDF0F3] rounded-sm p-2 border border-[rgba(212,120,138,0.2)]">
                   <p className="text-xs text-[#9A7480] font-['DM_Sans']">
-                    Precio final: <span className="font-semibold text-[#1A1118]">${precioFinal.toFixed(2)}</span>
-                    <span className="ml-2 line-through text-[#9A7480]">${parseFloat(formData.price_original).toFixed(2)}</span>
+                    Precio final: <span className="font-semibold text-[#1A1118]">{formatPrice(precioFinal, { currency: '$', separator: '' })}</span>
+                    <span className="ml-2 line-through text-[#9A7480]">{formatPrice(parseFloat(formData.price_original), { currency: '$', separator: '' })}</span>
                   </p>
                 </div>
               )}

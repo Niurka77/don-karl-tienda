@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
+import { formatPrice, computeFinalPrice } from '../../lib/format'
 import ProductoForm from '../../components/admin/ProductoForm'
 import { useAdminNotifications } from '../../hooks/useAdminNotifications'
 
@@ -23,12 +24,6 @@ const STOCK_FILTER_OPTIONS = [
 const STOCK_THRESHOLDS = { critical: 5, empty: 0 }
 
 // ─── Pure helpers ─────────────────────────────────────────────────────────────
-
-const computeFinalPrice = (originalPrice, discountPercent) => {
-  const price = parseFloat(originalPrice) || 0
-  const discount = parseInt(discountPercent) || 0
-  return discount > 0 ? price * (1 - discount / 100) : price
-}
 
 const resolveStockStatus = (stock) => {
   if (stock === STOCK_THRESHOLDS.empty) return 'empty'
@@ -81,7 +76,7 @@ const PriceDisplay = ({ originalPrice, discountPercent }) => {
   if (!hasDiscount) {
     return (
       <span className="text-sm font-medium text-[#1A1118] font-['DM_Sans']">
-        S/ {finalPrice.toFixed(2)}
+        {formatPrice(finalPrice)}
       </span>
     )
   }
@@ -89,10 +84,10 @@ const PriceDisplay = ({ originalPrice, discountPercent }) => {
   return (
     <div className="flex flex-col gap-0.5">
       <span className="text-xs text-[#9A7480] line-through font-['DM_Sans']">
-        S/ {parseFloat(originalPrice).toFixed(2)}
+        {formatPrice(parseFloat(originalPrice))}
       </span>
       <span className="text-sm font-semibold text-[#B85268] font-['DM_Sans']">
-        S/ {finalPrice.toFixed(2)}
+        {formatPrice(finalPrice)}
       </span>
       <span className="text-[0.6rem] font-medium bg-[#B85268]/10 text-[#B85268] px-1.5 py-0.5 rounded-sm self-start font-['DM_Sans'] tracking-wide">
         -{discountPercent}%

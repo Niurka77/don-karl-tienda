@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { formatPrice } from '../../lib/format'
 
 // ─── Paleta Aurora Bloom ─────────────────────────────────────────────────────
 const p = {
@@ -384,7 +385,7 @@ const ProductCard = ({ product }) => {
                 letterSpacing: '-0.02em',
               }}
             >
-              S/ {precio?.toFixed(2)}
+              {formatPrice(precio)}
             </span>
             {tieneDescuento && (
               <span
@@ -396,7 +397,7 @@ const ProductCard = ({ product }) => {
                   opacity: 0.6,
                 }}
               >
-                S/ {price_original?.toFixed(2)}
+                {formatPrice(price_original)}
               </span>
             )}
           </div>

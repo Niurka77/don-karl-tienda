@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import ProductCard from '../components/producto/ProductCard'
 import { supabase } from '../lib/supabase'
+import { formatPrice, formatDate } from '../lib/format'
 import useCartStore from '../store/cartStore'
 import WhatsAppButton from '../components/ui/WhatsAppButton'
 import DOMPurify from 'dompurify'
@@ -456,12 +457,12 @@ useEffect(() => {
                 fontWeight: 300, letterSpacing: '-0.03em',
                 color: 'var(--color-kb-rose-deep)',
               }}>
-                S/ {precioFinal?.toFixed(2)}
+                {formatPrice(precioFinal)}
               </span>
               {tieneDescuento && (
                 <>
                   <span style={{ fontSize: '1rem', fontWeight: 300, color: 'var(--color-kb-mauve)', textDecoration: 'line-through', opacity: 0.65 }}>
-                    S/ {producto.price_original?.toFixed(2)}
+                    {formatPrice(producto.price_original)}
                   </span>
                   <span className="badge-sale">−{producto.discount_percent}%</span>
                 </>
@@ -470,7 +471,7 @@ useEffect(() => {
 
             {tieneDescuento && (
               <p style={{ fontSize: '0.78rem', fontWeight: 300, color: '#4CAF50', marginBottom: '1.2rem', letterSpacing: '0.03em' }}>
-                Ahorras S/ {(producto.price_original - producto.price_final).toFixed(2)}
+                Ahorras {formatPrice(producto.price_original - producto.price_final)}
               </p>
             )}
 
@@ -894,7 +895,7 @@ useEffect(() => {
                     )}
 
                     <span style={{ fontSize: '0.65rem', fontWeight: 300, color: 'rgba(154,116,128,0.5)', letterSpacing: '0.04em' }}>
-                      {new Date(review.created_at).toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' })}
+                      {formatDate(review.created_at, { year: 'numeric', month: 'long', day: 'numeric' })}
                     </span>
                   </div>
                 ))}

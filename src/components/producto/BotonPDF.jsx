@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { jsPDF } from 'jspdf'
 import { supabase } from '../../lib/supabase'
+import { formatPrice, formatDate } from '../../lib/format'
 
 const BotonPDF = () => {
   const [generando, setGenerando] = useState(false)
@@ -51,7 +52,7 @@ const BotonPDF = () => {
         align: 'center',
       })
       doc.text(
-        `Fecha: ${new Date().toLocaleDateString('es-PE')}`,
+        `Fecha: ${formatDate(new Date())}`,
         pageWidth / 2,
         margin + 21,
         { align: 'center' }
@@ -112,7 +113,7 @@ const BotonPDF = () => {
                 ? producto.price_final
                 : producto.price_original
                 
-            const texto = `${producto.name} - $${precio?.toFixed(2)}`
+            const texto = `${producto.name} - ${formatPrice(precio, { currency: '$', separator: '' })}`
 
             if (producto.discount_percent > 0) {
               doc.setTextColor(200, 0, 0)
