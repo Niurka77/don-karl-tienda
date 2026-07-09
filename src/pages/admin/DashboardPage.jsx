@@ -445,7 +445,11 @@ const useStagnantProducts = (dayThreshold) => {
       .order('created_at', { ascending: true })
       .limit(20)
 
-    if (error || !data) return
+    if (error) {
+      console.error('Error al cargar productos estancados:', error)
+      return
+    }
+    if (!data) return
     setStagnantProducts(data)
     setDiscountMap(buildInitialDiscountMap(data))
   }, [dayThreshold])

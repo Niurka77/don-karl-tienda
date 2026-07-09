@@ -35,17 +35,22 @@ const ReviewsSection = ({ productId, onReviewAdded }) => {
   const [newReview, setNewReview] = useState({ name: '', rating: 5, comment: '' })
   const [submitting, setSubmitting] = useState(false)
   const [showForm, setShowForm] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   useEffect(() => {
     loadReviews()
   }, [productId])
 
   const loadReviews = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('reviews')
       .select('*')
       .eq('product_id', productId)
       .order('created_at', { ascending: false })
+    if (error) {
+      console.error('Error al cargar reseñas:', error)
+      return
+    }
     if (data) setReviews(data)
   }
 
@@ -54,6 +59,7 @@ const ReviewsSection = ({ productId, onReviewAdded }) => {
     if (!newReview.name.trim() || !newReview.comment.trim()) return
     
     setSubmitting(true)
+    setSubmitError('')
     const { error } = await supabase.from('reviews').insert([{
       product_id: productId,
       customer_name: newReview.name.trim(),
@@ -61,15 +67,20 @@ const ReviewsSection = ({ productId, onReviewAdded }) => {
       comment: newReview.comment.trim(),
       verified_purchase: false
     }])
-    
-    if (!error) {
-      setNewReview({ name: '', rating: 5, comment: '' })
-      setShowForm(false)
-      await loadReviews()
-      // Notificar al padre para actualizar rating
-      if (onReviewAdded) {
-        onReviewAdded()
-      }
+
+    if (error) {
+      console.error('Error al enviar reseña:', error)
+      setSubmitError('No se pudo publicar tu reseña. Intenta nuevamente.')
+      setSubmitting(false)
+      return
+    }
+
+    setNewReview({ name: '', rating: 5, comment: '' })
+    setShowForm(false)
+    await loadReviews()
+    // Notificar al padre para actualizar rating
+    if (onReviewAdded) {
+      onReviewAdded()
     }
     setSubmitting(false)
   }
@@ -209,6 +220,12 @@ const ReviewsSection = ({ productId, onReviewAdded }) => {
               {newReview.comment.length}/500
             </p>
           </div>
+
+          {submitError && (
+            <p className="text-sm text-red-600" role="alert">
+              {submitError}
+            </p>
+          )}
           
           <div className="flex gap-3 pt-2">
             <button 

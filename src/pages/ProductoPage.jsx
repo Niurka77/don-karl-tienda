@@ -130,9 +130,11 @@ useEffect(() => {
         .neq('id', producto.id)
         .gt('stock', 0)
         .limit(4)
-      if (!error && data) setRelatedProducts(data)
+      if (error) throw error
+      if (data) setRelatedProducts(data)
     } catch (e) {
-      // Silencioso, no afecta la experiencia principal
+      // No afecta la experiencia principal, pero registramos el error
+      console.error('Error cargando productos relacionados:', e)
     }
   }
   fetchRelated()
