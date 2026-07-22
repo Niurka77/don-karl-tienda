@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import useCartStore from '../../store/cartStore'
+import ImageWithFallback from '../ui/ImageWithFallback'
 
 const CartDrawer = () => {
   const navigate = useNavigate()
@@ -96,8 +97,8 @@ const CartDrawer = () => {
                 >
                   {/* Imagen */}
                   <div className="flex-shrink-0">
-                    <img
-                      src={item.image || 'https://via.placeholder.com/80x100?text=KB'}
+                    <ImageWithFallback
+                      src={item.image}
                       alt={item.name}
                       className="w-20 h-24 object-cover rounded-xl shadow-md"
                       loading="lazy"
@@ -151,10 +152,10 @@ const CartDrawer = () => {
                           {item.quantity}
                         </span>
                         <button
-                          onClick={() => updateQuantity(item.id, Math.min(item.stock || 99, item.quantity + 1), item.selectedSize)}
+                          onClick={() => updateQuantity(item.id, Math.min(item.stock ?? 99, item.quantity + 1), item.selectedSize)}
                           className="w-6 h-6 rounded-full border border-border flex items-center justify-center text-foreground/60 hover:border-foreground/30 hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                           aria-label={`Aumentar cantidad de ${item.name}`}
-                          disabled={item.stock && item.quantity >= item.stock}
+                          disabled={item.stock != null && item.quantity >= item.stock}
                         >
                           +
                         </button>

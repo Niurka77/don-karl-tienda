@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import useCartStore from '../store/cartStore'
 import { supabase } from '../lib/supabase'
+import { WHATSAPP_PHONE } from '../lib/constants'
+import ImageWithFallback from '../components/ui/ImageWithFallback'
 
 /* ─────────────────────────────────────────
    Input base con línea inferior editorial
@@ -124,6 +126,7 @@ const CheckoutPage = () => {
     ev.preventDefault()
     setErrorServidor(null)
     if (!validar()) return
+    if (enviando) return
     setEnviando(true)
     try {
       const pedido = {
@@ -140,17 +143,15 @@ const CheckoutPage = () => {
         total, payment_method: formData.metodoPago, status: 'pendiente',
       }
           // 1. Guardar el pedido en la base de datos
-      console.log("Intentando guardar el pedido con estos datos:", pedido);
       const { data, error } = await supabase.from('orders').insert([pedido]).select('id').single()
       if (error) throw error
-            console.log("¡Pedido guardado exitosamente! ID:", data.id);
       
       // 2. Reducir el stock
       for (const item of items)
         await supabase.rpc('decrementar_stock', { product_id: item.id, cantidad: item.quantity })
 
       // 3. Notificación híbrida: Correo electrónico + WhatsApp (opcional)
-      const numeroVendedora = '51906877812' // Número de la tienda
+      const numeroVendedora = WHATSAPP_PHONE
       
       const listaProductos = items.map(item => 
         `• ${item.name} ${item.selectedSize ? `(Talla ${item.selectedSize})` : ''} x ${item.quantity} = S/ ${(item.price * item.quantity).toFixed(2)}`
@@ -435,8 +436,8 @@ const CheckoutPage = () => {
                   >
                     {/* Miniatura */}
                     <div style={{ width: '52px', height: '64px', flexShrink: 0, overflow: 'hidden', background: 'var(--color-kb-blush)' }}>
-                      <img
-                        src={item.image || 'https://via.placeholder.com/52x64'}
+                      <ImageWithFallback
+                        src={item.image}
                         alt={item.name}
                         className="w-full h-full object-cover"
                         loading="lazy"

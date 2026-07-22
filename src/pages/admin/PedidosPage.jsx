@@ -45,8 +45,6 @@ const PedidosPage = () => {
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'orders' }, 
         (payload) => {
-          console.log('Cambio en pedidos:', payload)
-          
           if (payload.eventType === 'INSERT') {
             // Nuevo pedido insertado
             setPedidos(prev => [payload.new, ...prev])
@@ -517,13 +515,24 @@ const PedidosPage = () => {
 
                     {/* Acciones adicionales */}
                     <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-[rgba(212,120,138,0.1)]">
-                      <button
-                        onClick={() => enviarWhatsApp(pedido)}
-                        className="px-3 py-1.5 text-xs font-medium rounded-sm font-['DM_Sans'] bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-all flex items-center gap-1"
-                        title="Contactar por WhatsApp"
-                      >
-                        💬 WhatsApp
-                      </button>
+                     <button
+  onClick={() => enviarWhatsApp(pedido)}
+  className="px-3 py-1.5 text-xs font-medium rounded-sm font-['DM_Sans'] bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-all flex items-center gap-1"
+  title="Contactar por WhatsApp"
+>
+  💬 WhatsApp
+</button>
+<button
+  onClick={() => {
+    const mensaje = `Hola ${pedido.customer_name}, te contactamos sobre tu pedido #${String(pedido.id).substring(0, 8).toUpperCase()}. Estado actual: ${pedido.status}. Total: S/ ${Number(pedido.total || 0).toFixed(2)}`;
+    navigator.clipboard.writeText(mensaje);
+    agregarToast('Mensaje copiado al portapapeles', 'success');
+  }}
+  className="px-3 py-1.5 text-xs font-medium rounded-sm font-['DM_Sans'] bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-all flex items-center gap-1"
+  title="Copiar mensaje para el courier"
+>
+  📋 Copiar
+</button>
                       <button
                         onClick={() => setModalEliminar({ abierto: true, pedido })}
                         className="px-3 py-1.5 text-xs font-medium rounded-sm font-['DM_Sans'] bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition-all flex items-center gap-1"

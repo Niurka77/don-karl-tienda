@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import ProductCard from './ProductCard'
@@ -223,53 +223,81 @@ const ProductGrid = () => {
     setPaginaActual(1)
   }, [searchParams])
 
-  // Cargar productos
-  const cargarProductos = useCallback(async () => {
-    let cancelled = false
-    try {
-      setCargando(true)
-      setError(null)
-
-      let query = supabase.from('products').select('*', { count: 'exact' })
-
-      if (filtros.categoria) query = query.eq('category', filtros.categoria)
-      if (filtros.marca) query = query.ilike('brand', `%${filtros.marca}%`)
-      if (filtros.genero) query = query.eq('gender', filtros.genero)
-      if (filtros.precioMin) query = query.gte('price_original', parseFloat(filtros.precioMin))
-      if (filtros.precioMax) query = query.lte('price_original', parseFloat(filtros.precioMax))
-      if (filtros.busqueda) {
-      query = query.ilike('name', `%${filtros.busqueda}%`)
-      }
-
-      query = query.gt('stock', 0)
-
-      const [campo, dir] = filtros.orden.split('-')
-      query = query.order(campo, { ascending: dir === 'asc' })
-
-      const inicio = (paginaActual - 1) * productosPorPagina
-      query = query.range(inicio, inicio + productosPorPagina - 1)
-
-      const { data, error: e, count } = await query
-      if (cancelled) return
-      if (e) throw e
-      setProductos(data || [])
-      setTotalProductos(count || 0)
-    } catch (err) {
-      if (!cancelled) {
-        console.error('Error cargando productos:', err)
-        setError('No se pudieron cargar los productos. Intenta de nuevo.')
-      }
-    } finally {
-      if (!cancelled) setCargando(false)
-    }
-    return () => {
-      cancelled = true
-    }
-  }, [filtros, paginaActual])
-
+  // Cargar productos + reviews en batch
   useEffect(() => {
+    let cancelled = false
+
+    const cargarProductos = async () => {
+      try {
+        setCargando(true)
+        setError(null)
+
+        let query = supabase.from('products').select('*', { count: 'exact' })
+
+        if (filtros.categoria) query = query.eq('category', filtros.categoria)
+        if (filtros.marca) query = query.ilike('brand', `%${filtros.marca}%`)
+        if (filtros.genero) query = query.eq('gender', filtros.genero)
+        if (filtros.precioMin) query = query.gte('price_original', parseFloat(filtros.precioMin))
+        if (filtros.precioMax) query = query.lte('price_original', parseFloat(filtros.precioMax))
+        if (filtros.busqueda) query = query.ilike('name', `%${filtros.busqueda}%`)
+
+        query = query.gt('stock', 0)
+
+        const [campo, dir] = filtros.orden.split('-')
+        query = query.order(campo, { ascending: dir === 'asc' })
+
+        const inicio = (paginaActual - 1) * productosPorPagina
+        query = query.range(inicio, inicio + productosPorPagina - 1)
+
+        const { data, error: e, count } = await query
+        if (cancelled) return
+        if (e) throw e
+
+        // Batch fetch de ratings — un solo query para todos los productos de la página
+        const productIds = (data || []).map((p) => p.id)
+        let ratingsMap = {}
+        if (productIds.length > 0) {
+          const { data: reviews } = await supabase
+            .from('reviews')
+            .select('product_id, rating')
+            .in('product_id', productIds)
+            .eq('approved', true)
+
+          if (reviews) {
+            for (const r of reviews) {
+              if (!ratingsMap[r.product_id]) {
+                ratingsMap[r.product_id] = { sum: 0, count: 0 }
+              }
+              ratingsMap[r.product_id].sum += r.rating
+              ratingsMap[r.product_id].count += 1
+            }
+          }
+        }
+
+        const enriched = (data || []).map((p) => {
+          const r = ratingsMap[p.id]
+          return {
+            ...p,
+            avgRating: r ? (r.sum / r.count).toFixed(1) : null,
+            reviewCount: r ? r.count : 0,
+          }
+        })
+
+        setProductos(enriched)
+        setTotalProductos(count || 0)
+      } catch (err) {
+        if (!cancelled) {
+          console.error('Error cargando productos:', err)
+          setError('No se pudieron cargar los productos. Intenta de nuevo.')
+        }
+      } finally {
+        if (!cancelled) setCargando(false)
+      }
+    }
+
     cargarProductos()
-  }, [cargarProductos])
+    return () => { cancelled = true }
+  }, [filtros, paginaActual])
 
   // Scroll automático al grid
   useEffect(() => {
@@ -492,7 +520,11 @@ const ProductGrid = () => {
                     animationFillMode: 'backwards',
                   }}
                 >
-                  <ProductCard product={producto} />
+                  <ProductCard
+                    product={producto}
+                    avgRating={producto.avgRating}
+                    reviewCount={producto.reviewCount}
+                  />
                 </div>
               ))}
             </div>

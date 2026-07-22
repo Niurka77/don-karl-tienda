@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase } from '../../lib/supabase'
+import { getColorHex } from '../../lib/colors'
+import ImageWithFallback from '../ui/ImageWithFallback'
 
 // ─── Paleta Aurora Bloom ─────────────────────────────────────────────────────
 const p = {
@@ -20,28 +21,6 @@ const p = {
   textMain: '#4A3340',
   textSoft: '#8B6F7A',
 }
-
-// ─── Mapeo de colores ────────────────────────────────────────────────────────
-const COLOR_MAP = {
-  negro: '#111111',
-  blanco: '#F8F8F8',
-  rojo: '#C0392B',
-  rosa: '#E87D8F',
-  dorado: '#C9A84C',
-  plateado: '#B0B0B0',
-  azul: '#2C5F8A',
-  verde: '#2E7D32',
-  beige: '#D4C5A9',
-  marrón: '#6D4C41',
-  gris: '#78909C',
-  amarillo: '#F9A825',
-  naranja: '#E64A19',
-  morado: '#6A1B9A',
-  vino: '#6D1F2E',
-  turquesa: '#00897B',
-}
-
-const getColorHex = (name) => COLOR_MAP[name?.toLowerCase()] ?? p.rose
 
 // ─── Mini estrellas ──────────────────────────────────────────────────────────
 const MiniStars = ({ rating }) => (
@@ -63,36 +42,8 @@ const MiniStars = ({ rating }) => (
 )
 
 // ─── ProductCard ─────────────────────────────────────────────────────────────
-const ProductCard = ({ product }) => {
-  const [avgRating, setAvgRating] = useState(null)
-  const [reviewCount, setReviewCount] = useState(0)
-  const [loadingReviews, setLoadingReviews] = useState(true)
+const ProductCard = ({ product, avgRating = null, reviewCount = 0 }) => {
   const [hovered, setHovered] = useState(false)
-
-  useEffect(() => {
-    let cancelled = false
-    const fetchReviews = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('reviews')
-          .select('rating')
-          .eq('product_id', product.id)
-
-        if (cancelled) return
-        if (!error && data?.length) {
-          const avg = data.reduce((a, r) => a + r.rating, 0) / data.length
-          setAvgRating(avg.toFixed(1))
-          setReviewCount(data.length)
-        }
-      } catch (e) {
-        if (!cancelled) console.error('Error reviews:', e)
-      } finally {
-        if (!cancelled) setLoadingReviews(false)
-      }
-    }
-    fetchReviews()
-    return () => { cancelled = true }
-  }, [product.id])
 
     const {
     id, name,
@@ -130,8 +81,8 @@ const ProductCard = ({ product }) => {
           style={{ aspectRatio: '4/5', background: p.roseMist }}
         >
           {/* Foto */}
-          <img
-            src={image_url || 'https://via.placeholder.com/600x750?text=KB+Dresses'}
+          <ImageWithFallback
+            src={image_url}
             alt={name}
             className="w-full h-full object-cover"
             style={{
@@ -355,7 +306,7 @@ const ProductCard = ({ product }) => {
           )}
 
           {/* Rating */}
-          {!loadingReviews && avgRating && reviewCount > 0 && (
+          {avgRating && reviewCount > 0 && (
             <div className="flex items-center gap-2">
               <MiniStars rating={parseFloat(avgRating)} />
               <span

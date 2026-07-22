@@ -5,20 +5,13 @@ import { supabase } from '../lib/supabase'
 import useCartStore from '../store/cartStore'
 import WhatsAppButton from '../components/ui/WhatsAppButton'
 import DOMPurify from 'dompurify'
+import { getColorHex } from '../lib/colors'
+import { WHATSAPP_PHONE } from '../lib/constants'
+import ImageWithFallback from '../components/ui/ImageWithFallback'
 
 /* ─────────────────────────────────────────
-   Mapa de colores
+   Stars component
 ───────────────────────────────────────── */
-const COLOR_MAP = {
-  negro: '#111111', blanco: '#F8F8F8', rojo: '#C0392B',
-  rosa: '#E87D8F', dorado: '#C9A84C', plateado: '#B0B0B0',
-  azul: '#2C5F8A', verde: '#2E7D32', beige: '#D4C5A9',
-  marron: '#6D4C41', gris: '#78909C', amarillo: '#F9A825',
-  naranja: '#E64A19', morado: '#6A1B9A', vino: '#6D1F2E',
-  turquesa: '#00897B',
-}
-const getColorHex = (n) => COLOR_MAP[n?.toLowerCase()] ?? 'var(--color-kb-rose)'
-
 const Stars = ({ rating, size = 18 }) => (
   <div className="flex gap-0.5" role="img" aria-label={`${rating} de 5 estrellas`}>
     {[1, 2, 3, 4, 5].map((s) => (
@@ -95,11 +88,12 @@ const ProductoPage = () => {
           } catch { setTallas([]) }
         }
 
-        // Cargar todas las reseñas (sin filtro de approved)
+        // Cargar solo reseñas aprobadas
         const { data: rev, error: re } = await supabase
           .from('reviews')
           .select('*')
           .eq('product_id', id)
+          .eq('approved', true)
           .order('created_at', { ascending: false })
         
         if (cancelled) return
@@ -193,11 +187,12 @@ useEffect(() => {
       
       if (error) throw error
       
-      // Recargar las reseñas para mostrar la nueva
+      // Recargar las reseñas aprobadas para mostrar las aprobadas
       const { data: rev, error: re } = await supabase
         .from('reviews')
         .select('*')
         .eq('product_id', id)
+        .eq('approved', true)
         .order('created_at', { ascending: false })
       
       if (!re && rev) {
@@ -327,8 +322,8 @@ useEffect(() => {
               className="relative overflow-hidden mb-3"
               style={{ background: 'var(--color-kb-blush)', aspectRatio: '4/5' }}
             >
-              <img
-                src={imagenes[selectedImage] || 'https://via.placeholder.com/600x750?text=KB+Dresses'}
+              <ImageWithFallback
+                src={imagenes[selectedImage]}
                 alt={`${producto.name} — vista ${selectedImage + 1}`}
                 className="w-full h-full object-cover transition-all duration-700"
                 loading="eager"
@@ -916,7 +911,7 @@ useEffect(() => {
         </div>
       </div>
 
-      <WhatsAppButton phoneNumber="51906877812" />
+      <WhatsAppButton phoneNumber={WHATSAPP_PHONE} />
     </div>
   )
 }

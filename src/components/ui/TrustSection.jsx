@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import logoKB from '/kb.png'
+import { WHATSAPP_PHONE } from '../../lib/constants'
 
 // ─── Paleta Aurora Bloom — Editorial Edition ─────────────────────────────────
 const p = {
@@ -446,7 +447,7 @@ const TrustSection = () => {
                     icon: <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />,
                     label: 'WhatsApp',
                     value: '+51 906 877 812',
-                    href: 'https://wa.me/51906877812',
+                    href: `https://wa.me/${WHATSAPP_PHONE}`,
                   },
                 ].map((item, i) => {
                   const Tag = item.href ? 'a' : 'div'
@@ -594,7 +595,7 @@ const TrustSection = () => {
 
             {/* CTA */}
             <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center gap-6">
-              <MagneticButton href="https://wa.me/51906877812">
+              <MagneticButton href={`https://wa.me/${WHATSAPP_PHONE}`}>
                 Escríbenos por WhatsApp
               </MagneticButton>
               <p className="text-[0.78rem] font-light" style={{ color: p.textSoft }}>

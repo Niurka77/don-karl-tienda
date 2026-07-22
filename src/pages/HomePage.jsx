@@ -234,7 +234,9 @@ const HomePage = () => {
         Converts the momentum from hero interest into brand confidence
         before the user sees any product. Correct sequence for ecommerce.
       */}
-      <TrustSection />
+      <RevealSection delay={0}>
+        <TrustSection />
+      </RevealSection>
 
       <SectionDivider />
 

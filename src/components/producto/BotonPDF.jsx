@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { jsPDF } from 'jspdf'
 import { supabase } from '../../lib/supabase'
 
 const BotonPDF = () => {
@@ -30,6 +29,7 @@ const BotonPDF = () => {
       }
 
       // Crear PDF
+      const { default: jsPDF } = await import('jspdf')
       const doc = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',

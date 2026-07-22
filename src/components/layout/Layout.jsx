@@ -3,7 +3,9 @@ import WhatsAppButton from '../ui/WhatsAppButton'
 import { Outlet, Link, useNavigate } from 'react-router-dom'
 import CartDrawer from '../carrito/CartDrawer'
 import useCartStore from '../../store/cartStore'
+import { WHATSAPP_PHONE, WHATSAPP_MESSAGES } from '../../lib/constants'
 import { useState, useEffect, useRef } from 'react'
+import { useScrollReveal } from '../../hooks/useScrollReveal'
 
 // ─── Paleta Aurora Bloom — Editorial Edition ─────────────────────────────────
 const p = {
@@ -52,6 +54,7 @@ const Layout = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const headerRef = useRef(null)
+  const { ref: footerRef, isVisible: footerVisible } = useScrollReveal({ threshold: 0.1 })
 
   // ── Scroll effect ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -335,7 +338,7 @@ const Layout = () => {
                 {/* AYUDA & CONTACTO — desktop */}
                 <div className="hidden lg:flex items-center gap-6 mr-2">
                   <a
-                    href="https://wa.me/51906877812?text=Hola,%20necesito%20ayuda%20con%20mi%20pedido"
+                    href={`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(WHATSAPP_MESSAGES.help)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -359,7 +362,7 @@ const Layout = () => {
                     AYUDA
                   </a>
                   <a
-                    href="https://wa.me/51906877812?text=Hola,%20quiero%20contactar%20contigo"
+                    href={`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(WHATSAPP_MESSAGES.contact)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -575,7 +578,7 @@ const Layout = () => {
                 />
 
                 <a
-                  href="https://wa.me/51906877812?text=Hola,%20necesito%20ayuda"
+                  href={`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(WHATSAPP_MESSAGES.help)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
@@ -592,7 +595,7 @@ const Layout = () => {
                   AYUDA
                 </a>
                 <a
-                  href="https://wa.me/51906877812?text=Hola,%20quiero%20contactar%20contigo"
+                  href={`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(WHATSAPP_MESSAGES.contact)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
@@ -621,7 +624,7 @@ const Layout = () => {
       </main>
 
       {/* WhatsApp */}
-      <WhatsAppButton phoneNumber="51906877812" />
+      <WhatsAppButton phoneNumber={WHATSAPP_PHONE} />
 
       {/* Cart Drawer */}
       <CartDrawer />
@@ -645,7 +648,15 @@ const Layout = () => {
         />
 
         {/* Sección principal */}
-        <div className="relative max-w-screen-xl mx-auto px-6 lg:px-10 pt-16 pb-12">
+        <div
+          ref={footerRef}
+          className="relative max-w-screen-xl mx-auto px-6 lg:px-10 pt-16 pb-12"
+          style={{
+            opacity: footerVisible ? 1 : 0,
+            transform: footerVisible ? 'translateY(0)' : 'translateY(40px)',
+            transition: 'opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+        >
           <div className="grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-16">
             {/* BRAND — 4 columnas */}
             <div className="md:col-span-4">
@@ -812,10 +823,10 @@ const Layout = () => {
               </p>
               <ul className="space-y-3">
                 {[
-                  { label: 'Preguntas Frecuentes', href: 'https://wa.me/51906877812?text=Hola,%20tengo%20una%20pregunta' },
-                  { label: 'Contacto', href: 'https://wa.me/51906877812' },
-                  { label: 'Política de Envíos', href: null },
-                  { label: 'Cambios y Devoluciones', href: null },
+                  { label: 'Preguntas Frecuentes', href: `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(WHATSAPP_MESSAGES.question)}` },
+                  { label: 'Contacto', href: `https://wa.me/${WHATSAPP_PHONE}` },
+                  { label: 'Política de Envíos', href: `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent('Hola, ¿cuál es su política de envíos?')}` },
+                  { label: 'Cambios y Devoluciones', href: `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent('Hola, quisiera información sobre cambios y devoluciones.')}` },
                 ].map((item, i) =>
                   item.href ? (
                     <li key={i}>
@@ -930,7 +941,7 @@ const Layout = () => {
 
               {/* CTA WhatsApp */}
               <a
-                href="https://wa.me/51906877812?text=Hola,%20quiero%20hacer%20un%20pedido"
+                href={`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(WHATSAPP_MESSAGES.order)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group inline-flex items-center gap-3 px-6 py-3 text-xs font-medium tracking-widest uppercase transition-all duration-500 hover:-translate-y-1"
