@@ -1,6 +1,6 @@
 -- ═══════════════════════════════════════════════════════════════════
 -- TABLA DE CONFIGURACIÓN VISUAL DEL SITIO
--- Almacena texturas, decoraciones, textos y colores editables
+-- SEGURO PARA EJECUTAR MÚLTIPLES VECES (idempotente)
 -- ═══════════════════════════════════════════════════════════════════
 
 -- Tabla principal de configuración
@@ -10,8 +10,12 @@ CREATE TABLE IF NOT EXISTS site_config (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- RLS: Solo admin puede modificar, todos pueden leer
+-- RLS
 ALTER TABLE site_config ENABLE ROW LEVEL SECURITY;
+
+-- Eliminar policies si existen
+DROP POLICY IF EXISTS "Admin gestiona config visual" ON site_config;
+DROP POLICY IF EXISTS "Publico lee config visual" ON site_config;
 
 -- Admin gestiona config
 CREATE POLICY "Admin gestiona config visual"
@@ -19,18 +23,11 @@ ON site_config FOR ALL
 USING (public.is_admin_user())
 WITH CHECK (public.is_admin_user());
 
--- Público puede leer config (para texturas/textos de la tienda)
+-- Público puede leer config
 CREATE POLICY "Publico lee config visual"
 ON site_config FOR SELECT
 USING (true);
 
--- Bucket de storage para assets del sitio (texturas, decoraciones)
--- Ejecutar esto desde el Dashboard de Supabase:
--- Storage > New Bucket > name: "site-assets" > Public: true
-
 -- ═══════════════════════════════════════════════════════════════════
--- INSTRUCCIONES:
--- 1. Ejecuta este SQL en el SQL Editor de Supabase
--- 2. Ve a Storage y crea el bucket "site-assets" como público
--- 3. El sistema de configuración visual ya funcionará
+-- LISTO. Ejecuta esto DESPUÉS del script de RLS principal.
 -- ═══════════════════════════════════════════════════════════════════
