@@ -6,26 +6,7 @@ import useCartStore from '../../store/cartStore'
 import { WHATSAPP_PHONE, WHATSAPP_MESSAGES } from '../../lib/constants'
 import { useState, useEffect, useRef } from 'react'
 import { useScrollReveal } from '../../hooks/useScrollReveal'
-
-// ─── Paleta Aurora Bloom — Editorial Edition ─────────────────────────────────
-const p = {
-  rose: '#E891A8',
-  roseDeep: '#C9607F',
-  roseVivid: '#FF5C8A',
-  roseBlush: '#FFC2D4',
-  roseMist: '#FFE8EF',
-  peach: '#FFB088',
-  coral: '#FF8E72',
-  coralSoft: '#FFA78E',
-  apricot: '#FFCBA4',
-  cream: '#FFF5F0',
-  ivory: '#FFFAF8',
-  gold: '#C9A961',
-  goldSoft: '#D4B87A',
-  goldLight: '#F5E6A3',
-  textMain: '#4A3340',
-  textSoft: '#8B6F7A',
-}
+import { p } from '../../lib/theme'
 
 // ─── Pétalo decorativo flotante ──────────────────────────────────────────────
 const FloatingPetal = ({ delay, left, size, color, duration }) => (
@@ -53,7 +34,10 @@ const Layout = () => {
   const [scrolled, setScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const headerRef = useRef(null)
+  const searchInputRef = useRef(null)
   const { ref: footerRef, isVisible: footerVisible } = useScrollReveal({ threshold: 0.1 })
 
   // ── Scroll effect ─────────────────────────────────────────────────────────
@@ -80,6 +64,23 @@ const Layout = () => {
       return () => el.removeEventListener('mousemove', handleMouseMove)
     }
   }, [])
+
+  // ── Auto-focus search input ──────────────────────────────────────────────
+  useEffect(() => {
+    if (searchOpen && searchInputRef.current) {
+      searchInputRef.current.focus()
+    }
+  }, [searchOpen])
+
+  // ── Search handler ──────────────────────────────────────────────────────
+  const handleSearch = (e) => {
+    e.preventDefault()
+    const q = searchQuery.trim()
+    if (!q) return
+    setSearchOpen(false)
+    setSearchQuery('')
+    navigate(`/?busqueda=${encodeURIComponent(q)}`)
+  }
 
   // ── Navegación con scroll suave ───────────────────────────────────────────
   const handleNavigateWithScroll = (url) => {
@@ -387,6 +388,62 @@ const Layout = () => {
                   </a>
                 </div>
 
+                {/* Búsqueda — desktop */}
+                <div className="hidden lg:flex items-center mr-2">
+                  {searchOpen ? (
+                    <form onSubmit={handleSearch} className="flex items-center gap-2">
+                      <input
+                        ref={searchInputRef}
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Buscar productos..."
+                        className="outline-none"
+                        style={{
+                          width: '180px',
+                          fontSize: '0.7rem',
+                          letterSpacing: '0.05em',
+                          fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+                          color: p.textMain,
+                          background: `${p.roseMist}60`,
+                          border: `1px solid ${p.roseBlush}50`,
+                          borderRadius: '50px',
+                          padding: '0.45rem 0.9rem',
+                          transition: 'all 0.3s ease',
+                        }}
+                        onBlur={() => { if (!searchQuery.trim()) setSearchOpen(false) }}
+                      />
+                    </form>
+                  ) : (
+                    <button
+                      onClick={() => setSearchOpen(true)}
+                      aria-label="Buscar productos"
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '6px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        color: p.textSoft,
+                        transition: 'all 0.3s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = p.roseVivid
+                        e.currentTarget.style.transform = 'translateY(-1px)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = p.textSoft
+                        e.currentTarget.style.transform = 'translateY(0)'
+                      }}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+
                 {/* Carrito */}
                 <button
                   onClick={toggleCart}
@@ -503,6 +560,27 @@ const Layout = () => {
               }}
             >
               <div className="max-w-screen-xl mx-auto px-6 py-8 flex flex-col gap-6">
+                {/* Búsqueda mobile */}
+                <form onSubmit={(e) => { handleSearch(e); setMobileMenuOpen(false) }} className="flex items-center gap-2 pb-4" style={{ borderBottom: `1px solid ${p.roseBlush}20` }}>
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke={p.textSoft} strokeWidth={1.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                  </svg>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Buscar productos..."
+                    className="flex-1 outline-none"
+                    style={{
+                      fontSize: '0.8rem',
+                      fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+                      color: p.textMain,
+                      background: 'transparent',
+                      border: 'none',
+                    }}
+                  />
+                </form>
+
                 {navItems.map((item, i) =>
                   item.href ? (
                     <a

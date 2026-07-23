@@ -60,12 +60,12 @@ CREATE POLICY "Publico ve productos"
 ON products FOR SELECT
 USING (true);
 
--- El RPC de decrementar_stock necesita UPDATE público para stock
--- (Supabase RPC ejecuta con permisos del usuario anónimo)
-CREATE POLICY "Publico actualiza stock"
-ON products FOR UPDATE
-USING (true)
-WITH CHECK (true);
+-- SEGURIDAD: Nadie puede UPDATE directo a products.
+-- Solo la función RPC decrementar_stock (SECURITY DEFINER) puede modificar stock.
+-- Si necesitas otro UPDATE público, crea una RPC específica con SECURITY DEFINER.
+
+
+
 
 -- ORDERS
 -- Admin puede ver y actualizar pedidos
@@ -119,8 +119,21 @@ CREATE POLICY "Publico ve videos activos"
 ON social_videos FOR SELECT
 USING (active = true);
 
--- ─── PASO 5: Activar auto-RLS para tablas futuras ────────────────
--- (Esto se hace en Dashboard > Settings > Database >杂项)
+-- ─── PASO 5: RPC segura para decrementar stock ───────────────────
+-- SECURITY DEFINER: ejecuta con permisos del owner de la función,
+-- no del usuario anónimo. Así el RLS abierto no importa.
+CREATE OR REPLACE FUNCTION public.decrementar_stock(product_id uuid, cantidad int)
+RETURNS void AS $$
+BEGIN
+  UPDATE products
+  SET stock = stock - cantidad
+  WHERE id = product_id
+    AND stock >= cantidad;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ─── PASO 6: Activar auto-RLS para tablas futuras ────────────────
+-- (Esto se hace en Dashboard > Settings > Database > Misc)
 
 -- ═══════════════════════════════════════════════════════════════════
 -- LISTO. Después de ejecutar esto, ve a:

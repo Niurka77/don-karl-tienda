@@ -6,3 +6,6 @@ export const WHATSAPP_MESSAGES = {
   question: 'Hola, tengo una pregunta',
   order: 'Hola, quiero hacer un pedido',
 }
+
+export const CURRENCY = 'S/'
+export const CURRENCY_NAME = 'Soles'

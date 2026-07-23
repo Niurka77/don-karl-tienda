@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { p } from '../../lib/theme'
 // ═══════════════════════════════════════════════════════════════════════════════
 //  KB DRESSES & MORE — HERO SECTION V3.2
 //  "Aurora Bloom Editorial" — Lujo, feminidad y celebración refinada
@@ -22,36 +23,6 @@ const SLIDE_DURATION_MS = 6000
 const TRANSITION_DURATION_MS = 1000
 const FALLBACK_IMAGE =
   'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=1600&h=1000&fit=crop&q=85'
-
-// ─── Paleta Aurora Bloom — Editorial Edition ─────────────────────────────────
-const p = {
-  // Rosados (identidad)
-  rose: '#E891A8',
-  roseDeep: '#C9607F',
-  roseVivid: '#FF5C8A',
-  roseBlush: '#FFC2D4',
-  roseMist: '#FFE8EF',
-  // Champagne & Nude (lujo)
-  champagne: '#E8D5B7',
-  champagneLt: '#F5EBD9',
-  nude: '#E8CDB5',
-  // Base cálida
-  peach: '#FFB088',
-  coral: '#FF8E72',
-  coralSoft: '#FFA78E',
-  apricot: '#FFCBA4',
-  cream: '#FFF5F0',
-  ivory: '#FFFAF8',
-  // Dorados
-  gold: '#C9A961',
-  goldSoft: '#D4B87A',
-  goldLight: '#F5E6A3',
-  goldMist: '#FFF8E1',
-  // Textos
-  ink: '#2D1F26',
-  textMain: '#4A3340',
-  textSoft: '#8B6F7A',
-}
 
 // ─── Trust bar items ─────────────────────────────────────────────────────────
 const trustItems = [
