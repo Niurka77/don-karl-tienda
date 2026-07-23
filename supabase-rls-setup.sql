@@ -24,6 +24,13 @@ ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE hero_slides ENABLE ROW LEVEL SECURITY;
 ALTER TABLE social_videos ENABLE ROW LEVEL SECURITY;
+
+-- Tabla de configuración visual (necesita existir antes de RLS)
+CREATE TABLE IF NOT EXISTS site_config (
+  id TEXT PRIMARY KEY DEFAULT 'main',
+  config JSONB NOT NULL DEFAULT '{}',
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
 ALTER TABLE site_config ENABLE ROW LEVEL SECURITY;
 
 -- ─── PASO 3: Eliminar TODAS las policies existentes ──────────────
