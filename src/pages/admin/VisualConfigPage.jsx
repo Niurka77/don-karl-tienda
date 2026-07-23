@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import useSiteConfigStore from '../../store/siteConfigStore'
 import { supabase } from '../../lib/supabase'
 
@@ -26,7 +25,7 @@ const PRESET_TEXTURES = [
   { name: 'Granito claro', url: 'https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=400&q=60' },
 ]
 
-function Toast({ message, type, onNavigate }) {
+function Toast({ message, type, onView }) {
   if (!message) return null
   const bg = type === 'success' ? 'bg-[#2E7D32]' : type === 'error' ? 'bg-[#E53935]' : 'bg-[#C9A84C]'
   const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ'
@@ -38,9 +37,9 @@ function Toast({ message, type, onNavigate }) {
     >
       <span className="text-lg font-bold">{icon}</span>
       <span>{message}</span>
-      {onNavigate && (
+      {onView && (
         <button
-          onClick={onNavigate}
+          onClick={() => window.open('/', '_blank')}
           className="ml-2 px-3 py-1 bg-white/20 rounded-sm text-xs font-semibold hover:bg-white/30 transition-colors"
         >
           Ver resultado →
@@ -51,7 +50,7 @@ function Toast({ message, type, onNavigate }) {
 }
 
 // Guarda solo un tab específico
-function SaveBar({ tabKey, hasChanges, saving, onSave, onView }) {
+function SaveBar({ tabKey, hasChanges, saving, onSave }) {
   return (
     <div className="flex items-center justify-between bg-white rounded-sm border border-[rgba(212,120,138,0.12)] px-5 py-3 mt-6">
       <span className="text-xs text-[#9A7480] font-['DM_Sans']">
@@ -59,7 +58,7 @@ function SaveBar({ tabKey, hasChanges, saving, onSave, onView }) {
       </span>
       <div className="flex gap-3">
         <button
-          onClick={onView}
+          onClick={() => window.open('/', '_blank')}
           className="flex items-center gap-2 px-4 py-2 text-[0.65rem] font-['DM_Sans'] font-medium tracking-widest uppercase border border-[rgba(212,120,138,0.2)] rounded-sm hover:bg-[#FDF0F3] transition-colors text-[#9A7480]"
         >
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -92,7 +91,6 @@ function SaveBar({ tabKey, hasChanges, saving, onSave, onView }) {
 }
 
 export default function VisualConfigPage() {
-  const navigate = useNavigate()
   const { config, saveConfig } = useSiteConfigStore()
   const [activeTab, setActiveTab] = useState('textures')
   const [uploading, setUploading] = useState(false)
@@ -129,7 +127,7 @@ export default function VisualConfigPage() {
       await saveConfig(newConfig)
 
       const tabLabels = { textures: 'Texturas', decorations: 'Decoraciones', texts: 'Textos', colors: 'Colores' }
-      showToast(`${tabLabels[tabKey]} guardadas`, 'success', () => navigate('/'))
+      showToast(`${tabLabels[tabKey]} guardadas`, 'success')
     } catch (err) {
       showToast('Error al guardar: ' + err.message, 'error')
     } finally {
@@ -233,7 +231,7 @@ export default function VisualConfigPage() {
         {activeTab === 'textures' && (
           <div className="space-y-8">
             <p className="text-xs text-[#9A7480] font-['DM_Sans']">
-              Sube una textura por sección. Se aplica como capa fina con opacidad y modo de fusión.
+              Sube una textura por sección o elige un color de fondo. Se aplica como capa fina con opacidad y modo de fusión.
             </p>
 
             {SECTIONS.map(({ key, label }) => (
@@ -288,8 +286,21 @@ export default function VisualConfigPage() {
                         {BLENDS.map((b) => <option key={b.value} value={b.value}>{b.label}</option>)}
                       </select>
                     </div>
+                    <div>
+                      <label className="block text-xs font-medium text-[#4A3340] mb-2 font-['DM_Sans']">Color de fondo (si no hay textura)</label>
+                      <div className="flex items-center gap-3">
+                        <input type="color" value={localTextures[key]?.bgColor || '#ffffff'}
+                          onChange={(e) => setLocalTextures((prev) => ({ ...prev, [key]: { ...prev[key], bgColor: e.target.value } }))}
+                          className="w-10 h-10 rounded-sm border border-[rgba(212,120,138,0.2)] cursor-pointer" />
+                        <span className="text-xs text-[#9A7480] font-['DM_Sans']">{localTextures[key]?.bgColor || '#ffffff'}</span>
+                        {localTextures[key]?.bgColor && (
+                          <button onClick={() => setLocalTextures((prev) => ({ ...prev, [key]: { ...prev[key], bgColor: '' } }))}
+                            className="text-[0.6rem] text-[#E53935] hover:underline font-['DM_Sans']">Limpiar</button>
+                        )}
+                      </div>
+                    </div>
                     {localTextures[key]?.url && (
-                      <button onClick={() => setLocalTextures((prev) => ({ ...prev, [key]: { url: '', opacity: 0.04, blend: 'multiply' } }))}
+                      <button onClick={() => setLocalTextures((prev) => ({ ...prev, [key]: { url: '', opacity: 0.04, blend: 'multiply', bgColor: prev[key]?.bgColor || '' } }))}
                         className="text-xs text-[#E53935] hover:underline font-['DM_Sans']">Eliminar textura</button>
                     )}
                   </div>
@@ -298,7 +309,7 @@ export default function VisualConfigPage() {
             ))}
 
             <SaveBar tabKey="textures" hasChanges={texturesChanged} saving={savingTab === 'textures'}
-              onSave={handleSaveTab} onView={() => navigate('/')} />
+              onSave={handleSaveTab} />
           </div>
         )}
 
@@ -368,7 +379,7 @@ export default function VisualConfigPage() {
             )}
 
             <SaveBar tabKey="decorations" hasChanges={decorationsChanged} saving={savingTab === 'decorations'}
-              onSave={handleSaveTab} onView={() => navigate('/')} />
+              onSave={handleSaveTab} />
           </div>
         )}
 
@@ -397,7 +408,7 @@ export default function VisualConfigPage() {
             ))}
 
             <SaveBar tabKey="texts" hasChanges={textsChanged} saving={savingTab === 'texts'}
-              onSave={handleSaveTab} onView={() => navigate('/')} />
+              onSave={handleSaveTab} />
           </div>
         )}
 
@@ -423,7 +434,7 @@ export default function VisualConfigPage() {
             ))}
 
             <SaveBar tabKey="colors" hasChanges={colorsChanged} saving={savingTab === 'colors'}
-              onSave={handleSaveTab} onView={() => navigate('/')} />
+              onSave={handleSaveTab} />
           </div>
         )}
       </div>

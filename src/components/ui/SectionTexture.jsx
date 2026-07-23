@@ -3,18 +3,20 @@ import { useSiteConfig } from '../../hooks/useSiteConfig'
 // Componente reutilizable para agregar textura a cualquier sección
 // Uso: <SectionTexture section="hero">...contenido...</SectionTexture>
 export default function SectionTexture({ section, children, className = '' }) {
-  const { getTextureStyle, getDecorations } = useSiteConfig()
+  const { getTextureStyle, getDecorations, getSectionBg } = useSiteConfig()
   const textureStyle = getTextureStyle(section)
   const decorations = getDecorations(section)
+  const bgColor = getSectionBg(section)
   const hasTexture = textureStyle.backgroundImage
   const hasDecos = decorations.length > 0
+  const hasBg = !!bgColor
 
-  if (!hasTexture && !hasDecos) {
+  if (!hasTexture && !hasDecos && !hasBg) {
     return <div className={className}>{children}</div>
   }
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative ${className}`} style={hasBg ? { backgroundColor: bgColor } : undefined}>
       {/* Textura de fondo */}
       {hasTexture && <div style={textureStyle} />}
 

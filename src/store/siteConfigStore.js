@@ -5,12 +5,12 @@ import { supabase } from '../lib/supabase'
 const defaultConfig = {
   // Texturas por sección
   textures: {
-    hero: { url: '', opacity: 0.04, blend: 'multiply' },
-    trust: { url: '', opacity: 0.03, blend: 'multiply' },
-    categories: { url: '', opacity: 0.03, blend: 'multiply' },
-    catalog: { url: '', opacity: 0.03, blend: 'multiply' },
-    videos: { url: '', opacity: 0.03, blend: 'multiply' },
-    footer: { url: '', opacity: 0.05, blend: 'multiply' },
+    hero: { url: '', opacity: 0.04, blend: 'multiply', bgColor: '' },
+    trust: { url: '', opacity: 0.03, blend: 'multiply', bgColor: '' },
+    categories: { url: '', opacity: 0.03, blend: 'multiply', bgColor: '' },
+    catalog: { url: '', opacity: 0.03, blend: 'multiply', bgColor: '' },
+    videos: { url: '', opacity: 0.03, blend: 'multiply', bgColor: '' },
+    footer: { url: '', opacity: 0.05, blend: 'multiply', bgColor: '' },
   },
   // Decoraciones flotantes
   decorations: [],

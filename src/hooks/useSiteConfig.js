@@ -48,6 +48,12 @@ export function useSiteConfig() {
     }
   }
 
+  // Obtener color de fondo de una sección
+  const getSectionBg = (section) => {
+    const tex = getTexture(section)
+    return tex.bgColor || ''
+  }
+
   // Obtener decoraciones de una sección
   const getDecorations = (section) => {
     return config.decorations.filter((d) => d.section === section)
@@ -62,6 +68,7 @@ export function useSiteConfig() {
     config,
     getTexture,
     getTextureStyle,
+    getSectionBg,
     getDecorations,
     getText,
   }
