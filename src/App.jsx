@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
+import ErrorBoundary from './components/ui/ErrorBoundary'
 import Layout from './components/layout/Layout'
 import AdminLayout from './components/admin/AdminLayout'
 import ProtectedRoute from './components/admin/ProtectedRoute'
@@ -67,8 +68,9 @@ const NotFoundPage = () => (
 
 function App() {
   return (
-    <Suspense fallback={<PageLoader />}>
-    <Routes>
+    <ErrorBoundary>
+      <Suspense fallback={<PageLoader />}>
+      <Routes>
       {/* Rutas públicas */}
       <Route path="/" element={<Layout />}>
         <Route index element={<HomePage />} />
@@ -98,7 +100,8 @@ function App() {
       {/* 404 */}
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
-    </Suspense>
+      </Suspense>
+    </ErrorBoundary>
   )
 }
 

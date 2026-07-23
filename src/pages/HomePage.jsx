@@ -5,42 +5,14 @@ import HeroSection from '../components/ui/HeroSection'
 import TrustSection from '../components/ui/TrustSection'
 import CategoriesSection from '../components/ui/CategoriesSection'
 import VideoGallery from '../components/ui/VideoGallery'
-
-// ─── Reveal animation hook ────────────────────────────────────────────────────
-// Triggers a CSS class when a section enters the viewport.
-// Avoids layout shifts — elements are invisible before reveal, not displaced.
-
-const useRevealOnScroll = (threshold = 0.12) => {
-  const ref = useRef(null)
-  const [isVisible, setIsVisible] = useState(false)
-
-  useEffect(() => {
-    const element = ref.current
-    if (!element) return
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true)
-          observer.disconnect()
-        }
-      },
-      { threshold }
-    )
-
-    observer.observe(element)
-    return () => observer.disconnect()
-  }, [threshold])
-
-  return { ref, isVisible }
-}
+import { useScrollReveal } from '../hooks/useScrollReveal'
 
 // ─── Section reveal wrapper ───────────────────────────────────────────────────
 // Wraps any section with an editorial fade-up reveal.
 // `delay` staggers sibling reveals naturally without JS timers.
 
 const RevealSection = ({ children, delay = 0, className = '' }) => {
-  const { ref, isVisible } = useRevealOnScroll()
+  const { ref, isVisible } = useScrollReveal({ threshold: 0.12 })
 
   return (
     <div
