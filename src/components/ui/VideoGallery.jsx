@@ -17,7 +17,6 @@ const VideoGallery = ({ limit, showTitle = true }) => {
   const [videos, setVideos] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAll, setShowAll] = useState(false)
-  const [hoveredIndex, setHoveredIndex] = useState(null)
 
   useEffect(() => {
     const fetchVideos = async () => {
@@ -58,16 +57,6 @@ const VideoGallery = ({ limit, showTitle = true }) => {
 
   return (
     <section className="relative py-16 md:py-24 overflow-hidden" style={{ background: 'linear-gradient(180deg, #FFF8F5 0%, #FDF0F3 60%, #FFF8F5 100%)' }}>
-      {/* Fondo decorativo con círculos difusos */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-10 left-10 w-72 h-72 rounded-full bg-[#D4788A]/5 blur-3xl" />
-        <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-[#B85268]/5 blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-[#F2C4CE]/5 blur-3xl" />
-        {/* Líneas decorativas sutiles */}
-        <div className="absolute top-0 left-0 w-full h-full opacity-30" style={{
-          backgroundImage: 'radial-gradient(circle at 20% 30%, rgba(212,120,138,0.03) 0%, transparent 50%)',
-        }} />
-      </div>
 
       <div className="relative max-w-7xl mx-auto px-6 lg:px-10">
         {/* ─── HEADER ─── */}
@@ -94,7 +83,6 @@ const VideoGallery = ({ limit, showTitle = true }) => {
         {/* ─── GRID DE VIDEOS ─── */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
           {videosToShow.map((video, index) => {
-            const isHovered = hoveredIndex === index
             return (
               <div
                 key={video.id}
@@ -104,8 +92,6 @@ const VideoGallery = ({ limit, showTitle = true }) => {
                   opacity: 0,
                   transform: 'translateY(30px)',
                 }}
-                onMouseEnter={() => setHoveredIndex(index)}
-                onMouseLeave={() => setHoveredIndex(null)}
               >
                 {/* ── Imagen de fondo ── */}
                 <div className="aspect-video bg-gradient-to-br from-[#FDF0F3] to-[#F2C4CE]/40 relative overflow-hidden">
