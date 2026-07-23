@@ -328,9 +328,7 @@ const ProductGrid = () => {
 
   const totalPages = Math.ceil(totalProductos / productosPorPagina)
 
-  // 🔧 CAMBIO: Fondo con textura sutil
   const sectionStyle = {
-    background: `linear-gradient(180deg, ${p.cream} 0%, ${p.ivory} 100%)`,
     position: 'relative',
   }
 
@@ -338,13 +336,6 @@ const ProductGrid = () => {
   if (cargando) {
     return (
       <div ref={gridRef} id="product-grid-section" className="scroll-mt-32" style={sectionStyle}>
-        {/* Textura de grano sutil */}
-        <div
-          className="absolute inset-0 pointer-events-none opacity-[0.03] mix-blend-multiply"
-          style={{
-            backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.5'/></svg>")`,
-          }}
-        />
         <div className="relative z-10 max-w-screen-xl mx-auto px-6 lg:px-10 py-12">
           <FilterBar filtros={filtros} onChangeFiltros={handleChangeFiltros} />
           <style>{`@keyframes shimmerBg { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }`}</style>
@@ -414,13 +405,6 @@ const ProductGrid = () => {
   // ── RENDER PRINCIPAL ──
   return (
     <div ref={gridRef} id="product-grid-section" className="scroll-mt-32" style={sectionStyle}>
-      {/* Textura de grano sutil */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-[0.03] mix-blend-multiply"
-        style={{
-          backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.5'/></svg>")`,
-        }}
-      />
 
       <div className="relative z-10 max-w-screen-xl mx-auto px-6 lg:px-10 py-12">
         <FilterBar filtros={filtros} onChangeFiltros={handleChangeFiltros} />
