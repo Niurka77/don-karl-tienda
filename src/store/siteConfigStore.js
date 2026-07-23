@@ -6,7 +6,10 @@ const defaultConfig = {
   // Texturas por sección
   textures: {
     hero: { url: '', opacity: 0.04, blend: 'multiply' },
+    trust: { url: '', opacity: 0.03, blend: 'multiply' },
+    categories: { url: '', opacity: 0.03, blend: 'multiply' },
     catalog: { url: '', opacity: 0.03, blend: 'multiply' },
+    videos: { url: '', opacity: 0.03, blend: 'multiply' },
     footer: { url: '', opacity: 0.05, blend: 'multiply' },
   },
   // Decoraciones flotantes
