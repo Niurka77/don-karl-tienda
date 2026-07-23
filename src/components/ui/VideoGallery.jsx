@@ -56,7 +56,7 @@ const VideoGallery = ({ limit, showTitle = true }) => {
   if (videos.length === 0) return null
 
   return (
-    <section className="relative py-16 md:py-24 overflow-hidden" style={{ background: 'linear-gradient(180deg, #FFF8F5 0%, #FDF0F3 60%, #FFF8F5 100%)' }}>
+    <section className="relative py-16 md:py-24 overflow-hidden">
 
       <div className="relative max-w-7xl mx-auto px-6 lg:px-10">
         {/* ─── HEADER ─── */}
