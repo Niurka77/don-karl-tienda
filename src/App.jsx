@@ -14,6 +14,7 @@ const ProductosPage = lazy(() => import('./pages/admin/ProductosPage'))
 const PedidosPage = lazy(() => import('./pages/admin/PedidosPage'))
 const AdminVideos = lazy(() => import('./components/admin/AdminVideos'))
 const HeroSlidesManager = lazy(() => import('./components/admin/HeroSlidesManager'))
+const VisualConfigPage = lazy(() => import('./pages/admin/VisualConfigPage'))
 
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-kb-ivory)' }}>
@@ -95,6 +96,7 @@ function App() {
         <Route path="pedidos" element={<PedidosPage />} />
         <Route path="videos" element={<AdminVideos />} /> 
         <Route path="/admin/slides" element={<HeroSlidesManager />} />
+        <Route path="visual" element={<VisualConfigPage />} />
       </Route>
 
       {/* 404 */}
