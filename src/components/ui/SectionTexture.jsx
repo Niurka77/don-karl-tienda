@@ -1,7 +1,5 @@
 import { useSiteConfig } from '../../hooks/useSiteConfig'
 
-// Componente reutilizable para agregar textura a cualquier sección
-// Uso: <SectionTexture section="hero">...contenido...</SectionTexture>
 export default function SectionTexture({ section, children, className = '' }) {
   const { getTextureStyle, getDecorations, getSectionBg } = useSiteConfig()
   const textureStyle = getTextureStyle(section)
@@ -11,16 +9,24 @@ export default function SectionTexture({ section, children, className = '' }) {
   const hasDecos = decorations.length > 0
   const hasBg = !!bgColor
 
+  // Si no hay nada configurado, solo renderizar contenido
   if (!hasTexture && !hasDecos && !hasBg) {
     return <div className={className}>{children}</div>
   }
 
-  return (
-    <div className={`relative ${className}`} style={hasBg ? { backgroundColor: bgColor } : undefined}>
-      {/* Textura de fondo */}
-      {hasTexture && <div style={textureStyle} />}
+  // Modo color: si hay bgColor, se usa color solido (sin textura)
+  // Modo textura: si no hay bgColor pero si textura, se usa textura
+  const useColorMode = hasBg
 
-      {/* Decoraciones flotantes */}
+  return (
+    <div
+      className={`relative ${className}`}
+      style={useColorMode ? { backgroundColor: bgColor } : undefined}
+    >
+      {/* Textura (solo si NO hay color) */}
+      {!useColorMode && hasTexture && <div style={textureStyle} />}
+
+      {/* Decoraciones flotantes (siempre) */}
       {decorations.map((deco) => (
         <img
           key={deco.id}

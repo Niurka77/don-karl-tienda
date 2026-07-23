@@ -231,82 +231,143 @@ export default function VisualConfigPage() {
         {activeTab === 'textures' && (
           <div className="space-y-8">
             <p className="text-xs text-[#9A7480] font-['DM_Sans']">
-              Sube una textura por sección o elige un color de fondo. Se aplica como capa fina con opacidad y modo de fusión.
+              Elige el fondo de cada sección: <strong>Ninguno</strong> (transparente), <strong>Textura</strong> (imagen), o <strong>Color</strong> (sólido). Son modos exclusivos.
             </p>
 
-            {SECTIONS.map(({ key, label }) => (
-              <div key={key} className="bg-white rounded-sm border border-[rgba(212,120,138,0.12)] p-6">
-                <h3 className="font-['Cormorant_Garamond'] text-lg text-[#1A1118] mb-4">{label}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="relative aspect-video bg-[#FDF0F3] rounded-sm overflow-hidden">
-                    {localTextures[key]?.url ? (
-                      <div className="relative w-full h-full">
-                        <div className="absolute inset-0 bg-[#FDFAF9]" />
-                        <img src={localTextures[key].url} alt={`Textura ${label}`}
-                          className="absolute inset-0 w-full h-full object-cover"
-                          style={{ mixBlendMode: localTextures[key].blend, opacity: localTextures[key].opacity }} />
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center h-full text-xs text-[#9A7480]">Sin textura</div>
-                    )}
+            {SECTIONS.map(({ key, label }) => {
+              const tex = localTextures[key] || {}
+              const hasBg = !!tex.bgColor
+              const hasTex = !!tex.url
+              const mode = hasBg ? 'color' : hasTex ? 'texture' : 'none'
+
+              const setMode = (newMode) => {
+                setLocalTextures((prev) => ({
+                  ...prev,
+                  [key]: {
+                    ...prev[key],
+                    url: newMode === 'texture' ? (prev[key]?.url || '') : '',
+                    opacity: prev[key]?.opacity || 0.04,
+                    blend: prev[key]?.blend || 'multiply',
+                    bgColor: newMode === 'color' ? (prev[key]?.bgColor || '#ffffff') : '',
+                  },
+                }))
+              }
+
+              return (
+                <div key={key} className="bg-white rounded-sm border border-[rgba(212,120,138,0.12)] p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-['Cormorant_Garamond'] text-lg text-[#1A1118]">{label}</h3>
+                    {/* Selector de modo */}
+                    <div className="flex gap-1 bg-[#FDFAF9] rounded-sm p-0.5 border border-[rgba(212,120,138,0.1)]">
+                      {[
+                        { value: 'none', label: 'Ninguno' },
+                        { value: 'texture', label: 'Textura' },
+                        { value: 'color', label: 'Color' },
+                      ].map((m) => (
+                        <button key={m.value} onClick={() => setMode(m.value)}
+                          className={`px-3 py-1.5 text-[0.6rem] font-['DM_Sans'] font-medium tracking-wider uppercase rounded-sm transition-all ${
+                            mode === m.value
+                              ? 'bg-[#1A1118] text-white shadow-sm'
+                              : 'text-[#9A7480] hover:text-[#4A3340]'
+                          }`}>
+                          {m.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-medium text-[#4A3340] mb-2 font-['DM_Sans']">Subir imagen</label>
-                      <input type="file" accept="image/*" disabled={uploading}
-                        onChange={(e) => { if (e.target.files[0]) handleUploadTexture(key, e.target.files[0]) }}
-                        className="text-xs text-[#9A7480] file:mr-4 file:py-2 file:px-4 file:rounded-sm file:border-0 file:text-xs file:font-medium file:bg-[#FDF0F3] file:text-[#D4788A] hover:file:bg-[#F2C4CE]" />
+
+                  {/* ── Preview ── */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="relative aspect-video rounded-sm overflow-hidden border border-[rgba(212,120,138,0.1)]"
+                      style={hasBg ? { backgroundColor: tex.bgColor } : { background: 'linear-gradient(135deg, #FDF0F3, #F2C4CE)' }}>
+                      {hasTex && (
+                        <div className="relative w-full h-full">
+                          <div className="absolute inset-0 bg-[#FDFAF9]" />
+                          <img src={tex.url} alt={`Textura ${label}`}
+                            className="absolute inset-0 w-full h-full object-cover"
+                            style={{ mixBlendMode: tex.blend, opacity: tex.opacity }} />
+                        </div>
+                      )}
+                      {!hasBg && !hasTex && (
+                        <div className="flex items-center justify-center h-full text-xs text-[#9A7480]">Sin fondo</div>
+                      )}
                     </div>
-                    <div>
-                      <label className="block text-xs font-medium text-[#4A3340] mb-2 font-['DM_Sans']">Predefinidas</label>
-                      <div className="flex flex-wrap gap-2">
-                        {PRESET_TEXTURES.map((tex) => (
-                          <button key={tex.name}
-                            onClick={() => setLocalTextures((prev) => ({ ...prev, [key]: { ...prev[key], url: tex.url } }))}
-                            className="px-3 py-1.5 text-[0.65rem] font-['DM_Sans'] border border-[rgba(212,120,138,0.2)] rounded-sm hover:bg-[#FDF0F3] transition-colors">
-                            {tex.name}
-                          </button>
-                        ))}
-                      </div>
+
+                    <div className="space-y-4">
+                      {/* ── Modo COLOR ── */}
+                      {mode === 'color' && (
+                        <div>
+                          <label className="block text-xs font-medium text-[#4A3340] mb-2 font-['DM_Sans']">Color de fondo</label>
+                          <div className="flex items-center gap-3">
+                            <input type="color" value={tex.bgColor || '#ffffff'}
+                              onChange={(e) => setLocalTextures((prev) => ({ ...prev, [key]: { ...prev[key], bgColor: e.target.value } }))}
+                              className="w-12 h-12 rounded-sm border border-[rgba(212,120,138,0.2)] cursor-pointer" />
+                            <div className="flex-1">
+                              <span className="text-xs text-[#1A1118] font-['DM_Sans'] font-medium">{tex.bgColor || '#ffffff'}</span>
+                              <div className="flex gap-2 mt-2">
+                                {['#ffffff', '#FDF8F4', '#FFF8F5', '#FDF0F3', '#1A1118'].map((c) => (
+                                  <button key={c} onClick={() => setLocalTextures((prev) => ({ ...prev, [key]: { ...prev[key], bgColor: c } }))}
+                                    className="w-6 h-6 rounded-sm border border-[rgba(212,120,138,0.2)] hover:scale-110 transition-transform"
+                                    style={{ backgroundColor: c }} title={c} />
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* ── Modo TEXTURA ── */}
+                      {mode === 'texture' && (
+                        <>
+                          <div>
+                            <label className="block text-xs font-medium text-[#4A3340] mb-2 font-['DM_Sans']">Subir imagen</label>
+                            <input type="file" accept="image/*" disabled={uploading}
+                              onChange={(e) => { if (e.target.files[0]) handleUploadTexture(key, e.target.files[0]) }}
+                              className="text-xs text-[#9A7480] file:mr-4 file:py-2 file:px-4 file:rounded-sm file:border-0 file:text-xs file:font-medium file:bg-[#FDF0F3] file:text-[#D4788A] hover:file:bg-[#F2C4CE]" />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-[#4A3340] mb-2 font-['DM_Sans']">Predefinidas</label>
+                            <div className="flex flex-wrap gap-2">
+                              {PRESET_TEXTURES.map((preset) => (
+                                <button key={preset.name}
+                                  onClick={() => setLocalTextures((prev) => ({ ...prev, [key]: { ...prev[key], url: preset.url } }))}
+                                  className="px-3 py-1.5 text-[0.65rem] font-['DM_Sans'] border border-[rgba(212,120,138,0.2)] rounded-sm hover:bg-[#FDF0F3] transition-colors">
+                                  {preset.name}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-[#4A3340] mb-2 font-['DM_Sans']">
+                              Opacidad: {Math.round((tex.opacity || 0) * 100)}%
+                            </label>
+                            <input type="range" min="0" max="0.3" step="0.01"
+                              value={tex.opacity || 0}
+                              onChange={(e) => setLocalTextures((prev) => ({ ...prev, [key]: { ...prev[key], opacity: parseFloat(e.target.value) } }))}
+                              className="w-full accent-[#D4788A]" />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-[#4A3340] mb-2 font-['DM_Sans']">Fusión</label>
+                            <select value={tex.blend || 'multiply'}
+                              onChange={(e) => setLocalTextures((prev) => ({ ...prev, [key]: { ...prev[key], blend: e.target.value } }))}
+                              className="w-full px-3 py-2 text-xs border border-[rgba(212,120,138,0.2)] rounded-sm bg-white text-[#1A1118] font-['DM_Sans']">
+                              {BLENDS.map((b) => <option key={b.value} value={b.value}>{b.label}</option>)}
+                            </select>
+                          </div>
+                        </>
+                      )}
+
+                      {/* ── Modo NINGUNO ── */}
+                      {mode === 'none' && (
+                        <div className="flex items-center justify-center h-full text-xs text-[#9A7480] font-['DM_Sans'] py-8">
+                          Sin fondo — sección transparente
+                        </div>
+                      )}
                     </div>
-                    <div>
-                      <label className="block text-xs font-medium text-[#4A3340] mb-2 font-['DM_Sans']">
-                        Opacidad: {Math.round((localTextures[key]?.opacity || 0) * 100)}%
-                      </label>
-                      <input type="range" min="0" max="0.3" step="0.01"
-                        value={localTextures[key]?.opacity || 0}
-                        onChange={(e) => setLocalTextures((prev) => ({ ...prev, [key]: { ...prev[key], opacity: parseFloat(e.target.value) } }))}
-                        className="w-full accent-[#D4788A]" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-[#4A3340] mb-2 font-['DM_Sans']">Fusión</label>
-                      <select value={localTextures[key]?.blend || 'multiply'}
-                        onChange={(e) => setLocalTextures((prev) => ({ ...prev, [key]: { ...prev[key], blend: e.target.value } }))}
-                        className="w-full px-3 py-2 text-xs border border-[rgba(212,120,138,0.2)] rounded-sm bg-white text-[#1A1118] font-['DM_Sans']">
-                        {BLENDS.map((b) => <option key={b.value} value={b.value}>{b.label}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-[#4A3340] mb-2 font-['DM_Sans']">Color de fondo (si no hay textura)</label>
-                      <div className="flex items-center gap-3">
-                        <input type="color" value={localTextures[key]?.bgColor || '#ffffff'}
-                          onChange={(e) => setLocalTextures((prev) => ({ ...prev, [key]: { ...prev[key], bgColor: e.target.value } }))}
-                          className="w-10 h-10 rounded-sm border border-[rgba(212,120,138,0.2)] cursor-pointer" />
-                        <span className="text-xs text-[#9A7480] font-['DM_Sans']">{localTextures[key]?.bgColor || '#ffffff'}</span>
-                        {localTextures[key]?.bgColor && (
-                          <button onClick={() => setLocalTextures((prev) => ({ ...prev, [key]: { ...prev[key], bgColor: '' } }))}
-                            className="text-[0.6rem] text-[#E53935] hover:underline font-['DM_Sans']">Limpiar</button>
-                        )}
-                      </div>
-                    </div>
-                    {localTextures[key]?.url && (
-                      <button onClick={() => setLocalTextures((prev) => ({ ...prev, [key]: { url: '', opacity: 0.04, blend: 'multiply', bgColor: prev[key]?.bgColor || '' } }))}
-                        className="text-xs text-[#E53935] hover:underline font-['DM_Sans']">Eliminar textura</button>
-                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
 
             <SaveBar tabKey="textures" hasChanges={texturesChanged} saving={savingTab === 'textures'}
               onSave={handleSaveTab} />
