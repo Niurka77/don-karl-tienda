@@ -1,19 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAdminNotifications } from '../../hooks/useAdminNotifications'
+import ImageUploader, { MAX_IMAGENES, sanitizarNombreArchivo } from './ImageUploader'
+import ColorPicker from './ColorPicker'
+import SizePicker, { tallasPorCategoria } from './SizePicker'
+import BrandSelector, { marcasPredefinidas } from './BrandSelector'
 
 const categorias = ['vestidos', 'bolsos', 'zapatos', 'Billeteras']
 const generos = ['mujer', 'hombre', 'unisex']
 
-// 🆕 TALLAS DINÁMICAS POR CATEGORÍA
-const tallasPorCategoria = {
-  vestidos: ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Unico'],
-  bolsos: ['Unico', 'Pequeño', 'Mediano', 'Grande'],
-  zapatos: ['35', '36', '37', '38', '39', '40', '41', '42', '43', '44'],
-  Billeteras: ['Unico'],
-}
-
-// 🆕 PREFIJOS PARA SKU AUTOMÁTICO
 const prefijosCategoria = {
   vestidos: 'KB-VES',
   bolsos: 'KB-BOL',
@@ -21,49 +16,7 @@ const prefijosCategoria = {
   Billeteras: 'KB-BIL',
 }
 
-const marcasPredefinidas = [
-  'Guess', 'Tommy Hilfiger', 'Calvin Klein', 'Michael Kors',
-  'Victoria\'s Secret', 'Zara', 'H&M', 'Forever 21', 'Mango',
-  'Massimo Dutti', 'Steve Madden', 'Coach', 'Kate Spade',
-  'Ralph Lauren', 'Lacoste', 'Levi\'s', 'Nike', 'Adidas', 'Puma'
-]
-
-const coloresPredefinidos = [
-  { nombre: 'Negro', hex: '#000000' },
-  { nombre: 'Blanco', hex: '#FFFFFF' },
-  { nombre: 'Rojo', hex: '#DC143C' },
-  { nombre: 'Rosa', hex: '#FF69B4' },
-  { nombre: 'Dorado', hex: '#D4AF37' },
-  { nombre: 'Plateado', hex: '#C0C0C0' },
-  { nombre: 'Azul', hex: '#0000FF' },
-  { nombre: 'Verde', hex: '#008000' },
-  { nombre: 'Beige', hex: '#F5F5DC' },
-  { nombre: 'Marron', hex: '#8B4513' },
-  { nombre: 'Gris', hex: '#808080' },
-  { nombre: 'Amarillo', hex: '#FFD700' },
-  { nombre: 'Naranja', hex: '#FFA500' },
-  { nombre: 'Morado', hex: '#800080' },
-]
-
-const MAX_IMAGENES = 5
-const TAMANO_MAXIMO_MB = 5
-const TIPOS_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg']
 const MAX_SLIDES = 5
-
-const sanitizarNombreArchivo = (nombreOriginal) => {
-  const ultimoPunto = nombreOriginal.lastIndexOf('.')
-  const extension = ultimoPunto !== -1 ? nombreOriginal.slice(ultimoPunto) : ''
-  let nombreSinExtension = ultimoPunto !== -1 ? nombreOriginal.slice(0, ultimoPunto) : nombreOriginal
-  
-  nombreSinExtension = nombreSinExtension
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-  nombreSinExtension = nombreSinExtension.replace(/[^a-zA-Z0-9_-]/g, '_')
-  
-  if (nombreSinExtension.length === 0) nombreSinExtension = 'imagen'
-  
-  return `${nombreSinExtension}${extension}`
-}
 
 const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
   const esEdicion = !!producto
@@ -103,9 +56,6 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
   const [skuExiste, setSkuExiste] = useState(false)
   const [generandoSku, setGenerandoSku] = useState(false)
   const [skuEditandoManualmente, setSkuEditandoManualmente] = useState(false)
-
-  // 🎯 Tallas disponibles según la categoría actual
-  const tallasDisponibles = tallasPorCategoria[formData.category] || tallasPorCategoria.vestidos
 
   useEffect(() => {
     if (producto) {
@@ -271,7 +221,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     })
   }
 
-  const handleColorClick = (colorNombre) => {
+  const handleColorToggle = (colorNombre) => {
     const coloresActuales = formData.color ? formData.color.split(',').map(c => c.trim()) : []
     
     if (coloresActuales.includes(colorNombre)) {
@@ -302,58 +252,19 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     }
   }
 
-  const validarImagen = (file) => {
-    if (!TIPOS_PERMITIDOS.includes(file.type)) {
-      return 'Solo se permiten imagenes JPG, PNG o WebP'
-    }
-    if (file.size > TAMANO_MAXIMO_MB * 1024 * 1024) {
-      return `La imagen debe ser menor a ${TAMANO_MAXIMO_MB}MB`
-    }
-    return null
-  }
-
-  const handleImagenesSeleccionadas = (e) => {
-    const files = Array.from(e.target.files || [])
-    
-    if (previews.length + files.length > MAX_IMAGENES) {
-      setErrores((prev) => ({
-        ...prev,
-        imagenes: `Maximo ${MAX_IMAGENES} imagenes permitidas. Actualmente tienes ${previews.length}`
-      }))
-      agregarToast(`Máximo ${MAX_IMAGENES} imágenes`, 'warning')
-      return
-    }
-
-    const nuevosErrores = []
-    const nuevasImagenes = []
-    const nuevosPreviews = []
-
-    for (const file of files) {
-      const error = validarImagen(file)
-      if (error) {
-        nuevosErrores.push(`${file.name}: ${error}`)
-      } else {
-        nuevasImagenes.push(file)
-        nuevosPreviews.push(URL.createObjectURL(file))
-      }
-    }
-
-    if (nuevosErrores.length > 0) {
-      setErrores((prev) => ({
-        ...prev,
-        imagenes: nuevosErrores.join(' ')
-      }))
+  const handleImageFilesSelected = ({ error, files, previews: newPreviews }) => {
+    if (error) {
+      setErrores((prev) => ({ ...prev, imagenes: error }))
       agregarToast('Algunas imágenes no son válidas', 'error')
       return
     }
-
-    setImagenes((prev) => [...prev, ...nuevasImagenes])
-    setPreviews((prev) => [...prev, ...nuevosPreviews])
+    setImagenes((prev) => [...prev, ...files])
+    setPreviews((prev) => [...prev, ...newPreviews])
     setErrores((prev) => ({ ...prev, imagenes: '' }))
-    agregarToast(`${nuevasImagenes.length} imagen(es) agregada(s)`, 'success')
+    agregarToast(`${files.length} imagen(es) agregada(s)`, 'success')
   }
 
-  const eliminarImagen = (index) => {
+  const handleRemoveImage = (index) => {
     const esImagenExistente = previews[index] && !previews[index].startsWith('blob:')
     
     if (esImagenExistente) {
@@ -367,11 +278,6 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     setImagenes((prev) => prev.filter((_, i) => i !== index))
     setPreviews((prev) => prev.filter((_, i) => i !== index))
     agregarToast('Imagen eliminada', 'info')
-  }
-
-  const getColorHex = (colorNombre) => {
-    const color = coloresPredefinidos.find(c => c.nombre.toLowerCase() === colorNombre.toLowerCase())
-    return color ? color.hex : '#FFFFFF'
   }
 
   const subirImagenes = async () => {
@@ -784,37 +690,12 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
           </div>
 
           {/* Marca */}
-          <div>
-            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
-              Marca
-            </label>
-            <select
-              value={marcaSeleccion}
-              onChange={handleMarcaChange}
-              className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
-            >
-              <option value="">Seleccionar marca</option>
-              {marcasPredefinidas.map((marca) => (
-                <option key={marca} value={marca}>{marca}</option>
-              ))}
-              <option value="Otra">Otra...</option>
-            </select>
-          </div>
-
-          {marcaSeleccion === 'Otra' && (
-            <div>
-              <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
-                Escribe la marca
-              </label>
-              <input
-                type="text"
-                value={formData.brandPersonalizada}
-                onChange={handleMarcaPersonalizadaChange}
-                placeholder="Ej: Mi Marca"
-                className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
-              />
-            </div>
-          )}
+          <BrandSelector
+            marcaSeleccion={marcaSeleccion}
+            brandPersonalizada={formData.brandPersonalizada}
+            onMarcaChange={handleMarcaChange}
+            onBrandPersonalizadaChange={handleMarcaPersonalizadaChange}
+          />
 
           {/* Género */}
           <div>
@@ -953,205 +834,29 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
           </div>
 
           {/* Colores */}
-          <div className="md:col-span-2">
-            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
-              Colores disponibles
-            </label>
-            
-            <div className="flex flex-wrap gap-3 mb-4">
-              {coloresPredefinidos.map((color) => {
-                const coloresActuales = formData.color ? formData.color.split(',').map(c => c.trim()) : []
-                const estaSeleccionado = coloresActuales.includes(color.nombre)
-                
-                return (
-                  <button
-                    key={color.nombre}
-                    type="button"
-                    onClick={() => handleColorClick(color.nombre)}
-                    className={`
-                      relative w-10 h-10 rounded-sm border-2 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-105
-                      ${estaSeleccionado ? 'border-[#1A1118] ring-1 ring-[#D4788A]' : 'border-[rgba(212,120,138,0.25)]'}
-                    `}
-                    style={{ backgroundColor: color.hex }}
-                    title={color.nombre}
-                    aria-label={`Color ${color.nombre}`}
-                  >
-                    {estaSeleccionado && (
-                      <svg 
-                        className="absolute inset-0 w-full h-full text-white drop-shadow-sm" 
-                        fill="currentColor" 
-                        viewBox="0 0 20 20"
-                      >
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-
-            <div className="flex items-center gap-3 mt-4 pt-4 border-t border-[rgba(212,120,138,0.15)]">
-              <input
-                type="text"
-                value={colorPersonalizado}
-                onChange={(e) => setColorPersonalizado(e.target.value)}
-                placeholder="Agregar otro color (ej: Vino, Turquesa)"
-                className="flex-1 border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAgregarColorPersonalizado())}
-              />
-              <button
-                type="button"
-                onClick={handleAgregarColorPersonalizado}
-                disabled={!colorPersonalizado.trim()}
-                className="px-4 py-2 bg-[#1A1118] text-white rounded-sm text-sm font-['DM_Sans'] font-medium tracking-wide hover:bg-gradient-to-r hover:from-[#D4788A] hover:to-[#B85268] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] disabled:bg-[#9A7480] disabled:cursor-not-allowed"
-              >
-                Agregar
-              </button>
-            </div>
-
-            {formData.color && (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {formData.color.split(',').map((colorNombre, index) => {
-                  const color = colorNombre.trim()
-                  const hex = getColorHex(color)
-                  
-                  return (
-                    <div
-                      key={index}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#FDF0F3] rounded-sm text-sm font-['DM_Sans']"
-                    >
-                      <div 
-                        className="w-4 h-4 rounded-sm border border-[rgba(212,120,138,0.25)]"
-                        style={{ backgroundColor: hex }}
-                      />
-                      <span className="text-[#1A1118]">{color}</span>
-                      <button
-                        type="button"
-                        onClick={() => handleColorClick(color)}
-                        className="text-[#9A7480] hover:text-[#B85268] transition-colors duration-300"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
+          <ColorPicker
+            colorSeleccionado={formData.color}
+            colorPersonalizado={colorPersonalizado}
+            onColorPersonalizadoChange={setColorPersonalizado}
+            onColorToggle={handleColorToggle}
+            onAgregarPersonalizado={handleAgregarColorPersonalizado}
+          />
 
           {/* Tallas dinámicas */}
-          <div className="md:col-span-2">
-            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
-              Tallas disponibles
-              <span className="ml-2 text-[0.55rem] normal-case tracking-normal text-[#D4788A]">
-                (para {formData.category})
-              </span>
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {tallasDisponibles.map((talla) => (
-                <button
-                  key={talla}
-                  type="button"
-                  onClick={() => handleTallaToggle(talla)}
-                  className={`
-                    px-4 py-2 border rounded-sm text-sm font-['DM_Sans'] font-medium transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
-                    ${
-                      formData.sizes_available.includes(talla)
-                        ? 'border-[#1A1118] bg-[#1A1118] text-white'
-                        : 'border-[rgba(212,120,138,0.25)] text-[#2D2030] hover:border-[#D4788A]'
-                    }
-                  `}
-                >
-                  {talla}
-                </button>
-              ))}
-            </div>
-            <p className="text-xs text-[#9A7480] font-['DM_Sans'] mt-2">
-              {formData.category === 'vestidos' && '👗 Tallas de ropa: XS a XXL'}
-              {formData.category === 'bolsos' && '👜 Tamaños de bolsos'}
-              {formData.category === 'zapatos' && '👠 Tallas numéricas de calzado'}
-              {formData.category === 'Billeteras' && '💳 Billeteras: talla única'}
-            </p>
-          </div>
+          <SizePicker
+            categoria={formData.category}
+            sizesSeleccionadas={formData.sizes_available}
+            onToggle={handleTallaToggle}
+          />
 
           {/* Imágenes */}
-          <div className="md:col-span-2">
-            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
-              Imágenes del producto {!esEdicion && '*'}
-            </label>
-            <p className="text-xs text-[#9A7480] font-['DM_Sans'] mb-3">
-              Máximo {MAX_IMAGENES} imágenes. La primera imagen será la principal.
-            </p>
-
-            {previews.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-4">
-                {previews.map((preview, index) => (
-                  <div key={index} className="relative group">
-                    <div className="aspect-[3/4] bg-[#FDF0F3] rounded-sm overflow-hidden">
-                      <img
-                        src={preview}
-                        alt={`Vista previa ${index + 1}`}
-                        className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
-                      />
-                    </div>
-                    {index === 0 && (
-                      <span className="absolute top-2 left-2 px-2 py-0.5 bg-[#D4788A] text-white text-xs font-['DM_Sans'] font-medium rounded-sm">
-                        Principal
-                      </span>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => eliminarImagen(index)}
-                      className="absolute top-2 right-2 w-7 h-7 bg-[#1A1118] text-white rounded-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-[#B85268]"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {previews.length < MAX_IMAGENES && (
-              <div className="flex items-center justify-center w-full">
-                <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-[rgba(212,120,138,0.35)] rounded-sm cursor-pointer hover:border-[#D4788A] transition-colors duration-300 bg-[#FDF0F3] bg-opacity-50">
-                  <div className="text-center">
-                    <svg
-                      className="w-10 h-10 text-[#9A7480] mx-auto mb-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1}
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                    <p className="text-sm text-[#2D2030] font-['DM_Sans'] font-light">
-                      {imagenes.length > 0 ? `${imagenes.length} imágenes seleccionadas` : 'Arrastra imágenes o haz clic aquí'}
-                    </p>
-                    <p className="text-xs text-[#9A7480] font-['DM_Sans'] mt-1">
-                      JPG, PNG o WebP (máx. {TAMANO_MAXIMO_MB}MB c/u)
-                    </p>
-                    <p className="text-xs text-[#9A7480] font-['DM_Sans']">
-                      {previews.length}/{MAX_IMAGENES} imágenes
-                    </p>
-                  </div>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={handleImagenesSeleccionadas}
-                    className="hidden"
-                  />
-                </label>
-              </div>
-            )}
-            {errores.imagenes && (
-              <p className="mt-2 text-xs text-[#B85268] font-['DM_Sans']">{errores.imagenes}</p>
-            )}
-          </div>
+          <ImageUploader
+            previews={previews}
+            imagenesCount={imagenes.length}
+            errores={errores.imagenes}
+            onFilesSelected={handleImageFilesSelected}
+            onRemoveImage={handleRemoveImage}
+          />
 
           {/* Descripción */}
           <div className="md:col-span-2">
