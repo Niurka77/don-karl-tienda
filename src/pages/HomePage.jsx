@@ -6,6 +6,7 @@ import TrustSection from '../components/ui/TrustSection'
 import CategoriesSection from '../components/ui/CategoriesSection'
 import VideoGallery from '../components/ui/VideoGallery'
 import { useScrollReveal } from '../hooks/useScrollReveal'
+import { useSiteConfig } from '../hooks/useSiteConfig'
 
 // ─── Section reveal wrapper ───────────────────────────────────────────────────
 // Wraps any section with an editorial fade-up reveal.
@@ -193,13 +194,18 @@ const VideoSectionHeader = () => (
 // ─── HomePage ─────────────────────────────────────────────────────────────────
 
 const HomePage = () => {
+  const { getTextureStyle } = useSiteConfig()
+
   return (
     <main>
       {/*
         Hero: full-bleed, no padding wrapper.
         HeroSection owns its own layout completely — correct.
       */}
-      <HeroSection />
+      <div className="relative">
+        <HeroSection />
+        <div style={getTextureStyle('hero')} />
+      </div>
 
       {/*
         Trust bar: placed immediately after hero.
@@ -230,12 +236,14 @@ const HomePage = () => {
         Padding is generous — editorial breathing room, not crowded marketplace.
       */}
       <section
+        className="relative"
         style={{
           maxWidth: '1280px',
           margin: '0 auto',
           padding: 'clamp(4rem, 8vw, 7rem) 1.5rem',
         }}
       >
+        <div style={getTextureStyle('catalog')} />
         <RevealSection delay={0}>
           <CatalogueHeader />
         </RevealSection>

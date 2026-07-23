@@ -8,10 +8,12 @@ import useCartStore from '../../store/cartStore'
 import { WHATSAPP_PHONE, WHATSAPP_MESSAGES } from '../../lib/constants'
 import { useState, useEffect, useRef } from 'react'
 import { useScrollReveal } from '../../hooks/useScrollReveal'
+import { useSiteConfig } from '../../hooks/useSiteConfig'
 import { p } from '../../lib/theme'
 
 const Layout = () => {
   const navigate = useNavigate()
+  const { getTextureStyle, getText } = useSiteConfig()
   const { toggleCart, getItemCount } = useCartStore()
   const itemCount = getItemCount()
   const [scrolled, setScrolled] = useState(false)
