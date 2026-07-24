@@ -121,7 +121,6 @@ const CategoriesSection = () => {
       ref={sectionRef}
       className="relative overflow-hidden"
       style={{
-        background: 'linear-gradient(180deg, #FFF8F5 0%, #FDF0F3 50%, #F2C4CE20 100%)',
         padding: 'clamp(5rem, 12vh, 10rem) 0',
         position: 'relative',
       }}

@@ -410,17 +410,9 @@ const HeroSection = () => {
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* ════════════════════════════════════════════════════════════════════════
-          FONDO — Capas editoriales
+          FONDO — Solo blobs decorativos (sin fondo fijo, textura viene de SectionTexture)
       ════════════════════════════════════════════════════════════════════════ */}
-      <div className="absolute inset-0" style={{ background: p.cream }}>
-        {/* Gradiente base */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `linear-gradient(135deg, ${p.ivory} 0%, ${p.roseMist}40 35%, ${p.champagneLt}30 70%, ${p.cream} 100%)`,
-          }}
-        />
-
+      <div className="absolute inset-0 pointer-events-none">
         {/* Blobs morphing */}
         <div
           className="absolute -top-40 -right-40 pointer-events-none"
@@ -1148,10 +1140,9 @@ const HeroSection = () => {
 
       {/* ══════════════════════════════════════════════════════════════════════
           TRUST BAR
-      ═════════════════════════════════════════════════════════════════════ */}
+      ═══════════════════════════════════════════════════════════════════════ */}
       <div
         style={{
-          background: `linear-gradient(180deg, ${p.cream} 0%, ${p.ivory} 100%)`,
           borderTop: `1px solid ${p.champagne}50`,
           position: 'relative',
           zIndex: 20,

@@ -10,7 +10,6 @@ const Footer = ({ onNavigate }) => {
     <footer
       className="relative mt-28"
       style={{
-        background: `linear-gradient(180deg, ${p.cream} 0%, ${p.ivory} 100%)`,
         borderTop: `1px solid ${p.roseBlush}30`,
       }}
     >

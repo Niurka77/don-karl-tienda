@@ -172,7 +172,6 @@ const BrandMarquee = () => (
     style={{
       borderTop: `1px solid ${p.champagne}50`,
       borderBottom: `1px solid ${p.champagne}50`,
-      background: `linear-gradient(90deg, ${p.cream} 0%, ${p.ivory} 50%, ${p.cream} 100%)`,
     }}
   >
     <div
@@ -273,7 +272,6 @@ const TrustSection = () => {
       id="nosotros"
       className="relative overflow-hidden"
       style={{
-        background: `linear-gradient(180deg, ${p.cream} 0%, ${p.ivory} 50%, ${p.cream} 100%)`,
         padding: 'clamp(5rem, 12vh, 9rem) 0 clamp(4rem, 8vh, 6rem)',
         fontFamily: 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
       }}
