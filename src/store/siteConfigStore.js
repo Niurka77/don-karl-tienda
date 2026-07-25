@@ -112,11 +112,22 @@ const useSiteConfigStore = create(
       saveConfig: async (newConfig) => {
         set({ loading: true, error: null })
         try {
+          // Verificar que haya sesión de admin
+          const { data: { session } } = await supabase.auth.getSession()
+          if (!session) {
+            throw new Error('No hay sesión de admin. Inicia sesión para guardar.')
+          }
+
           const { error } = await supabase
             .from('site_config')
             .upsert({ id: 'main', config: newConfig, updated_at: new Date().toISOString() })
 
-          if (error) throw error
+          if (error) {
+            if (error.code === '42501' || error.message?.includes('permission')) {
+              throw new Error('Sin permisos. Verifica que estés logueado como admin (karl@tienda.com).')
+            }
+            throw error
+          }
 
           set({ config: newConfig, loading: false })
         } catch (error) {

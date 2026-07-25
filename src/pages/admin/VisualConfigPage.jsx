@@ -218,15 +218,26 @@ export default function VisualConfigPage() {
   const handleUploadTexture = async (section, file) => {
     setUploading(true)
     try {
+      // Verificar sesión
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        throw new Error('No hay sesión de admin. Inicia sesión para subir imágenes.')
+      }
+
       const fileExt = file.name.split('.').pop()
       const fileName = `texture-${section}-${Date.now()}.${fileExt}`
       const { error } = await supabase.storage.from('site-assets').upload(fileName, file, { upsert: true })
-      if (error) throw error
+      if (error) {
+        if (error.message?.includes('permission') || error.statusCode === 403) {
+          throw new Error('Sin permisos para subir. Verifica que estés logueado como admin.')
+        }
+        throw error
+      }
       const { data: { publicUrl } } = supabase.storage.from('site-assets').getPublicUrl(fileName)
       setLocalTextures((prev) => ({ ...prev, [section]: { ...prev[section], url: publicUrl } }))
-      showToast('Textura subida. Presiona Guardar.', 'info')
+      showToast('Textura subida. Presiona Guardar para aplicar.', 'info')
     } catch (err) {
-      showToast('Error: ' + err.message, 'error')
+      showToast('Error al subir: ' + err.message, 'error')
     } finally {
       setUploading(false)
     }
