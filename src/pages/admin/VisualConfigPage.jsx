@@ -101,6 +101,11 @@ export default function VisualConfigPage() {
   const [localDecorations, setLocalDecorations] = useState([...config.decorations])
   const [localTexts, setLocalTexts] = useState({ ...config.texts })
   const [localColors, setLocalColors] = useState({ ...config.customColors })
+  const [localTrustItems, setLocalTrustItems] = useState([...(config.trustItems || [])])
+  const [localTrustStats, setLocalTrustStats] = useState([...(config.trustStats || [])])
+  const [localBrands, setLocalBrands] = useState([...(config.brands || [])])
+  const [localFooterContact, setLocalFooterContact] = useState({ ...(config.footerContact || {}) })
+  const [localCategories, setLocalCategories] = useState([...(config.categories || [])])
 
   // Tracking de guardado por tab
   const [savingTab, setSavingTab] = useState(null)
@@ -123,6 +128,14 @@ export default function VisualConfigPage() {
         newConfig = { ...config, texts: localTexts }
       } else if (tabKey === 'colors') {
         newConfig = { ...config, customColors: localColors }
+      } else if (tabKey === 'trust') {
+        newConfig = { ...config, trustItems: localTrustItems, trustStats: localTrustStats }
+      } else if (tabKey === 'brands') {
+        newConfig = { ...config, brands: localBrands }
+      } else if (tabKey === 'footer') {
+        newConfig = { ...config, footerContact: localFooterContact }
+      } else if (tabKey === 'categories') {
+        newConfig = { ...config, categories: localCategories }
       }
       await saveConfig(newConfig)
 
@@ -140,8 +153,12 @@ export default function VisualConfigPage() {
   const decorationsChanged = JSON.stringify(localDecorations) !== JSON.stringify(config.decorations)
   const textsChanged = JSON.stringify(localTexts) !== JSON.stringify(config.texts)
   const colorsChanged = JSON.stringify(localColors) !== JSON.stringify(config.customColors)
+  const trustChanged = JSON.stringify(localTrustItems) !== JSON.stringify(config.trustItems) || JSON.stringify(localTrustStats) !== JSON.stringify(config.trustStats)
+  const brandsChanged = JSON.stringify(localBrands) !== JSON.stringify(config.brands)
+  const footerChanged = JSON.stringify(localFooterContact) !== JSON.stringify(config.footerContact)
+  const categoriesChanged = JSON.stringify(localCategories) !== JSON.stringify(config.categories)
 
-  const hasAnyChange = texturesChanged || decorationsChanged || textsChanged || colorsChanged
+  const hasAnyChange = texturesChanged || decorationsChanged || textsChanged || colorsChanged || trustChanged || brandsChanged || footerChanged || categoriesChanged
 
   // Upload texture
   const handleUploadTexture = async (section, file) => {
@@ -205,9 +222,13 @@ export default function VisualConfigPage() {
         {/* Tabs */}
         <div className="flex gap-1 mb-8 border-b border-[rgba(212,120,138,0.15)]">
           {[
-            { key: 'textures', label: 'Texturas', changed: texturesChanged },
-            { key: 'decorations', label: 'Decoraciones', changed: decorationsChanged },
+            { key: 'textures', label: 'Fondos', changed: texturesChanged },
             { key: 'texts', label: 'Textos', changed: textsChanged },
+            { key: 'trust', label: 'Confianza', changed: trustChanged },
+            { key: 'brands', label: 'Marcas', changed: brandsChanged },
+            { key: 'categories', label: 'Categorías', changed: categoriesChanged },
+            { key: 'footer', label: 'Footer', changed: footerChanged },
+            { key: 'decorations', label: 'Decos', changed: decorationsChanged },
             { key: 'colors', label: 'Colores', changed: colorsChanged },
           ].map((tab) => (
             <button
@@ -495,6 +516,197 @@ export default function VisualConfigPage() {
             ))}
 
             <SaveBar tabKey="colors" hasChanges={colorsChanged} saving={savingTab === 'colors'}
+              onSave={handleSaveTab} />
+          </div>
+        )}
+
+        {/* ═══════════════════ TRUST TAB ═══════════════════ */}
+        {activeTab === 'trust' && (
+          <div className="space-y-6">
+            <p className="text-xs text-[#9A7480] font-['DM_Sans']">
+              Items de confianza y estadísticas que se muestran en la sección "¿Por qué elegirnos?"
+            </p>
+
+            <div className="bg-white rounded-sm border border-[rgba(212,120,138,0.12)] p-6">
+              <h3 className="font-['Cormorant_Garamond'] text-lg text-[#1A1118] mb-4">Items de confianza</h3>
+              {localTrustItems.map((item, i) => (
+                <div key={i} className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3 p-3 bg-[#FDFAF9] rounded-sm">
+                  <input type="text" value={item.label} placeholder="Label"
+                    onChange={(e) => { const copy = [...localTrustItems]; copy[i] = { ...copy[i], label: e.target.value }; setLocalTrustItems(copy) }}
+                    className="px-3 py-2 text-xs border border-[rgba(212,120,138,0.2)] rounded-sm bg-white text-[#1A1118] font-['DM_Sans']" />
+                  <input type="text" value={item.sub} placeholder="Subtítulo"
+                    onChange={(e) => { const copy = [...localTrustItems]; copy[i] = { ...copy[i], sub: e.target.value }; setLocalTrustItems(copy) }}
+                    className="px-3 py-2 text-xs border border-[rgba(212,120,138,0.2)] rounded-sm bg-white text-[#1A1118] font-['DM_Sans']" />
+                  <div className="flex gap-2">
+                    <input type="text" value={item.iconPath} placeholder="SVG path"
+                      onChange={(e) => { const copy = [...localTrustItems]; copy[i] = { ...copy[i], iconPath: e.target.value }; setLocalTrustItems(copy) }}
+                      className="flex-1 px-3 py-2 text-xs border border-[rgba(212,120,138,0.2)] rounded-sm bg-white text-[#1A1118] font-['DM_Sans']" />
+                    <button onClick={() => setLocalTrustItems(localTrustItems.filter((_, j) => j !== i))}
+                      className="px-2 text-[#E53935] hover:bg-red-50 rounded-sm text-xs">✕</button>
+                  </div>
+                </div>
+              ))}
+              <button onClick={() => setLocalTrustItems([...localTrustItems, { label: '', sub: '', iconPath: '' }])}
+                className="mt-2 px-4 py-2 text-[0.65rem] font-['DM_Sans'] font-medium tracking-wider uppercase border border-[rgba(212,120,138,0.2)] rounded-sm hover:bg-[#FDF0F3] text-[#D4788A]">
+                + Agregar item
+              </button>
+            </div>
+
+            <div className="bg-white rounded-sm border border-[rgba(212,120,138,0.12)] p-6">
+              <h3 className="font-['Cormorant_Garamond'] text-lg text-[#1A1118] mb-4">Estadísticas</h3>
+              {localTrustStats.map((stat, i) => (
+                <div key={i} className="grid grid-cols-3 gap-3 mb-3 p-3 bg-[#FDFAF9] rounded-sm">
+                  <input type="number" value={stat.n} placeholder="Número"
+                    onChange={(e) => { const copy = [...localTrustStats]; copy[i] = { ...copy[i], n: parseInt(e.target.value) || 0 }; setLocalTrustStats(copy) }}
+                    className="px-3 py-2 text-xs border border-[rgba(212,120,138,0.2)] rounded-sm bg-white text-[#1A1118] font-['DM_Sans']" />
+                  <input type="text" value={stat.s} placeholder="Sufijo"
+                    onChange={(e) => { const copy = [...localTrustStats]; copy[i] = { ...copy[i], s: e.target.value }; setLocalTrustStats(copy) }}
+                    className="px-3 py-2 text-xs border border-[rgba(212,120,138,0.2)] rounded-sm bg-white text-[#1A1118] font-['DM_Sans']" />
+                  <input type="text" value={stat.l} placeholder="Label"
+                    onChange={(e) => { const copy = [...localTrustStats]; copy[i] = { ...copy[i], l: e.target.value }; setLocalTrustStats(copy) }}
+                    className="px-3 py-2 text-xs border border-[rgba(212,120,138,0.2)] rounded-sm bg-white text-[#1A1118] font-['DM_Sans']" />
+                </div>
+              ))}
+            </div>
+
+            <SaveBar tabKey="trust" hasChanges={trustChanged} saving={savingTab === 'trust'}
+              onSave={handleSaveTab} />
+          </div>
+        )}
+
+        {/* ═══════════════════ BRANDS TAB ═══════════════════ */}
+        {activeTab === 'brands' && (
+          <div className="space-y-6">
+            <p className="text-xs text-[#9A7480] font-['DM_Sans']">
+              Marcas que se muestran en el marquee de la sección de confianza.
+            </p>
+
+            <div className="bg-white rounded-sm border border-[rgba(212,120,138,0.12)] p-6">
+              <div className="flex flex-wrap gap-3">
+                {localBrands.map((brand, i) => (
+                  <div key={i} className="flex items-center gap-2 bg-[#FDFAF9] rounded-sm px-3 py-2 border border-[rgba(212,120,138,0.1)]">
+                    <input type="text" value={brand}
+                      onChange={(e) => { const copy = [...localBrands]; copy[i] = e.target.value; setLocalBrands(copy) }}
+                      className="w-40 px-2 py-1 text-xs border-0 bg-transparent text-[#1A1118] font-['DM_Sans'] font-medium focus:outline-none" />
+                    <button onClick={() => setLocalBrands(localBrands.filter((_, j) => j !== i))}
+                      className="text-[#E53935] hover:bg-red-50 rounded-sm w-5 h-5 flex items-center justify-center text-xs">✕</button>
+                  </div>
+                ))}
+              </div>
+              <button onClick={() => setLocalBrands([...localBrands, ''])}
+                className="mt-4 px-4 py-2 text-[0.65rem] font-['DM_Sans'] font-medium tracking-wider uppercase border border-[rgba(212,120,138,0.2)] rounded-sm hover:bg-[#FDF0F3] text-[#D4788A]">
+                + Agregar marca
+              </button>
+            </div>
+
+            <SaveBar tabKey="brands" hasChanges={brandsChanged} saving={savingTab === 'brands'}
+              onSave={handleSaveTab} />
+          </div>
+        )}
+
+        {/* ═══════════════════ CATEGORIES TAB ═══════════════════ */}
+        {activeTab === 'categories' && (
+          <div className="space-y-6">
+            <p className="text-xs text-[#9A7480] font-['DM_Sans']">
+              Categorías que se muestran en la sección de categorías. Si hay productos en BD, se usan sus imágenes automáticamente.
+            </p>
+
+            {localCategories.map((cat, i) => (
+              <div key={i} className="bg-white rounded-sm border border-[rgba(212,120,138,0.12)] p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-['Cormorant_Garamond'] text-lg text-[#1A1118]">Categoría {cat.num}</h3>
+                  <button onClick={() => setLocalCategories(localCategories.filter((_, j) => j !== i))}
+                    className="text-xs text-[#E53935] hover:underline font-['DM_Sans']">Eliminar</button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <input type="text" value={cat.title} placeholder="Título"
+                      onChange={(e) => { const copy = [...localCategories]; copy[i] = { ...copy[i], title: e.target.value }; setLocalCategories(copy) }}
+                      className="w-full px-3 py-2 text-xs border border-[rgba(212,120,138,0.2)] rounded-sm bg-white text-[#1A1118] font-['DM_Sans']" />
+                    <input type="text" value={cat.titleAccent} placeholder="Título accent"
+                      onChange={(e) => { const copy = [...localCategories]; copy[i] = { ...copy[i], titleAccent: e.target.value }; setLocalCategories(copy) }}
+                      className="w-full px-3 py-2 text-xs border border-[rgba(212,120,138,0.2)] rounded-sm bg-white text-[#1A1118] font-['DM_Sans']" />
+                    <input type="text" value={cat.subtitle} placeholder="Subtítulo"
+                      onChange={(e) => { const copy = [...localCategories]; copy[i] = { ...copy[i], subtitle: e.target.value }; setLocalCategories(copy) }}
+                      className="w-full px-3 py-2 text-xs border border-[rgba(212,120,138,0.2)] rounded-sm bg-white text-[#1A1118] font-['DM_Sans']" />
+                    <textarea value={cat.description} placeholder="Descripción" rows={2}
+                      onChange={(e) => { const copy = [...localCategories]; copy[i] = { ...copy[i], description: e.target.value }; setLocalCategories(copy) }}
+                      className="w-full px-3 py-2 text-xs border border-[rgba(212,120,138,0.2)] rounded-sm bg-white text-[#1A1118] font-['DM_Sans'] resize-none" />
+                    <input type="text" value={cat.link} placeholder="Link"
+                      onChange={(e) => { const copy = [...localCategories]; copy[i] = { ...copy[i], link: e.target.value }; setLocalCategories(copy) }}
+                      className="w-full px-3 py-2 text-xs border border-[rgba(212,120,138,0.2)] rounded-sm bg-white text-[#1A1118] font-['DM_Sans']" />
+                  </div>
+                  <div className="space-y-3">
+                    <input type="text" value={cat.image} placeholder="URL de imagen"
+                      onChange={(e) => { const copy = [...localCategories]; copy[i] = { ...copy[i], image: e.target.value }; setLocalCategories(copy) }}
+                      className="w-full px-3 py-2 text-xs border border-[rgba(212,120,138,0.2)] rounded-sm bg-white text-[#1A1118] font-['DM_Sans']" />
+                    <div className="aspect-[3/4] bg-[#FDF0F3] rounded-sm overflow-hidden">
+                      {cat.image && <img src={cat.image} alt={cat.title} className="w-full h-full object-cover" />}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <button onClick={() => setLocalCategories([...localCategories, {
+              title: '', titleAccent: '', subtitle: '', description: '', image: '', link: '/',
+              num: String(localCategories.length + 1).padStart(2, '0'), accent: 'left',
+            }])}
+              className="px-4 py-2 text-[0.65rem] font-['DM_Sans'] font-medium tracking-wider uppercase border border-[rgba(212,120,138,0.2)] rounded-sm hover:bg-[#FDF0F3] text-[#D4788A]">
+              + Agregar categoría
+            </button>
+
+            <SaveBar tabKey="categories" hasChanges={categoriesChanged} saving={savingTab === 'categories'}
+              onSave={handleSaveTab} />
+          </div>
+        )}
+
+        {/* ═══════════════════ FOOTER TAB ═══════════════════ */}
+        {activeTab === 'footer' && (
+          <div className="space-y-6">
+            <p className="text-xs text-[#9A7480] font-['DM_Sans']">
+              Información de contacto y redes sociales del footer.
+            </p>
+
+            <div className="bg-white rounded-sm border border-[rgba(212,120,138,0.12)] p-6">
+              <h3 className="font-['Cormorant_Garamond'] text-lg text-[#1A1118] mb-4">Contacto</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { key: 'address', label: 'Dirección' },
+                  { key: 'phone', label: 'Teléfono' },
+                  { key: 'email', label: 'Email' },
+                  { key: 'hours', label: 'Horario' },
+                ].map(({ key, label }) => (
+                  <div key={key}>
+                    <label className="block text-xs font-medium text-[#4A3340] mb-1 font-['DM_Sans']">{label}</label>
+                    <input type="text" value={localFooterContact[key] || ''}
+                      onChange={(e) => setLocalFooterContact({ ...localFooterContact, [key]: e.target.value })}
+                      className="w-full px-3 py-2 text-xs border border-[rgba(212,120,138,0.2)] rounded-sm bg-white text-[#1A1118] font-['DM_Sans']" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-sm border border-[rgba(212,120,138,0.12)] p-6">
+              <h3 className="font-['Cormorant_Garamond'] text-lg text-[#1A1118] mb-4">Redes sociales</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { key: 'facebook', label: 'Facebook URL' },
+                  { key: 'instagram', label: 'Instagram URL' },
+                  { key: 'pinterest', label: 'Pinterest URL' },
+                  { key: 'tiktok', label: 'TikTok URL' },
+                ].map(({ key, label }) => (
+                  <div key={key}>
+                    <label className="block text-xs font-medium text-[#4A3340] mb-1 font-['DM_Sans']">{label}</label>
+                    <input type="url" value={localFooterContact[key] || ''}
+                      onChange={(e) => setLocalFooterContact({ ...localFooterContact, [key]: e.target.value })}
+                      className="w-full px-3 py-2 text-xs border border-[rgba(212,120,138,0.2)] rounded-sm bg-white text-[#1A1118] font-['DM_Sans']" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <SaveBar tabKey="footer" hasChanges={footerChanged} saving={savingTab === 'footer'}
               onSave={handleSaveTab} />
           </div>
         )}

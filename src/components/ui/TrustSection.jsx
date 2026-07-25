@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import logoKB from '/kb.png'
 import { WHATSAPP_PHONE } from '../../lib/constants'
+import { useSiteConfig } from '../../hooks/useSiteConfig'
 
 // ─── Paleta Aurora Bloom — Editorial Edition ─────────────────────────────────
 const p = {
@@ -26,8 +27,8 @@ const p = {
   textSoft: '#8B6F7A',
 }
 
-// ─── Datos ───────────────────────────────────────────────────────────────────
-const checkItems = [
+// ─── Datos (fallbacks) ──────────────────────────────────────────────────────
+const defaultCheckItems = [
   {
     label: 'Productos 100% Originales',
     sub: 'Guess · Tommy Hilfiger · Calvin Klein · Michael Kors',
@@ -51,14 +52,14 @@ const checkItems = [
   },
 ]
 
-const stats = [
+const defaultStats = [
   { n: 500, s: '+', l: 'Productos importados' },
   { n: 8, s: '', l: 'Años de experiencia' },
   { n: 100, s: '%', l: 'Originales garantizados' },
   { n: 24, s: 'h', l: 'Tiempo de respuesta' },
 ]
 
-const brands = [
+const defaultBrands = [
   'GUESS', 'TOMMY HILFIGER', 'CALVIN KLEIN', 'MICHAEL KORS',
   'COACH', 'RALPH LAUREN', 'KATE SPADE',
 ]
@@ -166,19 +167,21 @@ const MagneticButton = ({ href, children }) => {
 }
 
 // Marquee de marcas
-const BrandMarquee = () => (
-  <div
-    className="relative overflow-hidden py-5"
-    style={{
-      borderTop: `1px solid ${p.champagne}50`,
-      borderBottom: `1px solid ${p.champagne}50`,
-    }}
-  >
+const BrandMarquee = ({ brands: brandsProp }) => {
+  const items = brandsProp?.length ? brandsProp : brands
+  return (
     <div
-      className="flex whitespace-nowrap"
-      style={{ animation: 'kbMarquee 30s linear infinite' }}
+      className="relative overflow-hidden py-5"
+      style={{
+        borderTop: `1px solid ${p.champagne}50`,
+        borderBottom: `1px solid ${p.champagne}50`,
+      }}
     >
-      {[...brands, ...brands, ...brands].map((b, i) => (
+      <div
+        className="flex whitespace-nowrap"
+        style={{ animation: 'kbMarquee 30s linear infinite' }}
+      >
+        {[...items, ...items, ...items].map((b, i) => (
         <span
           key={i}
           className="mx-10 font-light tracking-[0.35em] text-[0.95rem]"
@@ -193,7 +196,8 @@ const BrandMarquee = () => (
       ))}
     </div>
   </div>
-)
+  )
+}
 
 // Blob morphing de fondo (reemplaza pétalos)
 const MorphingBlob = () => (
@@ -233,6 +237,7 @@ const MorphingBlob = () => (
 
 // ─── Componente principal ────────────────────────────────────────────────────
 const TrustSection = () => {
+  const { config } = useSiteConfig()
   const [isVisible, setIsVisible] = useState(false)
   const [scrollProgress, setScrollProgress] = useState(0)
   const sectionRef = useRef(null)
@@ -251,6 +256,15 @@ const TrustSection = () => {
     if (sectionRef.current) obs.observe(sectionRef.current)
     return () => obs.disconnect()
   }, [])
+
+  // Mergear config con defaults (mantener iconos JSX hardcoded)
+  const checkItems = (config.trustItems?.length ? config.trustItems : defaultCheckItems).map((item, i) => ({
+    ...defaultCheckItems[i % defaultCheckItems.length],
+    label: item.label || defaultCheckItems[i % defaultCheckItems.length].label,
+    sub: item.sub || defaultCheckItems[i % defaultCheckItems.length].sub,
+  }))
+  const stats = config.trustStats?.length ? config.trustStats : defaultStats
+  const brandsList = config.brands?.length ? config.brands : defaultBrands
 
   // Scroll progress (para línea dorada decorativa)
   useEffect(() => {
@@ -605,7 +619,7 @@ const TrustSection = () => {
 
         {/* ─── MARQUEE DE MARCAS ─── */}
         <div className="mt-20 lg:mt-28">
-          <BrandMarquee />
+          <BrandMarquee brands={brandsList} />
         </div>
       </div>
 

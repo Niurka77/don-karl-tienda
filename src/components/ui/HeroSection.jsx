@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { p } from '../../lib/theme'
-import { SLIDE_DURATION_MS, TRANSITION_DURATION_MS, FALLBACK_IMAGE, trustItems, truncateText } from './hero/constants'
+import { SLIDE_DURATION_MS, TRANSITION_DURATION_MS, FALLBACK_IMAGE, truncateText } from './hero/constants'
+import { useSiteConfig } from '../../hooks/useSiteConfig'
 import SplitText from './hero/SplitText'
 import AnimatedPrice from './hero/AnimatedPrice'
 import MagneticButton from './hero/MagneticButton'
@@ -13,6 +14,7 @@ import Petal from './hero/Petal'
 //  COMPONENTE PRINCIPAL
 // ══════════════════════════════════════════════════════════════════════════════
 const HeroSection = () => {
+  const { config } = useSiteConfig()
   const [slides, setSlides] = useState([])
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
@@ -1150,7 +1152,7 @@ const HeroSection = () => {
       >
         <div className="max-w-screen-2xl mx-auto px-6 lg:px-12 py-7">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-            {trustItems.map((item) => (
+            {(config.trustItems || []).map((item) => (
               <div
                 key={item.label}
                 className="flex items-center gap-4 group cursor-default"
@@ -1172,7 +1174,7 @@ const HeroSection = () => {
                     strokeLinejoin="round"
                     viewBox="0 0 24 24"
                   >
-                    <path d={item.path} />
+                    <path d={item.iconPath} />
                   </svg>
                 </div>
                 <div>

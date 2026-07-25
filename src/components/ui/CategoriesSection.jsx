@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
+import { useSiteConfig } from '../../hooks/useSiteConfig'
 
 // 🔥 Fallbacks de imágenes (se usan si no hay datos en BD)
 const FALLBACK_CATEGORIES = [
@@ -37,7 +38,12 @@ const FALLBACK_CATEGORIES = [
 ]
 
 const CategoriesSection = () => {
-  const [categories, setCategories] = useState(FALLBACK_CATEGORIES)
+  const { config } = useSiteConfig()
+  const fallbacks = config.categories?.length ? config.categories.map((c, i) => ({
+    ...FALLBACK_CATEGORIES[i % FALLBACK_CATEGORIES.length],
+    ...c,
+  })) : FALLBACK_CATEGORIES
+  const [categories, setCategories] = useState(fallbacks)
   const [isVisible, setIsVisible] = useState(false)
   const sectionRef = useRef(null)
 
@@ -89,9 +95,9 @@ const CategoriesSection = () => {
         }
 
         setCategories([
-          buildCard(grouped.bolsos, FALLBACK_CATEGORIES[0], 0),
-          buildCard(grouped.vestidos, FALLBACK_CATEGORIES[1], 1),
-          buildCard(grouped.billeteras, FALLBACK_CATEGORIES[2], 2),
+          buildCard(grouped.bolsos, fallbacks[0], 0),
+          buildCard(grouped.vestidos, fallbacks[1], 1),
+          buildCard(grouped.billeteras, fallbacks[2], 2),
         ])
       } catch (error) {
         console.warn('Usando categorías fallback:', error)
