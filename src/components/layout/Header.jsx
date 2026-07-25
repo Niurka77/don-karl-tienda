@@ -1,6 +1,7 @@
 import logoKB from '/kb.png'
 import { Link } from 'react-router-dom'
 import { WHATSAPP_PHONE, WHATSAPP_MESSAGES } from '../../lib/constants'
+import { useSiteConfig } from '../../hooks/useSiteConfig'
 import { p } from '../../lib/theme'
 
 // ─── Pétalo decorativo flotante ──────────────────────────────────────────────
@@ -39,6 +40,8 @@ const Header = ({
   searchInputRef,
   petals,
 }) => {
+  const { config } = useSiteConfig()
+  const topbarText = config.texts?.topbar_text || 'Envío gratis en compras mayores a S/ 200 — Recoge en tienda'
   return (
     <header
       ref={headerRef}
@@ -74,14 +77,7 @@ const Header = ({
             animation: 'marqueeScroll 30s linear infinite',
           }}
         >
-          {[
-            '✦ Nueva Colección 2025',
-            '✦ Envíos a Todo el Perú',
-            '✦ Galería Chiclayo — 2do Piso',
-            '✦ Moda Importada desde EE.UU.',
-            '✦ 100% Originales',
-            '✦ Atención Personalizada',
-          ].map((text, i) => (
+          {Array.from({ length: 6 }, (_, i) => (
             <span
               key={i}
               className="px-8 whitespace-nowrap"
@@ -95,21 +91,14 @@ const Header = ({
                 textShadow: `0 1px 4px ${p.roseDeep}30`,
               }}
             >
-              {text}
+              ✦ {topbarText}
               <span className="mx-4" style={{ opacity: 0.6 }}>
                 ✦
               </span>
             </span>
           ))}
           {/* Duplicar para loop infinito */}
-          {[
-            '✦ Nueva Colección 2025',
-            '✦ Envíos a Todo el Perú',
-            '✦ Galería Chiclayo — 2do Piso',
-            '✦ Moda Importada desde EE.UU.',
-            '✦ 100% Originales',
-            '✦ Atención Personalizada',
-          ].map((text, i) => (
+          {Array.from({ length: 6 }, (_, i) => (
             <span
               key={`dup-${i}`}
               className="px-8 whitespace-nowrap"
@@ -122,7 +111,7 @@ const Header = ({
                 fontFamily: 'ui-sans-serif, system-ui, sans-serif',
               }}
             >
-              {text}
+              ✦ {topbarText}
               <span className="mx-4" style={{ opacity: 0.6 }}>
                 ✦
               </span>

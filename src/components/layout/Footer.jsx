@@ -15,6 +15,11 @@ const Footer = ({ onNavigate }) => {
   const { config } = useSiteConfig()
   const fc = config.footerContact || {}
   const socialLinks = fc.socialLinks?.length ? fc.socialLinks : defaultSocialLinks
+  const phone = fc.phone || '+51 906 877 812'
+  const email = fc.email || 'info@kbdresses.com'
+  const address = fc.address || 'Galería Chiclayo — 2do Piso'
+  const brandText = config.texts?.footer_brand || 'Piezas únicas de moda importada desde Estados Unidos, seleccionadas con ojo editorial para la mujer que sabe quién es.'
+  const tagline = config.texts?.footer_tagline || 'Diseñado con ✦ en Chiclayo, Perú'
 
   return (
     <footer
@@ -54,8 +59,7 @@ const Footer = ({ onNavigate }) => {
               className="text-sm leading-relaxed mb-8"
               style={{ color: p.textSoft, fontWeight: 300, maxWidth: '300px', fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}
             >
-              Piezas únicas de moda importada desde Estados Unidos,
-              seleccionadas con ojo editorial para la mujer que sabe quién es.
+              {brandText}
             </p>
             <div className="flex items-center gap-3">
               {socialLinks.map((social, i) => (
@@ -155,9 +159,9 @@ const Footer = ({ onNavigate }) => {
             </p>
             <ul className="space-y-4 mb-8">
               {[
-                { icon: <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />, text: '+51 906 877 812' },
-                { icon: <><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" /></>, text: 'info@kbdresses.com' },
-                { icon: <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />, text: 'Galería Chiclayo — 2do Piso' },
+                { icon: <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />, text: phone },
+                { icon: <><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" /></>, text: email },
+                { icon: <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />, text: address },
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-3">
                   <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" style={{ color: p.rose }}>
@@ -214,9 +218,7 @@ const Footer = ({ onNavigate }) => {
           © 2025 KB Dresses & More — Todos los derechos reservados
         </p>
         <p style={{ color: p.textSoft, fontSize: '0.75rem', letterSpacing: '0.04em', fontWeight: 300, fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
-          Diseñado con{' '}
-          <span style={{ color: p.roseVivid, display: 'inline-block', animation: 'heartBeat 2s ease-in-out infinite' }}>✦</span>{' '}
-          en Chiclayo, Perú
+          {tagline}
         </p>
       </div>
     </footer>

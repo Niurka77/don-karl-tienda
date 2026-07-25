@@ -265,6 +265,11 @@ const TrustSection = () => {
   }))
   const stats = config.trustStats?.length ? config.trustStats : defaultStats
   const brandsList = config.brands?.length ? config.brands : defaultBrands
+  const trustTitle = config.texts?.trust_title || 'Moda importada'
+  const trustSubtitle = config.texts?.trust_subtitle || 'Tu confianza es nuestra prioridad'
+  const fc = config.footerContact || {}
+  const contactAddress = fc.address || 'Galería Chiclayo · 2do Piso'
+  const contactPhone = fc.phone || '+51 906 877 812'
 
   // Scroll progress (para línea dorada decorativa)
   useEffect(() => {
@@ -350,7 +355,7 @@ const TrustSection = () => {
               fontFamily: 'Georgia, "Times New Roman", serif',
             }}
           >
-            <SplitText text="Moda importada" inView={isVisible} />
+            <SplitText text={trustTitle} inView={isVisible} />
             <br />
             <SplitText text="desde" inView={isVisible} delay={0.35} />{' '}
             <span
@@ -375,7 +380,7 @@ const TrustSection = () => {
               transition: 'all 1s cubic-bezier(0.16, 1, 0.3, 1) 0.8s',
             }}
           >
-            En <strong style={{ color: p.textMain, fontWeight: 500 }}>KB Dresses & More</strong> curamos lo último en tendencias directamente desde Estados Unidos. Carteras, vestidos de fiesta, billeteras y accesorios de las mejores marcas del mundo — seleccionados para ti.
+            {trustSubtitle}
           </p>
         </div>
 
@@ -453,12 +458,12 @@ const TrustSection = () => {
                   {
                     icon: <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z" />,
                     label: 'Tienda física',
-                    value: 'Galería Chiclayo · 2do Piso',
+                    value: contactAddress,
                   },
                   {
                     icon: <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />,
                     label: 'WhatsApp',
-                    value: '+51 906 877 812',
+                    value: contactPhone,
                     href: `https://wa.me/${WHATSAPP_PHONE}`,
                   },
                 ].map((item, i) => {

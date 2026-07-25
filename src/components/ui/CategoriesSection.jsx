@@ -46,6 +46,8 @@ const CategoriesSection = () => {
   const [categories, setCategories] = useState(fallbacks)
   const [isVisible, setIsVisible] = useState(false)
   const sectionRef = useRef(null)
+  const catTitle = config.texts?.categories_title || 'Explora por'
+  const catAccent = config.texts?.categories_title_accent || 'categoría'
 
   // 🔥 Fetch de categorías desde Supabase
   useEffect(() => {
@@ -227,7 +229,7 @@ const CategoriesSection = () => {
                   marginBottom: '1rem',
                 }}
               >
-                Explora por{' '}
+                {catTitle}{' '}
                 <span
                   style={{
                     fontStyle: 'italic',
@@ -239,7 +241,7 @@ const CategoriesSection = () => {
                     animation: 'gradientShift 6s ease infinite',
                   }}
                 >
-                  categoría
+                  {catAccent}
                 </span>
               </h2>
 
