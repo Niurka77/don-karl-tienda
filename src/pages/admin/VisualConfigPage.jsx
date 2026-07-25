@@ -1,14 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import useSiteConfigStore from '../../store/siteConfigStore'
 import { supabase } from '../../lib/supabase'
 
 const SECTIONS = [
-  { key: 'hero', label: 'Hero Principal', anchor: '/' },
-  { key: 'trust', label: 'Barra de Confianza', anchor: '/' },
-  { key: 'categories', label: 'Categorías', anchor: '/' },
-  { key: 'catalog', label: 'Catálogo', anchor: '/#product-grid-section' },
-  { key: 'videos', label: 'Videos / Redes', anchor: '/' },
-  { key: 'footer', label: 'Footer', anchor: '/#footer' },
+  { key: 'hero', label: 'Hero Principal', anchor: '/#section-hero' },
+  { key: 'trust', label: 'Barra de Confianza', anchor: '/#section-trust' },
+  { key: 'categories', label: 'Categorías', anchor: '/#section-categories' },
+  { key: 'catalog', label: 'Catálogo', anchor: '/#section-catalog' },
+  { key: 'videos', label: 'Videos / Redes', anchor: '/#section-videos' },
+  { key: 'footer', label: 'Footer', anchor: '/#section-footer' },
 ]
 
 const BLENDS = [
@@ -25,26 +25,73 @@ const PRESET_TEXTURES = [
   { name: 'Granito claro', url: 'https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=400&q=60' },
 ]
 
-function Toast({ message, type, onView }) {
-  if (!message) return null
+function Toast({ message, type, onView, duration = 8000 }) {
+  const [progress, setProgress] = useState(0)
+  const [visible, setVisible] = useState(!!message)
+  const startRef = useRef(null)
+  const rafRef = useRef(null)
+
+  useEffect(() => {
+    if (!message) {
+      setVisible(false)
+      return
+    }
+    setVisible(true)
+    setProgress(0)
+    startRef.current = Date.now()
+
+    const tick = () => {
+      const elapsed = Date.now() - startRef.current
+      const pct = Math.min((elapsed / duration) * 100, 100)
+      setProgress(pct)
+      if (pct < 100) {
+        rafRef.current = requestAnimationFrame(tick)
+      }
+    }
+    rafRef.current = requestAnimationFrame(tick)
+
+    const timer = setTimeout(() => {
+      setVisible(false)
+    }, duration)
+
+    return () => {
+      clearTimeout(timer)
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    }
+  }, [message, duration])
+
+  if (!visible || !message) return null
+
   const bg = type === 'success' ? 'bg-[#2E7D32]' : type === 'error' ? 'bg-[#E53935]' : 'bg-[#C9A84C]'
   const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ'
 
   return (
     <div
-      className={`fixed top-6 right-6 z-[100] flex items-center gap-3 px-5 py-3 rounded-sm shadow-lg text-white text-sm font-['DM_Sans'] ${bg}`}
+      className="fixed top-6 right-6 z-[100] w-[400px] rounded-sm shadow-2xl text-white overflow-hidden"
       style={{ animation: 'slide-in 0.3s cubic-bezier(0.16,1,0.3,1)' }}
     >
-      <span className="text-lg font-bold">{icon}</span>
-      <span>{message}</span>
-      {onView && (
-        <button
-          onClick={() => window.open('/', '_blank')}
-          className="ml-2 px-3 py-1 bg-white/20 rounded-sm text-xs font-semibold hover:bg-white/30 transition-colors"
-        >
-          Ver resultado →
-        </button>
-      )}
+      <div className={`flex items-center gap-3 px-5 py-4 ${bg}`}>
+        <span className="text-lg font-bold flex-shrink-0">{icon}</span>
+        <span className="text-sm font-['DM_Sans'] flex-1">{message}</span>
+        {onView && (
+          <button
+            onClick={() => window.open(onView, '_blank')}
+            className="ml-2 px-3 py-1.5 bg-white/20 rounded-sm text-xs font-semibold hover:bg-white/30 transition-colors whitespace-nowrap flex-shrink-0"
+          >
+            Ver resultado →
+          </button>
+        )}
+      </div>
+      {/* Barra de progreso */}
+      <div className="h-[3px] bg-black/20">
+        <div
+          className="h-full bg-[#4CAF50]"
+          style={{
+            width: `${progress}%`,
+            transition: 'width 0.1s linear',
+          }}
+        />
+      </div>
     </div>
   )
 }
@@ -110,18 +157,23 @@ export default function VisualConfigPage() {
   // Tracking de guardado por tab
   const [savingTab, setSavingTab] = useState(null)
 
-  const showToast = (message, type = 'success', nav = null) => {
-    setToast({ message, type, nav })
-    setTimeout(() => setToast({ message: '', type: '', nav: null }), 5000)
+  const showToast = (message, type = 'success', anchorUrl = null) => {
+    setToast({ message, type, anchor: anchorUrl })
+    setTimeout(() => setToast({ message: '', type: '', anchor: null }), 8000)
   }
 
   // Guardar un tab específico
-  const handleSaveTab = async (tabKey) => {
-    setSavingTab(tabKey)
+  const handleSaveTab = async (tabKey, sectionKey = null) => {
+    setSavingTab(sectionKey ? `${tabKey}-${sectionKey}` : tabKey)
     try {
       let newConfig
       if (tabKey === 'textures') {
-        newConfig = { ...config, textures: localTextures }
+        if (sectionKey) {
+          // Guardar solo una sección
+          newConfig = { ...config, textures: { ...config.textures, [sectionKey]: localTextures[sectionKey] } }
+        } else {
+          newConfig = { ...config, textures: localTextures }
+        }
       } else if (tabKey === 'decorations') {
         newConfig = { ...config, decorations: localDecorations }
       } else if (tabKey === 'texts') {
@@ -139,8 +191,10 @@ export default function VisualConfigPage() {
       }
       await saveConfig(newConfig)
 
-      const tabLabels = { textures: 'Texturas', decorations: 'Decoraciones', texts: 'Textos', colors: 'Colores' }
-      showToast(`${tabLabels[tabKey]} guardadas`, 'success')
+      const section = sectionKey ? SECTIONS.find((s) => s.key === sectionKey) : null
+      const anchorUrl = section?.anchor || null
+      const label = section?.label || tabKey
+      showToast(`Fondo de ${label} guardado`, 'success', anchorUrl)
     } catch (err) {
       showToast('Error al guardar: ' + err.message, 'error')
     } finally {
@@ -205,7 +259,7 @@ export default function VisualConfigPage() {
       <Toast
         message={toast.message}
         type={toast.type}
-        onNavigate={toast.nav}
+        onView={toast.anchor}
       />
 
       <div className="max-w-5xl mx-auto">
@@ -275,25 +329,27 @@ export default function VisualConfigPage() {
               }
 
               return (
-                <div key={key} className="bg-white rounded-sm border border-[rgba(212,120,138,0.12)] p-6">
+                <div key={key} id={`admin-section-${key}`} className="bg-white rounded-sm border border-[rgba(212,120,138,0.12)] p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-['Cormorant_Garamond'] text-lg text-[#1A1118]">{label}</h3>
-                    {/* Selector de modo */}
-                    <div className="flex gap-1 bg-[#FDFAF9] rounded-sm p-0.5 border border-[rgba(212,120,138,0.1)]">
-                      {[
-                        { value: 'none', label: 'Ninguno' },
-                        { value: 'texture', label: 'Textura' },
-                        { value: 'color', label: 'Color' },
-                      ].map((m) => (
-                        <button key={m.value} onClick={() => setMode(m.value)}
-                          className={`px-3 py-1.5 text-[0.6rem] font-['DM_Sans'] font-medium tracking-wider uppercase rounded-sm transition-all ${
-                            mode === m.value
-                              ? 'bg-[#1A1118] text-white shadow-sm'
-                              : 'text-[#9A7480] hover:text-[#4A3340]'
-                          }`}>
-                          {m.label}
-                        </button>
-                      ))}
+                    <div className="flex items-center gap-3">
+                      {/* Selector de modo */}
+                      <div className="flex gap-1 bg-[#FDFAF9] rounded-sm p-0.5 border border-[rgba(212,120,138,0.1)]">
+                        {[
+                          { value: 'none', label: 'Ninguno' },
+                          { value: 'texture', label: 'Textura' },
+                          { value: 'color', label: 'Color' },
+                        ].map((m) => (
+                          <button key={m.value} onClick={() => setMode(m.value)}
+                            className={`px-3 py-1.5 text-[0.6rem] font-['DM_Sans'] font-medium tracking-wider uppercase rounded-sm transition-all ${
+                              mode === m.value
+                                ? 'bg-[#1A1118] text-white shadow-sm'
+                                : 'text-[#9A7480] hover:text-[#4A3340]'
+                            }`}>
+                            {m.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
@@ -385,6 +441,31 @@ export default function VisualConfigPage() {
                         </div>
                       )}
                     </div>
+                  </div>
+
+                  {/* Botón guardar por sección */}
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-[rgba(212,120,138,0.1)]">
+                    <span className="text-[0.65rem] text-[#9A7480] font-['DM_Sans']">
+                      {JSON.stringify(localTextures[key]) !== JSON.stringify(config.textures?.[key]) ? '● Cambios pendientes' : '✓ Guardado'}
+                    </span>
+                    <button
+                      onClick={() => handleSaveTab('textures', key)}
+                      disabled={savingTab === `textures-${key}` || JSON.stringify(localTextures[key]) === JSON.stringify(config.textures?.[key])}
+                      className={`flex items-center gap-2 px-4 py-2 text-[0.6rem] font-['DM_Sans'] font-semibold tracking-widest uppercase rounded-sm transition-all ${
+                        JSON.stringify(localTextures[key]) !== JSON.stringify(config.textures?.[key])
+                          ? 'bg-[#1A1118] text-white hover:bg-[#2D2030] shadow-md cursor-pointer'
+                          : 'bg-[#F0E8E4] text-[#9A7480] cursor-not-allowed'
+                      }`}
+                    >
+                      {savingTab === `textures-${key}` ? (
+                        <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                      Guardar
+                    </button>
                   </div>
                 </div>
               )

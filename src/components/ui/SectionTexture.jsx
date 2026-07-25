@@ -9,9 +9,11 @@ export default function SectionTexture({ section, children, className = '' }) {
   const hasDecos = decorations.length > 0
   const hasBg = !!bgColor
 
+  const sectionId = `section-${section}`
+
   // Si no hay nada configurado, solo renderizar contenido
   if (!hasTexture && !hasDecos && !hasBg) {
-    return <div className={className}>{children}</div>
+    return <div id={sectionId} className={className}>{children}</div>
   }
 
   // Modo color: si hay bgColor, se usa color solido (sin textura)
@@ -20,6 +22,7 @@ export default function SectionTexture({ section, children, className = '' }) {
 
   return (
     <div
+      id={sectionId}
       className={`relative ${className}`}
       style={useColorMode ? { backgroundColor: bgColor } : undefined}
     >
