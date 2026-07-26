@@ -170,17 +170,21 @@ const ProductCard = ({ product, avgRating = null, reviewCount = 0 }) => {
             <div className="absolute top-3 right-3 z-20">
               <span
                 style={{
-                  background: `${p.ink}70`,
-                  backdropFilter: 'blur(10px)',
-                  color: p.champagneLt,
-                  fontSize: '0.55rem',
-                  padding: '0.22rem 0.6rem',
-                  letterSpacing: '0.18em',
+                  background: `linear-gradient(135deg, ${p.roseVivid} 0%, ${p.coral} 100%)`,
+                  color: '#FFFFFF',
+                  fontSize: '0.6rem',
+                  padding: '0.3rem 0.7rem',
+                  letterSpacing: '0.12em',
                   borderRadius: '3px',
-                  fontWeight: 500,
+                  fontWeight: 700,
+                  boxShadow: `0 4px 12px ${p.roseVivid}50`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
                 }}
               >
-                {sku.slice(-4)}
+                <span style={{ opacity: 0.85, fontSize: '0.5rem' }}>Código:</span>
+                {sku.replace(/[^0-9]/g, '')}
               </span>
             </div>
           )}

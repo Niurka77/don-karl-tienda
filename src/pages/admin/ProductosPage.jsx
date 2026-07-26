@@ -337,9 +337,10 @@ const useProductFilters = (products) => {
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
   const [stockFilter, setStockFilter] = useState('')
+  const [originFilter, setOriginFilter] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
 
-  const hasActiveFilters = Boolean(searchQuery || categoryFilter || stockFilter)
+  const hasActiveFilters = Boolean(searchQuery || categoryFilter || stockFilter || originFilter)
 
   const filteredProducts = useMemo(() => {
     let result = products
@@ -352,6 +353,10 @@ const useProductFilters = (products) => {
       result = result.filter((p) => p.category === categoryFilter)
     }
 
+    if (originFilter) {
+      result = result.filter((p) => p.origin === originFilter)
+    }
+
     if (stockFilter) {
       result = result.filter((p) => {
         if (stockFilter === 'agotado') return p.stock === 0
@@ -362,17 +367,18 @@ const useProductFilters = (products) => {
     }
 
     return result
-  }, [products, searchQuery, categoryFilter, stockFilter])
+  }, [products, searchQuery, categoryFilter, stockFilter, originFilter])
 
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchQuery, categoryFilter, stockFilter])
+  }, [searchQuery, categoryFilter, stockFilter, originFilter])
 
   const clearFilters = useCallback(() => {
     setSearchQuery('')
     setCategoryFilter('')
     setStockFilter('')
+    setOriginFilter('')
   }, [])
 
   const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE)
@@ -389,6 +395,7 @@ const useProductFilters = (products) => {
     searchQuery, setSearchQuery,
     categoryFilter, setCategoryFilter,
     stockFilter, setStockFilter,
+    originFilter, setOriginFilter,
     currentPage, setCurrentPage,
     filteredProducts,
     paginatedProducts,
@@ -414,6 +421,7 @@ const ProductosPage = () => {
     searchQuery, setSearchQuery,
     categoryFilter, setCategoryFilter,
     stockFilter, setStockFilter,
+    originFilter, setOriginFilter,
     currentPage, setCurrentPage,
     filteredProducts,
     paginatedProducts,
@@ -615,6 +623,16 @@ const ProductosPage = () => {
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
           </FilterSelect>
+
+          <FilterSelect
+            value={originFilter}
+            onChange={setOriginFilter}
+            ariaLabel="Filtrar por origen"
+          >
+            <option value="">Todos los orígenes</option>
+            <option value="importado">Importado (EE.UU.)</option>
+            <option value="nacional">Nacional (Lima)</option>
+          </FilterSelect>
         </div>
 
         {hasActiveFilters && (
@@ -677,6 +695,7 @@ const ProductosPage = () => {
                             <p className="text-xs text-[#9A7480] font-['DM_Sans'] mt-0.5">
                               {product.category}
                               {product.brand && <span className="opacity-60"> · {product.brand}</span>}
+                              {product.origin && <span className={`ml-1 px-1.5 py-0.5 text-[0.55rem] rounded-sm font-medium ${product.origin === 'nacional' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'}`}>{product.origin === 'nacional' ? 'NAC' : 'IMP'}</span>}
                             </p>
                           </div>
                         </div>

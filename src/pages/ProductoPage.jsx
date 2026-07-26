@@ -337,11 +337,14 @@ useEffect(() => {
               {producto.sku && (
                 <div className="absolute top-4 right-4 z-10">
                   <span className="text-editorial" style={{
-                    background: 'rgba(26,17,24,0.6)', backdropFilter: 'blur(8px)',
-                    color: 'rgba(242,196,206,0.75)', fontSize: '0.55rem',
-                    padding: '0.22rem 0.6rem', letterSpacing: '0.18em', borderRadius: '1px',
+                    background: 'linear-gradient(135deg, #FF5C8A 0%, #FF8E72 100%)',
+                    color: '#FFFFFF', fontSize: '0.6rem',
+                    padding: '0.3rem 0.7rem', letterSpacing: '0.12em', borderRadius: '3px',
+                    fontWeight: 700, boxShadow: '0 4px 12px rgba(255,92,138,0.5)',
+                    display: 'flex', alignItems: 'center', gap: '0.3rem',
                   }}>
-                    {producto.sku}
+                    <span style={{ opacity: 0.85, fontSize: '0.5rem' }}>Código:</span>
+                    {producto.sku.replace(/[^0-9]/g, '')}
                   </span>
                 </div>
               )}
@@ -419,9 +422,10 @@ useEffect(() => {
               )}
               {producto.sku && (
                 <span className="text-editorial" style={{
-                  color: 'rgba(154,116,128,0.5)', fontSize: '0.58rem', letterSpacing: '0.18em',
+                  color: '#FF5C8A', fontSize: '0.58rem', letterSpacing: '0.12em',
+                  fontWeight: 700,
                 }}>
-                  #{producto.sku}
+                  Código: {producto.sku.replace(/[^0-9]/g, '')}
                 </span>
               )}
             </div>

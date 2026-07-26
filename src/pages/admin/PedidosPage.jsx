@@ -173,7 +173,10 @@ const PedidosPage = () => {
       return
     }
     
-    const mensaje = `Hola ${pedido.customer_name}, te contactamos sobre tu pedido #${String(pedido.id).substring(0, 8).toUpperCase()}. Estado actual: ${pedido.status}. Total: S/ ${Number(pedido.total || 0).toFixed(2)}`
+    const items = Array.isArray(pedido.products) ? pedido.products.map(p => 
+      `- ${p.name}${p.sku ? ' [' + p.sku + ']' : ''}${p.size ? ' (' + p.size + ')' : ''} x${p.quantity}`
+    ).join('\n') : 'Sin productos';
+    const mensaje = `Hola ${pedido.customer_name}, te contactamos sobre tu pedido #${String(pedido.id).substring(0, 8).toUpperCase()}.\n\nProductos:\n${items}\n\nEstado: ${pedido.status}\nTotal: S/ ${Number(pedido.total || 0).toFixed(2)}`
     const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`
     window.open(url, '_blank')
   }
@@ -450,7 +453,7 @@ const PedidosPage = () => {
                           {pedido.products.map((prod, idx) => (
                             <div key={idx} className="flex justify-between items-center text-sm">
                               <span className="text-[#2D2030] font-['DM_Sans']">
-                                {prod.name} {prod.size && `(${prod.size})`} × {prod.quantity}
+                                {prod.name} {prod.sku && <span className="text-[#9A7480] text-xs">[{prod.sku}]</span>} {prod.size && `(${prod.size})`} × {prod.quantity}
                               </span>
                               <span className="text-[#1A1118] font-medium font-['DM_Sans']">
                                 {formatearMoneda(prod.price * prod.quantity)}
@@ -524,7 +527,10 @@ const PedidosPage = () => {
 </button>
 <button
   onClick={() => {
-    const mensaje = `Hola ${pedido.customer_name}, te contactamos sobre tu pedido #${String(pedido.id).substring(0, 8).toUpperCase()}. Estado actual: ${pedido.status}. Total: S/ ${Number(pedido.total || 0).toFixed(2)}`;
+    const items = Array.isArray(pedido.products) ? pedido.products.map(p => 
+      `- ${p.name}${p.sku ? ' [' + p.sku + ']' : ''}${p.size ? ' (' + p.size + ')' : ''} x${p.quantity}`
+    ).join('\n') : 'Sin productos';
+    const mensaje = `Hola ${pedido.customer_name}, te contactamos sobre tu pedido #${String(pedido.id).substring(0, 8).toUpperCase()}.\n\nProductos:\n${items}\n\nEstado: ${pedido.status}\nTotal: S/ ${Number(pedido.total || 0).toFixed(2)}`;
     navigator.clipboard.writeText(mensaje);
     agregarToast('Mensaje copiado al portapapeles', 'success');
   }}

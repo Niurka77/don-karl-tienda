@@ -6,14 +6,16 @@ import ColorPicker from './ColorPicker'
 import SizePicker, { tallasPorCategoria } from './SizePicker'
 import BrandSelector, { marcasPredefinidas } from './BrandSelector'
 
-const categorias = ['vestidos', 'bolsos', 'zapatos', 'Billeteras']
+const categorias = ['vestidos', 'bolsos', 'zapatos', 'zapatillas', 'Billeteras']
 const generos = ['mujer', 'hombre', 'unisex']
+const origenes = ['importado', 'nacional']
 
 const prefijosCategoria = {
   vestidos: 'KB-VES',
   bolsos: 'KB-BOL',
   zapatos: 'KB-ZAP',
-  Billeteras: 'KB-BIL',
+  zapatillas: 'KB-ZAT',
+  'Billeteras': 'KB-BIL',
 }
 
 const MAX_SLIDES = 5
@@ -33,6 +35,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     sku: '',
     category: 'vestidos',
     gender: 'mujer',
+    origin: 'importado',
     color: '',
     brand: '',
     brandPersonalizada: '',
@@ -77,6 +80,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
         sku: producto.sku || '',
         category: producto.category || 'vestidos',
         gender: producto.gender || 'mujer',
+        origin: producto.origin || 'importado',
         color: producto.color || '',
         brand: brandValue,
         brandPersonalizada: esMarcaPredefinida ? '' : brandValue,
@@ -451,6 +455,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
         sku: formData.sku.trim(),
         category: formData.category,
         gender: formData.gender,
+        origin: formData.origin,
         color: formData.color.trim(),
         brand: formData.brand.trim(),
         stock: parseInt(formData.stock),
@@ -711,6 +716,25 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
               {generos.map((gen) => (
                 <option key={gen} value={gen}>
                   {gen.charAt(0).toUpperCase() + gen.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Origen */}
+          <div>
+            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+              Origen
+            </label>
+            <select
+              name="origin"
+              value={formData.origin}
+              onChange={handleChange}
+              className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
+            >
+              {origenes.map((org) => (
+                <option key={org} value={org}>
+                  {org.charAt(0).toUpperCase() + org.slice(1)}
                 </option>
               ))}
             </select>

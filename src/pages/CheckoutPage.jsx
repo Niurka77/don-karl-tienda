@@ -99,6 +99,15 @@ const CheckoutPage = () => {
   const [errorServidor, setErrorServidor] = useState(null)
   const [pedidoExitoso, setPedidoExitoso] = useState(null)
 
+  // Código de descuento
+  const [couponCode, setCouponCode] = useState('')
+  const [couponDiscount, setCouponDiscount] = useState(0)
+  const [couponError, setCouponError] = useState('')
+  const [validatingCoupon, setValidatingCoupon] = useState(false)
+
+  const discountAmount = total * (couponDiscount / 100)
+  const finalTotal = total - discountAmount
+
   const validarEmail    = (v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
   const validarTelefono = (v) => /^9\d{8}$/.test(v.replace(/\D/g, ''))
 
@@ -107,6 +116,48 @@ const CheckoutPage = () => {
     setFormData(p => ({ ...p, [name]: value }))
     if (errores[name]) setErrores(p => ({ ...p, [name]: '' }))
     if (errorServidor) setErrorServidor(null)
+  }
+
+  const validateCoupon = async () => {
+    if (!couponCode.trim()) return
+    setValidatingCoupon(true)
+    setCouponError('')
+    setCouponDiscount(0)
+
+    const { data, error } = await supabase
+      .from('discount_codes')
+      .select('*')
+      .eq('code', couponCode.trim().toUpperCase())
+      .eq('active', true)
+      .single()
+
+    if (error || !data) {
+      setCouponError('Código no válido o inactivo')
+      setValidatingCoupon(false)
+      return
+    }
+
+    if (data.expires_at && new Date(data.expires_at) < new Date()) {
+      setCouponError('Código expirado')
+      setValidatingCoupon(false)
+      return
+    }
+
+    if (data.max_uses > 0 && data.used_count >= data.max_uses) {
+      setCouponError('Código agotado')
+      setValidatingCoupon(false)
+      return
+    }
+
+    if (data.min_purchase > 0 && total < data.min_purchase) {
+      setCouponError(`Compra mínima: S/ ${data.min_purchase}`)
+      setValidatingCoupon(false)
+      return
+    }
+
+    setCouponDiscount(data.discount_percent)
+    setCouponError('')
+    setValidatingCoupon(false)
   }
 
   const validar = () => {
@@ -140,7 +191,9 @@ const CheckoutPage = () => {
           cantidad: i.quantity, precio_unitario: i.price,
           subtotal: i.price * i.quantity, sku: i.sku,
         })),
-        total, payment_method: formData.metodoPago, status: 'pendiente',
+        total: finalTotal, payment_method: formData.metodoPago, status: 'pendiente',
+        coupon_code: couponDiscount > 0 ? couponCode.trim().toUpperCase() : null,
+        coupon_discount_percent: couponDiscount > 0 ? couponDiscount : null,
       }
           // 1. Guardar el pedido en la base de datos
       const { data, error } = await supabase.from('orders').insert([pedido]).select('id').single()
@@ -154,7 +207,7 @@ const CheckoutPage = () => {
       const numeroVendedora = WHATSAPP_PHONE
       
       const listaProductos = items.map(item => 
-        `• ${item.name} ${item.selectedSize ? `(Talla ${item.selectedSize})` : ''} x ${item.quantity} = S/ ${(item.price * item.quantity).toFixed(2)}`
+        `• ${item.name}${item.sku ? ' [' + item.sku + ']' : ''} ${item.selectedSize ? `(Talla ${item.selectedSize})` : ''} x ${item.quantity} = S/ ${(item.price * item.quantity).toFixed(2)}`
       ).join('\n')
 
       const textoNotificacion = 
@@ -164,7 +217,7 @@ const CheckoutPage = () => {
         `Dirección: ${pedido.customer_address}, ${pedido.customer_city}\n` +
         `Método de pago: ${pedido.payment_method.toUpperCase()}\n\n` +
         `Productos:\n${listaProductos}\n\n` +
-        `Total: S/ ${pedido.total.toFixed(2)}`
+        `Total: S/ ${pedido.total.toFixed(2)}${pedido.coupon_code ? '\nDescuento: ' + pedido.coupon_code + ' (-' + pedido.coupon_discount_percent + '%)' : ''}`
 
       // --- A) Correo Electrónico (MÁS SEGURO) ---
       // Esto usa el servicio de correos de Supabase (Edge Functions) para enviar un email al dueño
@@ -407,7 +460,7 @@ const CheckoutPage = () => {
               style={{ fontSize: '0.68rem', padding: '1.1rem', opacity: enviando ? 0.6 : 1 }}
             >
               <span>
-                {enviando ? 'Procesando…' : `Confirmar pedido — S/ ${total.toFixed(2)}`}
+                {enviando ? 'Procesando…' : `Confirmar pedido — S/ ${finalTotal.toFixed(2)}`}
               </span>
             </button>
           </form>
@@ -475,6 +528,40 @@ const CheckoutPage = () => {
                   <span style={{ fontSize: '0.72rem', fontWeight: 300, color: '#4CAF50', letterSpacing: '0.04em' }}>Por coordinar</span>
                 </div>
 
+                {/* Código de descuento */}
+                <div className="mb-4">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); if (couponDiscount > 0) { setCouponDiscount(0); setCouponError('') } }}
+                      placeholder="Código de descuento"
+                      className="flex-1 px-3 py-2 text-xs border border-[rgba(212,120,138,0.25)] rounded-sm font-['DM_Sans'] uppercase focus:outline-none focus:ring-1 focus:ring-[#D4788A]"
+                    />
+                    <button
+                      type="button"
+                      onClick={validateCoupon}
+                      disabled={validatingCoupon || !couponCode.trim()}
+                      className="px-4 py-2 text-[0.6rem] font-['DM_Sans'] font-semibold tracking-widest uppercase rounded-sm border border-[rgba(212,120,138,0.25)] hover:bg-[#FDF0F3] transition-colors disabled:opacity-50"
+                    >
+                      {validatingCoupon ? '...' : 'Aplicar'}
+                    </button>
+                  </div>
+                  {couponError && <p className="mt-1 text-xs text-red-500 font-['DM_Sans']">{couponError}</p>}
+                  {couponDiscount > 0 && (
+                    <p className="mt-1 text-xs text-green-600 font-['DM_Sans']">
+                      ✓-{couponDiscount}% descuento aplicado (-S/ {discountAmount.toFixed(2)})
+                    </p>
+                  )}
+                </div>
+
+                {couponDiscount > 0 && (
+                  <div className="flex justify-between items-center mb-2">
+                    <span style={{ fontSize: '0.75rem', fontWeight: 300, color: '#4CAF50' }}>Descuento ({couponDiscount}%)</span>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 300, color: '#4CAF50' }}>-S/ {discountAmount.toFixed(2)}</span>
+                  </div>
+                )}
+
                 <div style={{ borderTop: '1px solid rgba(212,120,138,0.1)', paddingTop: '1rem' }}
                   className="flex justify-between items-baseline">
                   <span className="text-editorial" style={{ color: 'var(--color-kb-mauve)', fontSize: '0.62rem', letterSpacing: '0.2em' }}>
@@ -485,7 +572,7 @@ const CheckoutPage = () => {
                     fontWeight: 300, letterSpacing: '-0.03em',
                     color: 'var(--color-kb-rose-deep)',
                   }}>
-                    S/ {total.toFixed(2)}
+                    S/ {finalTotal.toFixed(2)}
                   </span>
                 </div>
               </div>

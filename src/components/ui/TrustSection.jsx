@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import logoKB from '/kb.png'
+import logoKB from '/logo.svg'
 import { WHATSAPP_PHONE } from '../../lib/constants'
 import { useSiteConfig } from '../../hooks/useSiteConfig'
 

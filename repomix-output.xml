@@ -43,7 +43,7 @@ The content is organized as follows:
 .gitignore
 eslint.config.js
 index.html
-kb.png
+logo.svg
 package.json
 public/favicon.svg
 public/icons.svg
@@ -5651,7 +5651,7 @@ export default FilterBar
 
 <file path="src/components/ui/TrustSection.jsx">
 import { useState, useEffect, useRef } from 'react'
-import logoKB from '/kb.png'
+import logoKB from 'logo.svg'
 
 // ─── Paleta Aurora Bloom — Editorial Edition ─────────────────────────────────
 const p = {
@@ -11528,7 +11528,7 @@ export default ProductoForm
 </file>
 
 <file path="src/components/layout/Layout.jsx">
-import logoKB from '/kb.png'
+import logoKB from '/logo.svg'
 import WhatsAppButton from '../ui/WhatsAppButton'
 import { Outlet, Link, useNavigate } from 'react-router-dom'
 import CartDrawer from '../carrito/CartDrawer'

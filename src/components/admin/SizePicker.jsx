@@ -2,6 +2,7 @@ const tallasPorCategoria = {
   vestidos: ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Unico'],
   bolsos: ['Unico', 'Pequeño', 'Mediano', 'Grande'],
   zapatos: ['35', '36', '37', '38', '39', '40', '41', '42', '43', '44'],
+  zapatillas: ['35', '36', '37', '38', '39', '40', '41', '42', '43', '44'],
   Billeteras: ['Unico'],
 }
 
@@ -43,6 +44,7 @@ const SizePicker = ({
         {categoria === 'vestidos' && '👗 Tallas de ropa: XS a XXL'}
         {categoria === 'bolsos' && '👜 Tamaños de bolsos'}
         {categoria === 'zapatos' && '👠 Tallas numéricas de calzado'}
+        {categoria === 'zapatillas' && '👟 Tallas numéricas de zapatillas'}
         {categoria === 'Billeteras' && '💳 Billeteras: talla única'}
       </p>
     </div>

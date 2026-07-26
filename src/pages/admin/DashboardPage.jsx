@@ -357,6 +357,7 @@ const useDashboardStats = (onError) => {
     totalProducts:      0,
     totalOrders:        0,
     outOfStockProducts: 0,
+    lowStockProducts:   0,
     pendingOrders:      0,
     weekRevenue:        0,
     monthRevenue:       0,
@@ -371,6 +372,7 @@ const useDashboardStats = (onError) => {
       const [
         { count: totalProducts },
         { count: outOfStockProducts },
+        { data: lowStockData },
         { count: totalOrders },
         { count: pendingOrders },
         { data: weekOrders },
@@ -378,6 +380,7 @@ const useDashboardStats = (onError) => {
       ] = await Promise.all([
         supabase.from('products').select('*', { count: 'exact', head: true }),
         supabase.from('products').select('*', { count: 'exact', head: true }).eq('stock', 0),
+        supabase.from('products').select('id, name, sku, stock, category').gt('stock', 0).lte('stock', 5),
         supabase.from('orders').select('*', { count: 'exact', head: true }),
         supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pendiente'),
         supabase.from('orders').select('total').gte('created_at', oneWeekAgo).eq('status', 'entregado'),
@@ -391,6 +394,8 @@ const useDashboardStats = (onError) => {
         totalProducts:      totalProducts      ?? 0,
         totalOrders:        totalOrders        ?? 0,
         outOfStockProducts: outOfStockProducts ?? 0,
+        lowStockProducts:   lowStockData?.length || 0,
+        lowStockItems:      lowStockData || [],
         pendingOrders:      pendingOrders      ?? 0,
         weekRevenue:        sumRevenue(weekOrders),
         monthRevenue:       sumRevenue(monthOrders),
@@ -609,6 +614,12 @@ const DashboardPage = () => {
       accent: stats.outOfStockProducts > 0,
     },
     {
+      title:  'Stock bajo (≤5)',
+      value:  stats.lowStockProducts,
+      linkTo: '/admin/productos',
+      accent: stats.lowStockProducts > 0,
+    },
+    {
       title:  'Ingresos semana',
       value:  formatCurrency(stats.weekRevenue),
       linkTo: '/admin/pedidos',
@@ -744,6 +755,32 @@ const DashboardPage = () => {
             </section>
           )}
 
+          {/* Stock bajo */}
+          {stats.lowStockItems?.length > 0 && (
+            <section className="bg-white rounded-sm border border-[rgba(212,120,138,0.12)] shadow-[0_1px_4px_rgba(26,17,24,0.03)] p-6">
+              <SectionHeader
+                title="⚠ Stock bajo"
+                subtitle={`${stats.lowStockProducts} producto${stats.lowStockProducts !== 1 ? 's' : ''} con 5 o menos unidades`}
+                accent
+              />
+              <div className="mt-4 space-y-2">
+                {stats.lowStockItems.map((item) => (
+                  <div key={item.id} className="flex items-center justify-between py-2 px-3 bg-[#FFF8F5] rounded-sm">
+                    <div>
+                      <p className="text-sm font-medium text-[#1A1118] font-['DM_Sans']">{item.name}</p>
+                      <p className="text-xs text-[#9A7480] font-['DM_Sans']">{item.sku || '—'} · {item.category || '—'}</p>
+                    </div>
+                    <span className={`px-2 py-1 text-xs font-bold rounded-sm ${
+                      item.stock === 0 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+                    }`}>
+                      {item.stock} uds
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* Acciones rápidas */}
           <section className="bg-white rounded-sm border border-[rgba(212,120,138,0.12)] shadow-[0_1px_4px_rgba(26,17,24,0.03)] p-6">
             <SectionHeader title="Acciones rápidas" />
@@ -767,6 +804,14 @@ const DashboardPage = () => {
                 className="px-4 py-2 border border-[rgba(212,120,138,0.25)] text-[#9A7480] rounded-sm text-sm font-['DM_Sans'] font-medium hover:bg-[#FDF0F3] transition-colors"
               >
                 Ver tienda
+              </Link>
+              <Link
+                to="/catalogo"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 border border-[rgba(212,120,138,0.25)] text-[#9A7480] rounded-sm text-sm font-['DM_Sans'] font-medium hover:bg-[#FDF0F3] transition-colors"
+              >
+                Catálogo digital
               </Link>
             </div>
           </section>

@@ -1,4 +1,4 @@
-import logoKB from '/kb.png'
+import logoKB from '/logo.svg'
 import { WHATSAPP_PHONE, WHATSAPP_MESSAGES } from '../../lib/constants'
 import { useScrollReveal } from '../../hooks/useScrollReveal'
 import { useSiteConfig } from '../../hooks/useSiteConfig'
