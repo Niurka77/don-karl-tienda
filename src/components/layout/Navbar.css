@@ -8,13 +8,14 @@
   transition: background 0.5s cubic-bezier(0.16, 1, 0.3, 1),
               backdrop-filter 0.5s ease,
               box-shadow 0.5s ease;
+  border-bottom: 1px solid rgba(212, 120, 138, 0.12);
 }
 
 .kb-header--scrolled {
   background: linear-gradient(180deg, rgba(255, 248, 245, 0.96) 0%, rgba(253, 250, 249, 0.9) 100%);
   backdrop-filter: blur(20px);
-  box-shadow: 0 4px 40px rgba(255, 194, 212, 0.18),
-              0 0 0 1px rgba(255, 194, 212, 0.12);
+  border-bottom: 1px solid rgba(212, 120, 138, 0.18);
+  box-shadow: 0 4px 40px rgba(255, 194, 212, 0.18);
 }
 
 /* ── Topbar ─────────────────────────────────────────────────────────────── */
@@ -91,7 +92,7 @@
 }
 
 .kb-logo__img {
-  height: 56px;
+  height: 80px;
   object-fit: contain;
   filter: drop-shadow(0 2px 12px rgba(212, 120, 138, 0.15));
   transition: height 0.5s cubic-bezier(0.16, 1, 0.3, 1),
@@ -99,7 +100,7 @@
 }
 
 .kb-navbar--compact .kb-logo__img {
-  height: 42px;
+  height: 56px;
 }
 
 .kb-logo:hover .kb-logo__img {

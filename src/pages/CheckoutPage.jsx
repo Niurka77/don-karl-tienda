@@ -1,263 +1,49 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import useCartStore from '../store/cartStore'
-import { supabase } from '../lib/supabase'
 import { WHATSAPP_PHONE } from '../lib/constants'
 import ImageWithFallback from '../components/ui/ImageWithFallback'
 
-/* ─────────────────────────────────────────
-   Input base con línea inferior editorial
-───────────────────────────────────────── */
-const FieldLine = ({ name, value, onChange, placeholder, type = 'text', error, span }) => {
-  const [focused, setFocused] = useState(false)
+const CURRENCY = 'S/'
 
-  return (
-    <div className={span ? 'md:col-span-2' : ''}>
-      <div style={{ position: 'relative', paddingBottom: '1px' }}>
-        {/* Placeholder flotante */}
-        <label
-          style={{
-            position: 'absolute',
-            left: 0,
-            top: focused || value ? '-14px' : '10px',
-            fontSize: focused || value ? '0.58rem' : '0.82rem',
-            fontWeight: 300,
-            letterSpacing: focused || value ? '0.18em' : '0.02em',
-            textTransform: focused || value ? 'uppercase' : 'none',
-            color: error
-              ? '#E53935'
-              : focused
-              ? 'var(--color-kb-rose)'
-              : 'var(--color-kb-mauve)',
-            transition: 'all 0.25s cubic-bezier(0.16,1,0.3,1)',
-            pointerEvents: 'none',
-            fontFamily: 'var(--font-sans)',
-          }}
-        >
-          {placeholder}
-        </label>
-
-        <input
-          type={type}
-          name={name}
-          value={value}
-          onChange={onChange}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          autoComplete="off"
-          style={{
-            width: '100%',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: `1px solid ${
-              error ? '#E53935' : focused ? 'var(--color-kb-rose)' : 'rgba(212,120,138,0.25)'
-            }`,
-            padding: '0.55rem 0 0.5rem',
-            fontSize: '0.88rem',
-            fontWeight: 300,
-            fontFamily: 'var(--font-sans)',
-            color: 'var(--color-kb-charcoal)',
-            outline: 'none',
-            transition: 'border-color 0.3s ease',
-            letterSpacing: '0.02em',
-          }}
-        />
-
-        {/* Línea de progreso animada al focus */}
-        <div style={{
-          position: 'absolute', bottom: 0, left: 0,
-          height: '2px', borderRadius: '0',
-          background: 'linear-gradient(90deg, var(--color-kb-rose), var(--color-kb-soft-pink))',
-          width: focused ? '100%' : '0',
-          transition: 'width 0.4s cubic-bezier(0.16,1,0.3,1)',
-        }} />
-      </div>
-
-      {error && (
-        <p style={{ fontSize: '0.62rem', color: '#E53935', marginTop: '5px', letterSpacing: '0.04em', fontWeight: 300 }}>
-          {error}
-        </p>
-      )}
-    </div>
-  )
-}
-
-/* ─────────────────────────────────────────
-   CheckoutPage
-───────────────────────────────────────── */
 const CheckoutPage = () => {
-  const navigate = useNavigate()
   const { items, getTotalPrice, clearCart } = useCartStore()
   const total = getTotalPrice()
 
-  const [formData, setFormData] = useState({
-    nombre: '', telefono: '', email: '',
-    direccion: '', ciudad: '', metodoPago: '',
-  })
-  const [errores,       setErrores]      = useState({})
-  const [enviando,      setEnviando]     = useState(false)
-  const [errorServidor, setErrorServidor] = useState(null)
-  const [pedidoExitoso, setPedidoExitoso] = useState(null)
+  const buildWhatsAppMessage = () => {
+    const lines = items.map((item) => {
+      const code = item.sku ? item.sku.replace(/[^0-9]/g, '') : ''
+      const size = item.selectedSize ? ` (Talla ${item.selectedSize})` : ''
+      const sub = (item.price * item.quantity).toFixed(2)
+      return `• ${item.name}${code ? ' [Código: ' + code + ']' : ''}${size} x${item.quantity} = ${CURRENCY}${sub}`
+    })
 
-  // Código de descuento
-  const [couponCode, setCouponCode] = useState('')
-  const [couponDiscount, setCouponDiscount] = useState(0)
-  const [couponError, setCouponError] = useState('')
-  const [validatingCoupon, setValidatingCoupon] = useState(false)
-
-  const discountAmount = total * (couponDiscount / 100)
-  const finalTotal = total - discountAmount
-
-  const validarEmail    = (v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
-  const validarTelefono = (v) => /^9\d{8}$/.test(v.replace(/\D/g, ''))
-
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(p => ({ ...p, [name]: value }))
-    if (errores[name]) setErrores(p => ({ ...p, [name]: '' }))
-    if (errorServidor) setErrorServidor(null)
+    return [
+      `Hola Don Karl`,
+      ``,
+      `Vi en su tienda y me interesa:`,
+      ...lines,
+      ``,
+      `💰 Total: ${CURRENCY}${total.toFixed(2)}`,
+      ``,
+      `¿Cómo coordino el pago?`,
+    ].join('\n')
   }
 
-  const validateCoupon = async () => {
-    if (!couponCode.trim()) return
-    setValidatingCoupon(true)
-    setCouponError('')
-    setCouponDiscount(0)
+  const handleSendWhatsApp = () => {
+    if (items.length === 0) return
+    const msg = buildWhatsAppMessage()
+    const url = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(msg)}`
 
-    const { data, error } = await supabase
-      .from('discount_codes')
-      .select('*')
-      .eq('code', couponCode.trim().toUpperCase())
-      .eq('active', true)
-      .single()
-
-    if (error || !data) {
-      setCouponError('Código no válido o inactivo')
-      setValidatingCoupon(false)
-      return
-    }
-
-    if (data.expires_at && new Date(data.expires_at) < new Date()) {
-      setCouponError('Código expirado')
-      setValidatingCoupon(false)
-      return
-    }
-
-    if (data.max_uses > 0 && data.used_count >= data.max_uses) {
-      setCouponError('Código agotado')
-      setValidatingCoupon(false)
-      return
-    }
-
-    if (data.min_purchase > 0 && total < data.min_purchase) {
-      setCouponError(`Compra mínima: S/ ${data.min_purchase}`)
-      setValidatingCoupon(false)
-      return
-    }
-
-    setCouponDiscount(data.discount_percent)
-    setCouponError('')
-    setValidatingCoupon(false)
-  }
-
-  const validar = () => {
-    const e = {}
-    if (!formData.nombre.trim())    e.nombre    = 'Requerido'
-    if (!formData.telefono.trim())  e.telefono  = 'Requerido'
-    else if (!validarTelefono(formData.telefono)) e.telefono = 'Número inválido (ej: 999999999)'
-    if (!formData.direccion.trim()) e.direccion = 'Requerido'
-    if (!formData.ciudad.trim())    e.ciudad    = 'Requerido'
-    if (!formData.metodoPago)       e.metodoPago = 'Selecciona un método'
-    if (formData.email && !validarEmail(formData.email)) e.email = 'Email inválido'
-    setErrores(e)
-    return Object.keys(e).length === 0
-  }
-
-  const handleSubmit = async (ev) => {
-    ev.preventDefault()
-    setErrorServidor(null)
-    if (!validar()) return
-    if (enviando) return
-    setEnviando(true)
-    try {
-      const pedido = {
-        customer_name:    formData.nombre.trim(),
-        customer_phone:   formData.telefono.trim(),
-        customer_email:   formData.email.trim() || null,
-        customer_address: formData.direccion.trim(),
-        customer_city:    formData.ciudad.trim(),
-        products: items.map(i => ({
-          product_id: i.id, name: i.name, talla: i.selectedSize,
-          cantidad: i.quantity, precio_unitario: i.price,
-          subtotal: i.price * i.quantity, sku: i.sku,
-        })),
-        total: finalTotal, payment_method: formData.metodoPago, status: 'pendiente',
-        coupon_code: couponDiscount > 0 ? couponCode.trim().toUpperCase() : null,
-        coupon_discount_percent: couponDiscount > 0 ? couponDiscount : null,
-      }
-          // 1. Guardar el pedido en la base de datos
-      const { data, error } = await supabase.from('orders').insert([pedido]).select('id').single()
-      if (error) throw error
-      
-      // 2. Reducir el stock
-      for (const item of items)
-        await supabase.rpc('decrementar_stock', { product_id: item.id, cantidad: item.quantity })
-
-      // 3. Notificación híbrida: Correo electrónico + WhatsApp (opcional)
-      const numeroVendedora = WHATSAPP_PHONE
-      
-      const listaProductos = items.map(item => 
-        `• ${item.name}${item.sku ? ' [' + item.sku + ']' : ''} ${item.selectedSize ? `(Talla ${item.selectedSize})` : ''} x ${item.quantity} = S/ ${(item.price * item.quantity).toFixed(2)}`
-      ).join('\n')
-
-      const textoNotificacion = 
-        `🛍️ *NUEVO PEDIDO* 🛍️\n\n` +
-        `Cliente: ${pedido.customer_name}\n` +
-        `Teléfono: ${pedido.customer_phone}\n` +
-        `Dirección: ${pedido.customer_address}, ${pedido.customer_city}\n` +
-        `Método de pago: ${pedido.payment_method.toUpperCase()}\n\n` +
-        `Productos:\n${listaProductos}\n\n` +
-        `Total: S/ ${pedido.total.toFixed(2)}${pedido.coupon_code ? '\nDescuento: ' + pedido.coupon_code + ' (-' + pedido.coupon_discount_percent + '%)' : ''}`
-
-      // --- A) Correo Electrónico (MÁS SEGURO) ---
-      // Esto usa el servicio de correos de Supabase (Edge Functions) para enviar un email al dueño
-      // Simulamos el llamado aquí. (Requiere configurar una Edge Function, pero es gratis y no abre pestañas).
-      // Por ahora, como plan B, usaremos el método de WhatsApp.
-      
-          // --- B) WhatsApp (Versión mejorada sin bloqueos) ---
-      // Construimos la URL de WhatsApp
-      const waUrl = `https://wa.me/${numeroVendedora}?text=${encodeURIComponent(textoNotificacion)}`;
-
-      // Verificamos si es un celular
-      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-      if (isMobile) {
-        // En celulares, abrir la app nativa
-        window.location.href = waUrl;
-      } else {
-        // En escritorio, NO hacemos click automático. 
-        // Simplemente abrimos en una nueva pestaña permitida por el navegador.
-        // El navegador permite "window.open" si se hace inmediatamente después de un clic real del usuario.
-        window.open(waUrl, '_blank');
-      }
-
-      // 4. Mostrar la pantalla de éxito al cliente
-      setPedidoExitoso({ id: data.id, ...pedido })
-      clearCart()
-    } catch (err) {
-      console.error(err)
-      setErrorServidor('Error al procesar el pedido. Intenta nuevamente.')
-    } finally {
-      setEnviando(false)
+    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+      window.location.href = url
+    } else {
+      window.open(url, '_blank')
     }
   }
 
   /* ── CARRITO VACÍO ── */
-  if (items.length === 0 && !pedidoExitoso) return (
-    <div
-      className="min-h-screen flex items-center justify-center"
-      style={{ background: 'var(--color-kb-ivory)' }}
-    >
+  if (items.length === 0) return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-kb-ivory)' }}>
       <div className="text-center px-6">
         <div style={{
           width: '56px', height: '56px', borderRadius: '50%', margin: '0 auto 1.5rem',
@@ -280,314 +66,119 @@ const CheckoutPage = () => {
     </div>
   )
 
-  /* ── PEDIDO EXITOSO ── */
-  if (pedidoExitoso) return (
-    <div
-      className="min-h-screen flex items-center justify-center"
-      style={{ background: 'var(--color-kb-ivory)' }}
-    >
-      <div className="text-center px-6 animate-scale-reveal max-w-sm">
-        {/* Ícono check animado */}
-        <div style={{
-          width: '72px', height: '72px', borderRadius: '50%', margin: '0 auto 2rem',
-          border: '1px solid rgba(212,120,138,0.25)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: 'rgba(250,237,241,0.6)',
-        }}>
-          <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"
-            style={{ color: 'var(--color-kb-rose)' }}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-        </div>
-
-        {/* Número pedido */}
-        <p className="text-editorial mb-3" style={{ color: 'var(--color-kb-rose)', fontSize: '0.62rem', letterSpacing: '0.25em' }}>
-          Pedido confirmado
-        </p>
-
-        <h2 style={{
-          fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 300,
-          letterSpacing: '-0.02em', color: 'var(--color-kb-charcoal)', marginBottom: '0.5rem',
-        }}>
-          ¡Gracias, {pedidoExitoso.customer_name.split(' ')[0]}!
-        </h2>
-
-        <p style={{ fontSize: '0.75rem', fontWeight: 300, color: 'var(--color-kb-mauve)', marginBottom: '0.5rem' }}>
-          Pedido #{pedidoExitoso.id?.slice(0, 8).toUpperCase()}
-        </p>
-
-        <p style={{ fontSize: '0.78rem', fontWeight: 300, color: 'rgba(154,116,128,0.7)', lineHeight: 1.6, marginBottom: '2.5rem' }}>
-          Nos pondremos en contacto contigo en breve para coordinar la entrega.
-        </p>
-
-        <div style={{ height: '1px', background: 'rgba(212,120,138,0.12)', marginBottom: '2rem' }} />
-
-        <Link to="/" className="btn-kb-ghost">← Seguir comprando</Link>
-      </div>
-    </div>
-  )
-
-  /* ── CHECKOUT PRINCIPAL ── */
+  /* ── RESUMEN + WHATSAPP ── */
   return (
     <div style={{ background: 'var(--color-kb-ivory)', minHeight: '100vh' }}>
-      <div className="max-w-screen-xl mx-auto px-6 lg:px-10 py-14 md:py-20">
+      <div className="max-w-screen-md mx-auto px-6 py-14 md:py-20">
 
         {/* Header */}
-        <div className="flex items-center gap-4 mb-14">
+        <div className="flex items-center gap-4 mb-10">
           <span style={{ width: '24px', height: '1px', background: 'var(--color-kb-rose)', display: 'inline-block' }} />
           <h1 style={{
             fontFamily: 'var(--font-display)', fontSize: 'clamp(1.8rem, 4vw, 2.4rem)',
             fontWeight: 300, fontStyle: 'italic', letterSpacing: '-0.02em',
             color: 'var(--color-kb-charcoal)',
           }}>
-            Checkout
+            Tu cotización
           </h1>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-12 lg:gap-16 items-start">
-
-          {/* ── FORMULARIO ── */}
-          <form onSubmit={handleSubmit} className="lg:col-span-2 space-y-12">
-
-            {/* CONTACTO */}
-            <section>
-              <p className="text-editorial mb-8" style={{ color: 'var(--color-kb-mauve)', fontSize: '0.62rem', letterSpacing: '0.25em' }}>
-                01 — Contacto
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
-                <FieldLine name="nombre"   value={formData.nombre}   onChange={handleChange} placeholder="Nombre completo" error={errores.nombre} />
-                <FieldLine name="telefono" value={formData.telefono} onChange={handleChange} placeholder="Teléfono"         type="tel" error={errores.telefono} />
-                <FieldLine name="email"    value={formData.email}    onChange={handleChange} placeholder="Email (opcional)" type="email" error={errores.email} span />
-              </div>
-            </section>
-
-            {/* Separador */}
-            <div style={{ height: '1px', background: 'rgba(212,120,138,0.1)' }} />
-
-            {/* ENVÍO */}
-            <section>
-              <p className="text-editorial mb-8" style={{ color: 'var(--color-kb-mauve)', fontSize: '0.62rem', letterSpacing: '0.25em' }}>
-                02 — Envío
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
-                <FieldLine name="direccion" value={formData.direccion} onChange={handleChange} placeholder="Dirección" error={errores.direccion} span />
-                <FieldLine name="ciudad"    value={formData.ciudad}    onChange={handleChange} placeholder="Ciudad"    error={errores.ciudad} />
-              </div>
-            </section>
-
-            {/* Separador */}
-            <div style={{ height: '1px', background: 'rgba(212,120,138,0.1)' }} />
-
-            {/* PAGO */}
-            <section>
-              <p className="text-editorial mb-8" style={{ color: 'var(--color-kb-mauve)', fontSize: '0.62rem', letterSpacing: '0.25em' }}>
-                03 — Método de pago
-              </p>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                {['yape', 'plin', 'tarjeta', 'transferencia'].map((m) => {
-                  const active = formData.metodoPago === m
-                  return (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => { setFormData(p => ({ ...p, metodoPago: m })); if (errores.metodoPago) setErrores(p => ({ ...p, metodoPago: '' })) }}
-                      style={{
-                        padding: '0.85rem 0.5rem',
-                        border: `1px solid ${active ? 'var(--color-kb-obsidian)' : 'rgba(212,120,138,0.2)'}`,
-                        background: active ? 'var(--color-kb-obsidian)' : 'white',
-                        color: active ? 'var(--color-kb-ivory)' : 'var(--color-kb-mauve)',
-                        fontSize: '0.62rem', fontWeight: active ? 500 : 300,
-                        fontFamily: 'var(--font-sans)',
-                        letterSpacing: '0.18em', textTransform: 'uppercase',
-                        borderRadius: '2px',
-                        transition: 'all 0.25s ease',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {m}
-                    </button>
-                  )
-                })}
-              </div>
-
-              {errores.metodoPago && (
-                <p style={{ fontSize: '0.62rem', color: '#E53935', marginBottom: '1rem', letterSpacing: '0.04em' }}>
-                  {errores.metodoPago}
-                </p>
-              )}
-
-              {/* Info Yape */}
-              {formData.metodoPago === 'yape' && (
-                <div
-                  className="animate-slide-down"
-                  style={{
-                    padding: '1rem 1.2rem',
-                    border: '1px solid rgba(212,120,138,0.15)',
-                    background: 'rgba(250,237,241,0.5)',
-                    borderLeft: '2px solid var(--color-kb-rose)',
-                    borderRadius: '2px',
-                    fontSize: '0.78rem', fontWeight: 300,
-                    color: 'var(--color-kb-mauve)',
-                    lineHeight: 1.65,
-                  }}
-                >
-                  Yapea al <strong style={{ color: 'var(--color-kb-rose-deep)', fontWeight: 500 }}>+51 906 877 812</strong> a nombre de KB Dresses.
-                  El pedido se confirma al recibir el comprobante.
-                </div>
-              )}
-            </section>
-
-            {/* Error servidor */}
-            {errorServidor && (
-              <div style={{
-                padding: '0.9rem 1.2rem',
-                border: '1px solid rgba(229,57,53,0.2)',
-                borderLeft: '2px solid #E53935',
-                background: 'rgba(229,57,53,0.04)',
-                fontSize: '0.78rem', fontWeight: 300,
-                color: '#C62828', letterSpacing: '0.02em',
-              }}>
-                {errorServidor}
-              </div>
-            )}
-
-            {/* Botón confirmar */}
-            <button
-              type="submit"
-              disabled={enviando}
-              className="w-full btn-kb-primary"
-              style={{ fontSize: '0.68rem', padding: '1.1rem', opacity: enviando ? 0.6 : 1 }}
-            >
-              <span>
-                {enviando ? 'Procesando…' : `Confirmar pedido — S/ ${finalTotal.toFixed(2)}`}
-              </span>
-            </button>
-          </form>
-
-          {/* ── RESUMEN DEL PEDIDO ── */}
-          <div className="lg:sticky lg:top-28">
-            <div style={{
-              background: 'white',
-              border: '1px solid rgba(212,120,138,0.12)',
-              padding: '1.8rem',
-            }}>
-              {/* Heading */}
-              <div className="flex items-center gap-3 mb-6">
-                <span style={{ width: '16px', height: '1px', background: 'var(--color-kb-rose)', flexShrink: 0 }} />
-                <p className="text-editorial" style={{ color: 'var(--color-kb-charcoal)', fontSize: '0.62rem', letterSpacing: '0.22em' }}>
-                  Tu pedido
-                </p>
-              </div>
-
-              {/* Items */}
-              <div className="space-y-4 mb-6" style={{ maxHeight: '340px', overflowY: 'auto' }}>
-                {items.map((item) => (
-                  <div
-                    key={`${item.id}-${item.selectedSize}`}
-                    className="flex gap-3"
-                  >
-                    {/* Miniatura */}
-                    <div style={{ width: '52px', height: '64px', flexShrink: 0, overflow: 'hidden', background: 'var(--color-kb-blush)' }}>
-                      <ImageWithFallback
-                        src={item.image}
-                        alt={item.name}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    </div>
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <p style={{ fontSize: '0.82rem', fontWeight: 400, color: 'var(--color-kb-charcoal)', marginBottom: '2px' }}
-                        className="line-clamp-1">
-                        {item.name}
-                      </p>
-                      <p style={{ fontSize: '0.65rem', fontWeight: 300, color: 'var(--color-kb-mauve)', letterSpacing: '0.04em', marginBottom: '4px' }}>
-                        {item.selectedSize && `Talla ${item.selectedSize} · `}Cant. {item.quantity}
-                      </p>
-                      <p style={{
-                        fontFamily: 'var(--font-display)', fontSize: '0.95rem', fontWeight: 400,
-                        color: 'var(--color-kb-rose-deep)', letterSpacing: '-0.01em',
-                      }}>
-                        S/ {(item.price * item.quantity).toFixed(2)}
-                      </p>
-                    </div>
+        {/* Card resumen */}
+        <div style={{
+          background: 'white', border: '1px solid rgba(212,120,138,0.12)',
+          padding: '2rem', marginBottom: '2rem',
+        }}>
+          {/* Items */}
+          <div className="space-y-5 mb-6">
+            {items.map((item) => {
+              const code = item.sku ? item.sku.replace(/[^0-9]/g, '') : ''
+              return (
+                <div key={`${item.id}-${item.selectedSize}`} className="flex gap-4">
+                  <div style={{ width: '64px', height: '80px', flexShrink: 0, overflow: 'hidden', background: 'var(--color-kb-blush)' }}>
+                    <ImageWithFallback src={item.image} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
                   </div>
-                ))}
-              </div>
-
-              {/* Subtotal / envío / total */}
-              <div style={{ borderTop: '1px solid rgba(212,120,138,0.1)', paddingTop: '1.2rem' }}>
-                <div className="flex justify-between items-center mb-2">
-                  <span style={{ fontSize: '0.75rem', fontWeight: 300, color: 'var(--color-kb-mauve)' }}>Subtotal</span>
-                  <span style={{ fontSize: '0.82rem', fontWeight: 300, color: 'var(--color-kb-charcoal)' }}>S/ {total.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between items-center mb-5">
-                  <span style={{ fontSize: '0.75rem', fontWeight: 300, color: 'var(--color-kb-mauve)' }}>Envío</span>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 300, color: '#4CAF50', letterSpacing: '0.04em' }}>Por coordinar</span>
-                </div>
-
-                {/* Código de descuento */}
-                <div className="mb-4">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={couponCode}
-                      onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); if (couponDiscount > 0) { setCouponDiscount(0); setCouponError('') } }}
-                      placeholder="Código de descuento"
-                      className="flex-1 px-3 py-2 text-xs border border-[rgba(212,120,138,0.25)] rounded-sm font-['DM_Sans'] uppercase focus:outline-none focus:ring-1 focus:ring-[#D4788A]"
-                    />
-                    <button
-                      type="button"
-                      onClick={validateCoupon}
-                      disabled={validatingCoupon || !couponCode.trim()}
-                      className="px-4 py-2 text-[0.6rem] font-['DM_Sans'] font-semibold tracking-widest uppercase rounded-sm border border-[rgba(212,120,138,0.25)] hover:bg-[#FDF0F3] transition-colors disabled:opacity-50"
-                    >
-                      {validatingCoupon ? '...' : 'Aplicar'}
-                    </button>
-                  </div>
-                  {couponError && <p className="mt-1 text-xs text-red-500 font-['DM_Sans']">{couponError}</p>}
-                  {couponDiscount > 0 && (
-                    <p className="mt-1 text-xs text-green-600 font-['DM_Sans']">
-                      ✓-{couponDiscount}% descuento aplicado (-S/ {discountAmount.toFixed(2)})
+                  <div className="flex-1 min-w-0">
+                    <p className="line-clamp-1" style={{ fontSize: '0.9rem', fontWeight: 400, color: 'var(--color-kb-charcoal)' }}>
+                      {item.name}
                     </p>
-                  )}
-                </div>
-
-                {couponDiscount > 0 && (
-                  <div className="flex justify-between items-center mb-2">
-                    <span style={{ fontSize: '0.75rem', fontWeight: 300, color: '#4CAF50' }}>Descuento ({couponDiscount}%)</span>
-                    <span style={{ fontSize: '0.82rem', fontWeight: 300, color: '#4CAF50' }}>-S/ {discountAmount.toFixed(2)}</span>
+                    <div className="flex items-center gap-2 mt-1" style={{ fontSize: '0.72rem', color: 'var(--color-kb-mauve)' }}>
+                      {code && (
+                        <span style={{
+                          background: 'linear-gradient(135deg, #FF5C8A, #FF8E72)',
+                          color: '#fff', fontSize: '0.58rem', fontWeight: 700,
+                          padding: '0.15rem 0.5rem', borderRadius: '2px',
+                        }}>
+                          Código: {code}
+                        </span>
+                      )}
+                      {item.selectedSize && <span>Talla {item.selectedSize}</span>}
+                    </div>
+                    <div className="flex items-center justify-between mt-2">
+                      <span style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', color: 'var(--color-kb-rose-deep)' }}>
+                        {CURRENCY}{(item.price * item.quantity).toFixed(2)}
+                      </span>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--color-kb-mauve)' }}>
+                        {CURRENCY}{item.price.toFixed(2)} × {item.quantity}
+                      </span>
+                    </div>
                   </div>
-                )}
-
-                <div style={{ borderTop: '1px solid rgba(212,120,138,0.1)', paddingTop: '1rem' }}
-                  className="flex justify-between items-baseline">
-                  <span className="text-editorial" style={{ color: 'var(--color-kb-mauve)', fontSize: '0.62rem', letterSpacing: '0.2em' }}>
-                    Total
-                  </span>
-                  <span style={{
-                    fontFamily: 'var(--font-display)', fontSize: '1.6rem',
-                    fontWeight: 300, letterSpacing: '-0.03em',
-                    color: 'var(--color-kb-rose-deep)',
-                  }}>
-                    S/ {finalTotal.toFixed(2)}
-                  </span>
                 </div>
-              </div>
+              )
+            })}
+          </div>
 
-              {/* Trust badge */}
-              <div className="mt-5 flex items-center gap-2" style={{ opacity: 0.55 }}>
-                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20" style={{ color: 'var(--color-kb-rose)', flexShrink: 0 }}>
-                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                </svg>
-                <span style={{ fontSize: '0.6rem', fontWeight: 300, color: 'var(--color-kb-mauve)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                  Pago 100% seguro
-                </span>
-              </div>
+          {/* Totales */}
+          <div style={{ borderTop: '1px solid rgba(212,120,138,0.1)', paddingTop: '1.2rem' }}>
+            <div className="flex justify-between items-center mb-2">
+              <span style={{ fontSize: '0.8rem', fontWeight: 300, color: 'var(--color-kb-mauve)' }}>Subtotal</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: 300, color: 'var(--color-kb-charcoal)' }}>{CURRENCY}{total.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between items-center mb-4">
+              <span style={{ fontSize: '0.8rem', fontWeight: 300, color: 'var(--color-kb-mauve)' }}>Envío</span>
+              <span style={{ fontSize: '0.72rem', fontWeight: 300, color: '#4CAF50', letterSpacing: '0.04em' }}>Por coordinar</span>
+            </div>
+            <div style={{ borderTop: '1px solid rgba(212,120,138,0.1)', paddingTop: '0.8rem' }}
+              className="flex justify-between items-baseline">
+              <span className="text-editorial" style={{ color: 'var(--color-kb-mauve)', fontSize: '0.62rem', letterSpacing: '0.2em' }}>TOTAL</span>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', fontWeight: 300, color: 'var(--color-kb-rose-deep)' }}>
+                {CURRENCY}{total.toFixed(2)}
+              </span>
             </div>
           </div>
+        </div>
+
+        {/* Botón WhatsApp */}
+        <button onClick={handleSendWhatsApp} className="w-full" style={{
+          padding: '1rem 2rem',
+          background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
+          color: '#fff', fontSize: '0.75rem', fontWeight: 600,
+          fontFamily: 'var(--font-sans)', letterSpacing: '0.15em', textTransform: 'uppercase',
+          border: 'none', borderRadius: '50px', cursor: 'pointer',
+          boxShadow: '0 8px 24px rgba(37,211,102,0.3)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem',
+          transition: 'all 0.3s ease',
+        }}>
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+          Cotizar por WhatsApp
+        </button>
+
+        {/* Nota */}
+        <p style={{
+          textAlign: 'center', fontSize: '0.7rem', color: 'var(--color-kb-mauve)',
+          marginTop: '1rem', fontWeight: 300, lineHeight: 1.6,
+        }}>
+          Se abrirá WhatsApp con el resumen de tu pedido.
+          <br />Don Karl coordinará el pago y la entrega contigo.
+        </p>
+
+        {/* Separador */}
+        <div style={{ height: '1px', background: 'rgba(212,120,138,0.1)', margin: '2rem 0' }} />
+
+        {/* Seguir comprando */}
+        <div className="text-center">
+          <Link to="/" className="btn-kb-ghost">← Seguir comprando</Link>
         </div>
       </div>
     </div>
