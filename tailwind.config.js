@@ -1,4 +1,10 @@
-/** @type {import('tailwindcss').Config} */
+/**
+ * @type {import('tailwindcss').Config}
+ *
+ * NOTA: Este archivo NO se usa con Tailwind v4 + @tailwindcss/vite.
+ * Los tokens de diseño están en src/index.css (@theme) y src/lib/theme.js.
+ * Se mantiene por compatibilidad con herramientas que lo referencian.
+ */
 export default {
   content: [
     "./index.html",
@@ -7,46 +13,17 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        serif: ['Playfair Display', 'Georgia', 'serif'],
+        sans: ['DM Sans', 'system-ui', 'sans-serif'],
+        serif: ['Cormorant Garamond', 'Georgia', 'serif'],
         mono: ['SF Mono', 'ui-monospace', 'monospace'],
       },
-      animation: {
-        'fade-in-up': 'fadeInUp 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1)',
-        'scale-in': 'scaleIn 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1)',
-        'slide-in': 'slideIn 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1)',
-        'fade-in': 'fadeIn 0.3s ease-out',
-      },
-      keyframes: {
-        fadeInUp: {
-          '0%': { opacity: '0', transform: 'translateY(20px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
-        },
-        scaleIn: {
-          '0%': { opacity: '0', transform: 'scale(0.95)' },
-          '100%': { opacity: '1', transform: 'scale(1)' },
-        },
-        slideIn: {
-          '0%': { transform: 'translateX(100%)' },
-          '100%': { transform: 'translateX(0)' },
-        },
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
-      },
       colors: {
-        background: '#ffffff',
-        foreground: '#111111',
-        muted: '#f8f8f8',
-        'muted-foreground': '#6b7280',
-        border: '#eaeaea',
-        'kb-pink': '#FF69B4',
-        'kb-pink-dark': '#D41B6C',
-        'kb-gold': '#D4AF37',
-        'kb-gold-light': '#E9D48B',
-        'kb-black': '#0a0a0a',
-        'kb-gray': '#f5f5f5',
+        background: '#FDFAF9',
+        foreground: '#1A1118',
+        muted: '#FDF0F3',
+        'muted-foreground': '#7A6B72',
+        border: 'rgba(212, 120, 138, 0.15)',
+        'kb-mauve-light': '#9A7480',
       },
       spacing: {
         '18': '4.5rem',
