@@ -14,24 +14,15 @@
 .kb-header--scrolled {
   background: linear-gradient(180deg, rgba(255, 248, 245, 0.96) 0%, rgba(253, 250, 249, 0.9) 100%);
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(212, 120, 138, 0.18);
-  box-shadow: 0 4px 40px rgba(255, 194, 212, 0.18);
+  border-bottom: 1px solid rgba(212, 120, 138, 0.15);
+  box-shadow: 0 4px 40px rgba(26, 17, 24, 0.08);
 }
 
 /* ── Topbar ─────────────────────────────────────────────────────────────── */
 .kb-topbar {
   overflow: hidden;
   padding: 0.5rem 0;
-  background: linear-gradient(
-    90deg,
-    var(--color-kb-rose-deep) 0%,
-    var(--color-kb-rose) 30%,
-    var(--color-kb-gold) 60%,
-    var(--color-kb-rose-deep) 100%
-  );
-  background-size: 300% 100%;
-  animation: kb-topbar-gradient 8s ease infinite;
-  box-shadow: 0 2px 20px rgba(212, 120, 138, 0.25);
+  background: var(--color-kb-obsidian);
 }
 
 .kb-topbar__track {
@@ -43,18 +34,18 @@
 .kb-topbar__item {
   padding: 0 2rem;
   white-space: nowrap;
-  color: var(--color-kb-ivory);
+  color: rgba(255, 248, 245, 0.8);
   font-size: 0.65rem;
   letter-spacing: 0.2em;
-  font-weight: 600;
+  font-weight: 400;
   text-transform: uppercase;
   font-family: var(--font-sans);
-  text-shadow: 0 1px 4px rgba(184, 82, 104, 0.2);
 }
 
 .kb-topbar__dot {
   margin: 0 1rem;
-  opacity: 0.6;
+  opacity: 0.4;
+  color: var(--color-kb-rose);
 }
 
 /* ── Navbar principal ───────────────────────────────────────────────────── */
@@ -243,6 +234,16 @@
   height: 20px;
 }
 
+.kb-search-label {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-kb-charcoal);
+  margin-left: 0.25rem;
+}
+
 /* ── Carrito ────────────────────────────────────────────────────────────── */
 .kb-cart {
   position: relative;
@@ -399,11 +400,6 @@
 }
 
 /* ── Keyframes ──────────────────────────────────────────────────────────── */
-@keyframes kb-topbar-gradient {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
 @keyframes kb-marquee {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }

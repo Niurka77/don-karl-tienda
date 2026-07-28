@@ -2,30 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import logoKB from '/logo.svg'
 import { WHATSAPP_PHONE } from '../../lib/constants'
 import { useSiteConfig } from '../../hooks/useSiteConfig'
-
-// ─── Paleta Aurora Bloom — Editorial Edition ─────────────────────────────────
-const p = {
-  // Rosados (identidad)
-  rose: '#E891A8',
-  roseDeep: '#C9607F',
-  roseVivid: '#FF5C8A',
-  roseBlush: '#FFC2D4',
-  roseMist: '#FFE8EF',
-  // Champagne & Nude (lujo)
-  champagne: '#E8D5B7',
-  champagneLt: '#F5EBD9',
-  nude: '#E8CDB5',
-  ivory: '#FDF8F4',
-  cream: '#FAF3ED',
-  // Acentos
-  gold: '#C9A961',
-  goldSoft: '#D4B87A',
-  coral: '#FF8E72',
-  // Textos
-  ink: '#2D1F26',
-  textMain: '#4A3340',
-  textSoft: '#8B6F7A',
-}
+import { p } from '../../lib/theme'
 
 // ─── Datos (fallbacks) ──────────────────────────────────────────────────────
 const defaultCheckItems = [
@@ -187,7 +164,7 @@ const BrandMarquee = ({ brands: brandsProp }) => {
           className="mx-10 font-light tracking-[0.35em] text-[0.95rem]"
           style={{
             color: p.champagne,
-            fontFamily: 'Georgia, "Times New Roman", serif',
+            fontFamily: 'var(--font-display)',
           }}
         >
           {b}
@@ -203,7 +180,7 @@ const BrandMarquee = ({ brands: brandsProp }) => {
 const MorphingBlob = () => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none">
     <svg
-      className="absolute top-1/2 left-1/2 opacity-[0.35]"
+      className="absolute top-1/2 left-1/2 opacity-[0.18]"
       style={{
         width: 'min(90vw, 900px)',
         height: 'min(90vw, 900px)',
@@ -239,7 +216,6 @@ const MorphingBlob = () => (
 const TrustSection = () => {
   const { config } = useSiteConfig()
   const [isVisible, setIsVisible] = useState(false)
-  const [scrollProgress, setScrollProgress] = useState(0)
   const sectionRef = useRef(null)
 
   // Intersection Observer
@@ -271,19 +247,6 @@ const TrustSection = () => {
   const contactAddress = fc.address || 'Galería Chiclayo · 2do Piso'
   const contactPhone = fc.phone || '+51 906 877 812'
 
-  // Scroll progress (para línea dorada decorativa)
-  useEffect(() => {
-    const onScroll = () => {
-      if (!sectionRef.current) return
-      const r = sectionRef.current.getBoundingClientRect()
-      const vh = window.innerHeight
-      const progress = Math.min(Math.max((vh - r.top) / (vh + r.height), 0), 1)
-      setScrollProgress(progress)
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    onScroll()
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
 
   return (
     <section
@@ -297,7 +260,7 @@ const TrustSection = () => {
     >
       {/* Textura de grano sutil (film look) */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-[0.04] mix-blend-multiply"
+        className="absolute inset-0 pointer-events-none opacity-[0.02] mix-blend-multiply"
         style={{
           backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.5'/></svg>")`,
         }}
@@ -305,22 +268,6 @@ const TrustSection = () => {
 
       {/* Blob morphing de fondo */}
       <MorphingBlob />
-
-      {/* Línea dorada de progreso decorativa (lateral) */}
-      <div
-        className="absolute left-6 top-0 bottom-0 w-px pointer-events-none hidden lg:block"
-        style={{ background: `${p.champagne}30` }}
-      >
-        <div
-          className="w-full origin-top"
-          style={{
-            height: `${scrollProgress * 100}%`,
-            background: `linear-gradient(180deg, ${p.goldSoft}, ${p.roseVivid})`,
-            boxShadow: `0 0 12px ${p.goldSoft}60`,
-            transition: 'height 0.1s linear',
-          }}
-        />
-      </div>
 
       {/* ─── Contenido ─── */}
       <div className="relative max-w-screen-xl mx-auto px-6 lg:px-12">
@@ -352,7 +299,7 @@ const TrustSection = () => {
             style={{
               fontSize: 'clamp(2.2rem, 5.5vw, 4.5rem)',
               color: p.ink,
-              fontFamily: 'Georgia, "Times New Roman", serif',
+              fontFamily: 'var(--font-display)',
             }}
           >
             <SplitText text={trustTitle} inView={isVisible} />
@@ -506,7 +453,7 @@ const TrustSection = () => {
                 <span
                   className="text-4xl font-light tracking-tight"
                   style={{
-                    fontFamily: 'Georgia, serif',
+                    fontFamily: 'var(--font-display)',
                     fontStyle: 'italic',
                     color: p.roseDeep,
                   }}
@@ -594,7 +541,7 @@ const TrustSection = () => {
                   <div
                     className="text-3xl lg:text-4xl font-light mb-1"
                     style={{
-                      fontFamily: 'Georgia, serif',
+                      fontFamily: 'var(--font-display)',
                       color: p.roseDeep,
                     }}
                   >

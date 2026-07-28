@@ -90,9 +90,10 @@ export default function CatalogoPage() {
                 onClick={() => setFilter(cat)}
                 className={`px-4 py-2 text-[0.65rem] font-['DM_Sans'] font-medium tracking-wider uppercase rounded-sm transition-all ${
                   filter === cat
-                    ? 'bg-[#1A1118] text-white shadow-sm'
-                    : 'text-[#9A7480] hover:text-[#4A3340]'
+                    ? 'text-white shadow-sm'
+                    : 'text-kb-mauve-light hover:text-[#4A3340]'
                 }`}
+                style={filter === cat ? { background: p.obsidian } : undefined}
               >
                 {cat === 'all' ? 'Todo' : cat}
               </button>
@@ -107,9 +108,10 @@ export default function CatalogoPage() {
                 onClick={() => setOriginFilter(org)}
                 className={`px-4 py-2 text-[0.65rem] font-['DM_Sans'] font-medium tracking-wider uppercase rounded-sm transition-all ${
                   originFilter === org
-                    ? 'bg-[#1A1118] text-white shadow-sm'
-                    : 'text-[#9A7480] hover:text-[#4A3340]'
+                    ? 'text-white shadow-sm'
+                    : 'text-kb-mauve-light hover:text-[#4A3340]'
                 }`}
+                style={originFilter === org ? { background: p.obsidian } : undefined}
               >
                 {org === 'all' ? 'Todos' : org === 'importado' ? 'EE.UU.' : 'Lima'}
               </button>
@@ -176,7 +178,7 @@ export default function CatalogoPage() {
                       {product.name}
                     </h3>
                     <div className="flex items-baseline gap-2 mb-3">
-                      <span className="text-lg font-light" style={{ color: p.roseDeep, fontFamily: 'Georgia, serif' }}>
+                      <span className="text-lg font-light" style={{ color: p.roseDeep, fontFamily: 'var(--font-display)' }}>
                         S/ {finalPrice.toFixed(2)}
                       </span>
                       {hasDiscount && (

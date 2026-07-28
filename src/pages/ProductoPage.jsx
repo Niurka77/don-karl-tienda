@@ -7,6 +7,7 @@ import WhatsAppButton from '../components/ui/WhatsAppButton'
 import DOMPurify from 'dompurify'
 import { getColorHex } from '../lib/colors'
 import { WHATSAPP_PHONE } from '../lib/constants'
+import { p } from '../lib/theme'
 import ImageWithFallback from '../components/ui/ImageWithFallback'
 
 /* ─────────────────────────────────────────
@@ -451,7 +452,7 @@ useEffect(() => {
 
             <div className="flex items-baseline gap-3 flex-wrap mb-6">
               <span style={{
-                fontFamily: 'var(--font-display)', fontSize: '2.4rem',
+                fontFamily: 'var(--font-display)', fontSize: '2rem',
                 fontWeight: 300, letterSpacing: '-0.03em',
                 color: 'var(--color-kb-rose-deep)',
               }}>
@@ -468,7 +469,7 @@ useEffect(() => {
             </div>
 
             {tieneDescuento && (
-              <p style={{ fontSize: '0.78rem', fontWeight: 300, color: '#4CAF50', marginBottom: '1.2rem', letterSpacing: '0.03em' }}>
+              <p style={{ fontSize: '0.78rem', fontWeight: 400, color: '#4CAF50', marginBottom: '1.2rem', letterSpacing: '0.03em' }}>
                 Ahorras S/ {(producto.price_original - producto.price_final).toFixed(2)}
               </p>
             )}
@@ -653,7 +654,7 @@ useEffect(() => {
                 onClick={handleAgregar}
                 disabled={agregando || producto.stock === 0}
                 className="btn-kb-secondary flex-1 flex items-center justify-center gap-2"
-                style={{ padding: '0.95rem 1.5rem', fontSize: '0.68rem' }}
+                style={{ padding: '1rem 1.5rem', fontSize: '0.68rem' }}
                 type="button"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -665,11 +666,23 @@ useEffect(() => {
                 onClick={handleComprarAhora}
                 disabled={agregando || producto.stock === 0}
                 className="btn-kb-primary flex-1"
-                style={{ padding: '0.95rem 1.5rem', fontSize: '0.68rem' }}
+                style={{ padding: '1rem 1.5rem', fontSize: '0.68rem' }}
                 type="button"
               >
                 <span>{producto.stock === 0 ? 'Agotado' : 'Comprar ahora'}</span>
               </button>
+            </div>
+
+            {/* Señales de confianza */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+              {['Envío a todo el Perú', 'Devoluciones fáciles', '100% Original'].map((text, i) => (
+                <span key={i} style={{ fontSize: '0.62rem', color: 'var(--color-kb-mauve)', fontWeight: 300, letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--color-kb-rose)' }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                  {text}
+                </span>
+              ))}
             </div>
 
             <div style={{
@@ -701,7 +714,7 @@ useEffect(() => {
         </div>
 {/* ── PRODUCTOS RELACIONADOS ── */}
 {relatedProducts.length > 0 && (
-  <div className="mt-20 pt-8" style={{ borderTop: '1px solid rgba(212,120,138,0.1)' }}>
+  <div className="mt-28 pt-8" style={{ borderTop: '1px solid rgba(212,120,138,0.1)' }}>
     <div className="flex items-center gap-4 mb-6">
       <span style={{ width: '24px', height: '1px', background: 'var(--color-kb-rose)' }} />
       <h2 style={{
@@ -738,7 +751,7 @@ useEffect(() => {
             </div>
             <button
               onClick={() => setMostrarFormularioReview(!mostrarFormularioReview)}
-              className="px-4 py-2 border border-[rgba(212,120,138,0.4)] text-[#2D2030] rounded-sm text-xs font-['DM_Sans'] font-medium tracking-wide hover:bg-[#FDF0F3] hover:border-[#D4788A] transition-all duration-300"
+              className="px-4 py-2 border border-[rgba(212,120,138,0.4)] text-kb-charcoal rounded-sm text-xs font-['DM_Sans'] font-medium tracking-wide hover:bg-kb-rose-mist hover:border-kb-rose transition-all duration-300"
             >
               {mostrarFormularioReview ? 'Cancelar' : 'Escribir opinion'}
             </button>
@@ -746,26 +759,26 @@ useEffect(() => {
 
           {/* Formulario para escribir reseña */}
           {mostrarFormularioReview && (
-            <div className="mb-10 p-6 bg-[#FDF0F3] rounded-sm border border-[rgba(212,120,138,0.2)]">
-              <h3 className="font-['Cormorant_Garamond'] text-xl font-light tracking-[-0.02em] text-[#1A1118] mb-4">
+            <div className="mb-10 p-6 bg-kb-rose-mist rounded-sm border border-[rgba(212,120,138,0.2)]">
+              <h3 className="font-['Cormorant_Garamond'] text-xl font-light tracking-[-0.02em] text-kb-obsidian mb-4">
                 Comparte tu experiencia
               </h3>
               
               {reviewExito && (
-                <div className="mb-4 p-3 border border-[#D4788A] bg-white rounded-sm">
-                  <p className="text-sm text-[#1A1118] font-['DM_Sans']">{reviewExito}</p>
+                <div className="mb-4 p-3 border border-kb-rose bg-white rounded-sm">
+                  <p className="text-sm text-kb-obsidian font-['DM_Sans']">{reviewExito}</p>
                 </div>
               )}
               
               {reviewError && (
-                <div className="mb-4 p-3 border border-[#B85268] bg-white rounded-sm">
-                  <p className="text-sm text-[#B85268] font-['DM_Sans']">{reviewError}</p>
+                <div className="mb-4 p-3 border border-kb-rose-deep bg-white rounded-sm">
+                  <p className="text-sm text-kb-rose-deep font-['DM_Sans']">{reviewError}</p>
                 </div>
               )}
               
               <form onSubmit={handleSubmitReview} className="space-y-4">
                 <div>
-                  <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+                  <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-kb-mauve-light mb-2">
                     Tu nombre *
                   </label>
                   <input
@@ -775,12 +788,12 @@ useEffect(() => {
                     onChange={handleReviewChange}
                     placeholder="Maria Gonzalez"
                     required
-                    className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
+                    className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-kb-rose focus:border-transparent bg-white"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+                  <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-kb-mauve-light mb-2">
                     Puntuacion *
                   </label>
                   <div className="flex gap-2">
@@ -806,7 +819,7 @@ useEffect(() => {
                 </div>
                 
                 <div>
-                  <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+                  <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-kb-mauve-light mb-2">
                     Tu opinion *
                   </label>
                   <textarea
@@ -816,14 +829,14 @@ useEffect(() => {
                     rows={4}
                     placeholder="Cuentanos que te parecio el producto..."
                     required
-                    className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent resize-none bg-white"
+                    className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-kb-rose focus:border-transparent resize-none bg-white"
                   />
                 </div>
                 
                 <button
                   type="submit"
                   disabled={enviandoReview}
-                  className="px-6 py-2.5 bg-[#1A1118] text-white rounded-sm text-sm font-['DM_Sans'] font-medium tracking-wide hover:bg-gradient-to-r hover:from-[#D4788A] hover:to-[#B85268] transition-all duration-300 disabled:bg-[#9A7480] disabled:cursor-not-allowed"
+                  className="px-6 py-2.5 bg-kb-obsidian text-white rounded-sm text-sm font-['DM_Sans'] font-medium tracking-wide hover:bg-gradient-to-r hover:from-kb-rose hover:to-kb-rose-deep transition-all duration-300 disabled:bg-kb-mauve-light disabled:cursor-not-allowed"
                 >
                   {enviandoReview ? 'Enviando...' : 'Enviar opinion'}
                 </button>
@@ -904,7 +917,7 @@ useEffect(() => {
                 <div className="text-center mt-8">
                   <button
                     onClick={() => setMostrarTodasReviews(!mostrarTodasReviews)}
-                    className="px-6 py-2 border border-[rgba(212,120,138,0.4)] text-[#2D2030] rounded-sm text-xs font-['DM_Sans'] font-medium tracking-wide hover:bg-[#FDF0F3] hover:border-[#D4788A] transition-all duration-300"
+                    className="px-6 py-2 border border-[rgba(212,120,138,0.4)] text-kb-charcoal rounded-sm text-xs font-['DM_Sans'] font-medium tracking-wide hover:bg-kb-rose-mist hover:border-kb-rose transition-all duration-300"
                   >
                     {mostrarTodasReviews ? 'Ver menos' : `Ver todas las ${reviews.length} opiniones`}
                   </button>

@@ -99,7 +99,7 @@ const Footer = ({ onNavigate }) => {
 
           {/* EXPLORA */}
           <div className="md:col-span-2">
-            <p className="mb-6" style={{ fontSize: '0.65rem', letterSpacing: '0.25em', fontWeight: 700, textTransform: 'uppercase', color: p.textMain, fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
+            <p className="mb-6" style={{ fontSize: '0.65rem', letterSpacing: '0.25em', fontWeight: 600, textTransform: 'uppercase', color: p.textMain, fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
               Explora
             </p>
             <ul className="space-y-3">
@@ -126,7 +126,7 @@ const Footer = ({ onNavigate }) => {
 
           {/* SOPORTE */}
           <div className="md:col-span-2">
-            <p className="mb-6" style={{ fontSize: '0.65rem', letterSpacing: '0.25em', fontWeight: 700, textTransform: 'uppercase', color: p.textMain, fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
+            <p className="mb-6" style={{ fontSize: '0.65rem', letterSpacing: '0.25em', fontWeight: 600, textTransform: 'uppercase', color: p.textMain, fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
               Soporte
             </p>
             <ul className="space-y-3">
@@ -154,7 +154,7 @@ const Footer = ({ onNavigate }) => {
 
           {/* CONTACTO */}
           <div className="md:col-span-4">
-            <p className="mb-6" style={{ fontSize: '0.65rem', letterSpacing: '0.25em', fontWeight: 700, textTransform: 'uppercase', color: p.textMain, fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
+            <p className="mb-6" style={{ fontSize: '0.65rem', letterSpacing: '0.25em', fontWeight: 600, textTransform: 'uppercase', color: p.textMain, fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
               Contáctanos
             </p>
             <ul className="space-y-4 mb-8">
@@ -215,7 +215,7 @@ const Footer = ({ onNavigate }) => {
 
       <div className="max-w-screen-xl mx-auto px-6 lg:px-10 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
         <p style={{ color: p.textSoft, fontSize: '0.75rem', letterSpacing: '0.06em', fontWeight: 300, fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
-          © 2025 KB Dresses & More — Todos los derechos reservados
+          © 2026 KB Dresses & More — Todos los derechos reservados
         </p>
         <p style={{ color: p.textSoft, fontSize: '0.75rem', letterSpacing: '0.04em', fontWeight: 300, fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
           {tagline}

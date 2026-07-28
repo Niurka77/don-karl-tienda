@@ -8,7 +8,6 @@ import SplitText from './hero/SplitText'
 import AnimatedPrice from './hero/AnimatedPrice'
 import MagneticButton from './hero/MagneticButton'
 import MorphingBlob from './hero/MorphingBlob'
-import Petal from './hero/Petal'
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  COMPONENTE PRINCIPAL
@@ -237,17 +236,6 @@ const HeroSection = () => {
   const handleComprarAhora = (categoria) => navigate(`/?categoria=${categoria}`)
   const handleVerTodo = () => navigate('/')
 
-  // ── Generar pétalos (8 refinados) ───────────────────────────────────────────
-  const petals = useRef(
-    Array.from({ length: 8 }, (_, i) => ({
-      delay: i * 1.8,
-      left: 8 + (i * 11) % 85,
-      size: 7 + ((i * 2) % 9),
-      color: [p.roseBlush, p.peach, p.coralSoft, p.roseMist, p.goldLight][i % 5],
-      duration: 16 + (i % 4) * 2,
-    }))
-  ).current
-
   // ═══════════════════════════════════════════════════════════════════════════════
   //  SKELETON LOADER
   // ══════════════════════════════════════════════════════════════════════════════
@@ -380,7 +368,7 @@ const HeroSection = () => {
           <p
             className="text-2xl font-light mb-2"
             style={{
-              fontFamily: 'Georgia, serif',
+              fontFamily: 'var(--font-display)',
               fontStyle: 'italic',
               color: p.roseDeep,
             }}
@@ -415,71 +403,22 @@ const HeroSection = () => {
           FONDO — Solo blobs decorativos (sin fondo fijo, textura viene de SectionTexture)
       ════════════════════════════════════════════════════════════════════════ */}
       <div className="absolute inset-0 pointer-events-none">
-        {/* Blobs morphing */}
-        <div
-          className="absolute -top-40 -right-40 pointer-events-none"
-          style={{
-            transform: `translate(${mousePos.x * 30}px, ${mousePos.y * 30}px)`,
-            transition: 'transform 0.6s ease-out',
-          }}
-        >
+        <div className="absolute -top-32 -right-32">
           <MorphingBlob
             gradientId="heroBlob1"
             colors={[p.roseBlush, p.champagne, p.peach]}
-            size={700}
-            opacity={0.4}
+            size={600}
+            opacity={0.2}
           />
         </div>
+        {/* Textura de grano sutil */}
         <div
-          className="absolute -bottom-40 -left-40 pointer-events-none"
-          style={{
-            transform: `translate(${mousePos.x * -20}px, ${mousePos.y * -20}px)`,
-            transition: 'transform 0.6s ease-out',
-          }}
-        >
-          <MorphingBlob
-            gradientId="heroBlob2"
-            colors={[p.peach, p.coralSoft, p.roseMist]}
-            size={550}
-            opacity={0.3}
-          />
-        </div>
-        <div
-          className="absolute top-1/2 left-1/2 pointer-events-none"
-          style={{
-            transform: `translate(-50%, -50%) translate(${mousePos.x * 10}px, ${mousePos.y * 10}px)`,
-            transition: 'transform 0.6s ease-out',
-          }}
-        >
-          <MorphingBlob
-            gradientId="heroBlob3"
-            colors={[p.goldLight, p.roseBlush, p.champagne]}
-            size={400}
-            opacity={0.25}
-          />
-        </div>
-
-        {/* Textura de grano (film look) */}
-        <div
-          className="absolute inset-0 pointer-events-none opacity-[0.035] mix-blend-multiply"
+          className="absolute inset-0 pointer-events-none opacity-[0.02] mix-blend-multiply"
           style={{
             backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.5'/></svg>")`,
           }}
         />
-
-        {/* Spotlight que sigue al mouse */}
-        <div
-          className="absolute inset-0 pointer-events-none transition-transform duration-500 ease-out"
-          style={{
-            background: `radial-gradient(ellipse 50% 50% at ${50 + mousePos.x * 25}% ${50 + mousePos.y * 25}%, ${p.roseBlush}25 0%, transparent 60%)`,
-          }}
-        />
       </div>
-
-      {/* Pétalos flotantes */}
-      {petals.map((petal, i) => (
-        <Petal key={i} {...petal} />
-      ))}
 
       {/* ════════════════════════════════════════════════════════════════════════
           IMAGEN DE FONDO DEL SLIDE
@@ -605,7 +544,7 @@ const HeroSection = () => {
 <h1
   className="leading-[0.95] mb-6 relative"
   style={{
-    fontFamily: 'Georgia, "Times New Roman", serif',
+    fontFamily: 'var(--font-display)',
     fontSize: 'clamp(2rem, 4vw, 3.5rem)',
     fontWeight: 400,
     color: p.ink,
@@ -700,7 +639,7 @@ const HeroSection = () => {
                   >
                     <span
                       style={{
-                        fontFamily: 'Georgia, serif',
+                        fontFamily: 'var(--font-display)',
                         fontSize: '0.85rem',
                         fontStyle: 'italic',
                         color: p.textSoft,
@@ -712,7 +651,7 @@ const HeroSection = () => {
                     {slide.price ? (
                       <span
                         style={{
-                          fontFamily: 'Georgia, serif',
+                          fontFamily: 'var(--font-display)',
                           fontSize: 'clamp(1.8rem, 3vw, 2.5rem)',
                           fontWeight: 400,
                           color: p.roseDeep,
@@ -725,7 +664,7 @@ const HeroSection = () => {
                     ) : (
                       <span
                         style={{
-                          fontFamily: 'Georgia, serif',
+                          fontFamily: 'var(--font-display)',
                           fontSize: '1.4rem',
                           fontStyle: 'italic',
                           color: p.textSoft,
@@ -903,7 +842,7 @@ const HeroSection = () => {
                     </p>
                     <p
                       style={{
-                        fontFamily: 'Georgia, serif',
+                        fontFamily: 'var(--font-display)',
                         fontSize: '1.15rem',
                         fontWeight: 400,
                         fontStyle: 'italic',
@@ -997,7 +936,7 @@ const HeroSection = () => {
               <span
                 className="transition-all duration-500 font-light"
                 style={{
-                  fontFamily: 'Georgia, serif',
+                  fontFamily: 'var(--font-display)',
                   fontSize: '0.85rem',
                   fontStyle: 'italic',
                   color: index === currentSlide ? p.roseDeep : 'transparent',
@@ -1088,7 +1027,7 @@ const HeroSection = () => {
         >
           <span
             style={{
-              fontFamily: 'Georgia, serif',
+              fontFamily: 'var(--font-display)',
               fontSize: 'clamp(1.5rem, 2.5vw, 2rem)',
               fontWeight: 300,
               fontStyle: 'italic',

@@ -1,23 +1,5 @@
 import { useState } from 'react'
-
-// ─── Paleta Aurora Bloom ─────────────────────────────────────────────────────
-const p = {
-  rose: '#E891A8',
-  roseDeep: '#C9607F',
-  roseVivid: '#FF5C8A',
-  roseBlush: '#FFC2D4',
-  roseMist: '#FFE8EF',
-  champagne: '#E8D5B7',
-  champagneLt: '#F5EBD9',
-  ivory: '#FDF8F4',
-  cream: '#FAF3ED',
-  gold: '#C9A961',
-  goldSoft: '#D4B87A',
-  coral: '#FF8E72',
-  ink: '#2D1F26',
-  textMain: '#4A3340',
-  textSoft: '#8B6F7A',
-}
+import { p } from '../../lib/theme'
 
 const categorias = [
   { value: '', label: 'Todo' },
@@ -68,6 +50,8 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
   }
 
   const filtrosActivos = filtros.categoria || filtros.marca || filtros.genero || filtros.precioMin || filtros.precioMax
+
+  const activeFilterCount = [filtros.categoria, filtros.marca, filtros.genero, filtros.precioMin, filtros.precioMax].filter(Boolean).length
 
   // 🔧 CAMBIO: Estilo refinado para selectores
   const selectStyle = {
@@ -135,7 +119,7 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
             aria-controls="filtros-panel"
             aria-label={mostrarFiltros ? 'Ocultar filtros' : 'Mostrar filtros'}
           >
-            {mostrarFiltros ? 'Ocultar' : 'Mostrar'} filtros
+            {mostrarFiltros ? 'Ocultar' : 'Mostrar'} filtros{activeFilterCount > 0 && !mostrarFiltros ? ` (${activeFilterCount})` : ''}
           </button>
         </div>
 

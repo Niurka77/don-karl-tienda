@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useSiteConfig } from '../../hooks/useSiteConfig'
+import { p } from '../../lib/theme'
 
 // 🔥 Fallbacks de imágenes (se usan si no hay datos en BD)
 const FALLBACK_CATEGORIES = [
@@ -133,50 +134,15 @@ const CategoriesSection = () => {
         position: 'relative',
       }}
     >
-      {/* ── Fondo con efectos cinematográficos ── */}
+      {/* ── Fondo sutil ── */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Gradientes base */}
         <div
           className="absolute inset-0"
           style={{
             background: `
-              radial-gradient(ellipse 80% 60% at 20% 30%, rgba(212,120,138,0.08) 0%, transparent 60%),
-              radial-gradient(ellipse 60% 70% at 80% 70%, rgba(201,168,76,0.06) 0%, transparent 50%),
-              radial-gradient(ellipse 50% 50% at 50% 50%, rgba(242,196,206,0.05) 0%, transparent 60%)
+              radial-gradient(ellipse 80% 60% at 20% 30%, rgba(212,120,138,0.05) 0%, transparent 60%),
+              radial-gradient(ellipse 60% 70% at 80% 70%, rgba(201,168,76,0.04) 0%, transparent 50%)
             `,
-          }}
-        />
-
-        {/* Partículas brillantes animadas */}
-        {[...Array(6)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full blur-3xl animate-float"
-            style={{
-              width: `${200 + i * 80}px`,
-              height: `${200 + i * 80}px`,
-              background: `radial-gradient(circle, ${i % 2 === 0 ? 'rgba(212,120,138,0.08)' : 'rgba(201,168,76,0.06)'} 0%, transparent 70%)`,
-              top: `${10 + (i * 15)}%`,
-              left: `${5 + (i * 18)}%`,
-              animationDuration: `${8 + i * 2}s`,
-              animationDelay: `${i * 0.5}s`,
-            }}
-          />
-        ))}
-
-        {/* Líneas decorativas doradas */}
-        <div
-          className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage: `repeating-linear-gradient(
-              45deg,
-              transparent 0px,
-              transparent 50px,
-              rgba(201,168,76,0.03) 50px,
-              rgba(201,168,76,0.03) 51px,
-              transparent 51px,
-              transparent 100px
-            )`,
           }}
         />
       </div>
@@ -199,13 +165,12 @@ const CategoriesSection = () => {
                   style={{
                     width: '40px',
                     height: '2px',
-                    background: 'linear-gradient(90deg, #D4788A, #C9A84C)',
-                    boxShadow: '0 0 16px rgba(212,120,138,0.4)',
+                    background: `linear-gradient(90deg, ${p.rose}, ${p.gold})`,
                   }}
                 />
                 <span
                   style={{
-                    color: '#D4788A',
+                    color: p.rose,
                     fontSize: '0.65rem',
                     letterSpacing: '0.35em',
                     fontWeight: 600,
@@ -220,12 +185,12 @@ const CategoriesSection = () => {
               {/* Título principal */}
               <h2
                 style={{
-                  fontFamily: "'Playfair Display', Georgia, serif",
+                  fontFamily: "var(--font-display)",
                   fontSize: 'clamp(2.5rem, 5vw, 4rem)',
                   fontWeight: 300,
                   letterSpacing: '-0.02em',
                   lineHeight: 1.08,
-                  color: '#1A1118',
+                  color: p.obsidian,
                   marginBottom: '1rem',
                 }}
               >
@@ -233,7 +198,7 @@ const CategoriesSection = () => {
                 <span
                   style={{
                     fontStyle: 'italic',
-                    background: 'linear-gradient(135deg, #D4788A 0%, #B85268 40%, #C9A84C 100%)',
+                    background: `linear-gradient(135deg, ${p.rose} 0%, ${p.roseDeep} 40%, ${p.gold} 100%)`,
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                     backgroundClip: 'text',
@@ -270,7 +235,7 @@ const CategoriesSection = () => {
               }}
             >
               Piezas cuidadosamente seleccionadas y importadas directamente desde 
-              <span style={{ color: '#D4788A', fontWeight: 400 }}> Estados Unidos</span>. 
+              <span style={{ color: p.rose, fontWeight: 400 }}> Estados Unidos</span>. 
               Calidad y estilo que trascienden tendencias.
             </p>
           </div>
@@ -321,8 +286,8 @@ const CategoriesSection = () => {
             to="/"
             className="group relative inline-flex items-center gap-4 px-8 py-4 overflow-hidden"
             style={{
-              background: 'linear-gradient(135deg, #1A1118 0%, #2D2030 100%)',
-              color: '#FFF8F5',
+              background: `linear-gradient(135deg, ${p.obsidian} 0%, #2D2030 100%)`,
+              color: p.ivory,
               fontFamily: 'var(--font-sans)',
               fontSize: '0.7rem',
               fontWeight: 600,
@@ -364,13 +329,6 @@ const CategoriesSection = () => {
       </div>
 
       <style>{`
-        @keyframes float {
-          0%, 100% { opacity: 0.3; transform: translateY(0px) scale(1); }
-          50% { opacity: 0.6; transform: translateY(-30px) scale(1.05); }
-        }
-        .animate-float {
-          animation: float ease-in-out infinite;
-        }
         @keyframes gradientShift {
           0%, 100% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
@@ -487,7 +445,7 @@ const CategoryCard = ({ cat, index, isLarge }) => {
       <div
         className="absolute top-6 left-6"
         style={{
-          fontFamily: "'Playfair Display', Georgia, serif",
+          fontFamily: "var(--font-display)",
           fontSize: isLarge ? 'clamp(4rem, 8vw, 6rem)' : 'clamp(3rem, 5vw, 4.5rem)',
           fontWeight: 300,
           fontStyle: 'italic',
@@ -539,7 +497,7 @@ const CategoryCard = ({ cat, index, isLarge }) => {
           style={{
             width: hovered ? '60px' : '32px',
             height: '2px',
-            background: 'linear-gradient(90deg, #D4788A, #C9A84C)',
+            background: `linear-gradient(90deg, ${p.rose}, ${p.gold})`,
             marginBottom: '1.25rem',
             transition: 'width 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
             boxShadow: '0 0 12px rgba(212,120,138,0.4)',
@@ -566,11 +524,11 @@ const CategoryCard = ({ cat, index, isLarge }) => {
         {/* Título principal */}
         <h3
           style={{
-            fontFamily: "'Playfair Display', Georgia, serif",
+            fontFamily: "var(--font-display)",
             fontSize: isLarge ? 'clamp(2.5rem, 4vw, 3.5rem)' : 'clamp(2rem, 3vw, 2.8rem)',
             fontWeight: 300,
             letterSpacing: '-0.02em',
-            color: '#FFF8F5',
+            color: p.ivory,
             lineHeight: 1.05,
             marginBottom: '0.75rem',
           }}
@@ -579,7 +537,7 @@ const CategoryCard = ({ cat, index, isLarge }) => {
           <span
             style={{
               fontStyle: 'italic',
-              background: 'linear-gradient(135deg, #E298A6 0%, #F5BECA 40%, #C9A84C 100%)',
+              background: `linear-gradient(135deg, #E298A6 0%, #F5BECA 40%, ${p.gold} 100%)`,
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',

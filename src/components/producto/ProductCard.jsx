@@ -2,25 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getColorHex } from '../../lib/colors'
 import ImageWithFallback from '../ui/ImageWithFallback'
-
-// ─── Paleta Aurora Bloom ─────────────────────────────────────────────────────
-const p = {
-  rose: '#E891A8',
-  roseDeep: '#C9607F',
-  roseVivid: '#FF5C8A',
-  roseBlush: '#FFC2D4',
-  roseMist: '#FFE8EF',
-  champagne: '#E8D5B7',
-  champagneLt: '#F5EBD9',
-  ivory: '#FDF8F4',
-  cream: '#FAF3ED',
-  gold: '#C9A961',
-  goldSoft: '#D4B87A',
-  coral: '#FF8E72',
-  ink: '#2D1F26',
-  textMain: '#4A3340',
-  textSoft: '#8B6F7A',
-}
+import { p } from '../../lib/theme'
 
 // ─── Mini estrellas ──────────────────────────────────────────────────────────
 const MiniStars = ({ rating }) => (
@@ -56,6 +38,12 @@ const ProductCard = ({ product, avgRating = null, reviewCount = 0 }) => {
   const colores = color ? color.split(',').map(c => c.trim()).filter(Boolean) : []
 
   return (
+    <>
+    <style>{`
+      @media (hover: none) {
+        .pc-actions { opacity: 1 !important; transform: translateY(0) !important; }
+      }
+    `}</style>
     <Link
       to={`/producto/${id}`}
       className="group block"
@@ -67,7 +55,7 @@ const ProductCard = ({ product, avgRating = null, reviewCount = 0 }) => {
         style={{
           background: p.ivory,
           transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s ease',
-          transform: hovered ? 'translateY(-8px) scale(1.01)' : 'translateY(0) scale(1)',
+          transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
           boxShadow: hovered
             ? `0 25px 70px -15px ${p.roseBlush}50, 0 10px 30px -10px ${p.ink}15, 0 0 0 1px ${p.roseBlush}30`
             : `0 4px 20px ${p.ink}08, 0 0 0 1px ${p.champagne}30`,
@@ -133,11 +121,10 @@ const ProductCard = ({ product, avgRating = null, reviewCount = 0 }) => {
                   padding: '0.25rem 0.65rem',
                   letterSpacing: '0.18em',
                   textTransform: 'uppercase',
-                  fontWeight: 600,
+                  fontWeight: 500,
                   color: p.ivory,
-                  background: `linear-gradient(135deg, ${p.roseVivid} 0%, ${p.coral} 100%)`,
-                  borderRadius: '3px',
-                  boxShadow: `0 4px 14px ${p.roseVivid}40`,
+                  background: p.obsidian,
+                  borderRadius: '1px',
                 }}
               >
                 Nuevo
@@ -170,14 +157,13 @@ const ProductCard = ({ product, avgRating = null, reviewCount = 0 }) => {
             <div className="absolute top-3 right-3 z-20">
               <span
                 style={{
-                  background: `linear-gradient(135deg, ${p.roseVivid} 0%, ${p.coral} 100%)`,
+                  background: p.obsidian,
                   color: '#FFFFFF',
                   fontSize: '0.6rem',
                   padding: '0.3rem 0.7rem',
                   letterSpacing: '0.12em',
-                  borderRadius: '3px',
-                  fontWeight: 700,
-                  boxShadow: `0 4px 12px ${p.roseVivid}50`,
+                  borderRadius: '1px',
+                  fontWeight: 500,
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.3rem',
@@ -189,9 +175,9 @@ const ProductCard = ({ product, avgRating = null, reviewCount = 0 }) => {
             </div>
           )}
 
-          {/* ── OVERLAY DE ACCIONES (hover) ── */}
+          {/* ── OVERLAY DE ACCIONES (hover desktop, always visible mobile) ── */}
           <div
-            className="absolute inset-x-0 bottom-0 z-10 flex flex-col items-center gap-2.5 pb-5 transition-all duration-500"
+            className="absolute inset-x-0 bottom-0 z-10 flex flex-col items-center gap-2.5 pb-5 transition-all duration-500 pc-actions"
             style={{
               opacity: hovered ? 1 : 0,
               transform: hovered ? 'translateY(0)' : 'translateY(16px)',
@@ -209,7 +195,7 @@ const ProductCard = ({ product, avgRating = null, reviewCount = 0 }) => {
                 color: p.ivory,
                 background: `linear-gradient(135deg, ${p.roseVivid} 0%, ${p.coral} 50%, ${p.goldSoft} 100%)`,
                 border: 'none',
-                borderRadius: '50px',
+                borderRadius: '2px',
                 cursor: 'pointer',
                 boxShadow: `0 8px 24px ${p.roseVivid}50`,
                 transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -249,7 +235,7 @@ const ProductCard = ({ product, avgRating = null, reviewCount = 0 }) => {
         </div>
 
         {/* ── INFO ── */}
-        <div className="px-4 pt-4 pb-5 space-y-2.5">
+        <div className="px-5 pt-5 pb-6 space-y-2.5">
           {/* Marca */}
           {brand && (
             <p
@@ -270,7 +256,7 @@ const ProductCard = ({ product, avgRating = null, reviewCount = 0 }) => {
           <h3
             className="leading-snug line-clamp-2 transition-colors duration-400"
             style={{
-              fontFamily: 'Georgia, "Times New Roman", serif',
+              fontFamily: 'var(--font-display)',
               fontSize: '1.05rem',
               fontWeight: 400,
               color: hovered ? p.roseDeep : p.textMain,
@@ -332,7 +318,7 @@ const ProductCard = ({ product, avgRating = null, reviewCount = 0 }) => {
           >
             <span
               style={{
-                fontFamily: 'Georgia, serif',
+                fontFamily: 'var(--font-display)',
                 fontSize: '1.35rem',
                 fontWeight: 400,
                 color: p.roseDeep,
@@ -358,6 +344,7 @@ const ProductCard = ({ product, avgRating = null, reviewCount = 0 }) => {
         </div>
       </article>
     </Link>
+    </>
   )
 }
 

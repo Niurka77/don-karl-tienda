@@ -104,9 +104,9 @@ const CheckoutPage = () => {
                     <div className="flex items-center gap-2 mt-1" style={{ fontSize: '0.72rem', color: 'var(--color-kb-mauve)' }}>
                       {code && (
                         <span style={{
-                          background: 'linear-gradient(135deg, #FF5C8A, #FF8E72)',
-                          color: '#fff', fontSize: '0.58rem', fontWeight: 700,
-                          padding: '0.15rem 0.5rem', borderRadius: '2px',
+                          background: 'var(--color-kb-obsidian)',
+                          color: '#fff', fontSize: '0.58rem', fontWeight: 500,
+                          padding: '0.15rem 0.5rem', borderRadius: '1px',
                         }}>
                           Código: {code}
                         </span>
@@ -153,7 +153,7 @@ const CheckoutPage = () => {
           background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
           color: '#fff', fontSize: '0.75rem', fontWeight: 600,
           fontFamily: 'var(--font-sans)', letterSpacing: '0.15em', textTransform: 'uppercase',
-          border: 'none', borderRadius: '50px', cursor: 'pointer',
+          border: 'none', borderRadius: '2px', cursor: 'pointer',
           boxShadow: '0 8px 24px rgba(37,211,102,0.3)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem',
           transition: 'all 0.3s ease',

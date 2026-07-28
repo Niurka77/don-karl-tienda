@@ -3,25 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import ProductCard from './ProductCard'
 import FilterBar from './FilterBar'
-
-// ─── Paleta Aurora Bloom ─────────────────────────────────────────────────────
-const p = {
-  rose: '#E891A8',
-  roseDeep: '#C9607F',
-  roseVivid: '#FF5C8A',
-  roseBlush: '#FFC2D4',
-  roseMist: '#FFE8EF',
-  champagne: '#E8D5B7',
-  champagneLt: '#F5EBD9',
-  ivory: '#FDF8F4',
-  cream: '#FAF3ED',
-  gold: '#C9A961',
-  goldSoft: '#D4B87A',
-  coral: '#FF8E72',
-  ink: '#2D1F26',
-  textMain: '#4A3340',
-  textSoft: '#8B6F7A',
-}
+import { p } from '../../lib/theme'
 
 // ─── Skeleton de carga — editorial ───────────────────────────────────────────
 const SkeletonCard = () => (
@@ -356,7 +338,7 @@ const ProductGrid = () => {
         <div className="relative z-10 max-w-screen-xl mx-auto px-6 lg:px-10 py-32 text-center">
           <p
             style={{
-              fontFamily: 'Georgia, serif',
+              fontFamily: 'var(--font-display)',
               fontSize: '1.3rem',
               fontWeight: 300,
               fontStyle: 'italic',
@@ -422,7 +404,7 @@ const ProductGrid = () => {
             />
             <p
               style={{
-                fontFamily: 'Georgia, serif',
+                fontFamily: 'var(--font-display)',
                 fontSize: '1.6rem',
                 fontWeight: 300,
                 fontStyle: 'italic',
@@ -462,7 +444,7 @@ const ProductGrid = () => {
                 />
                 <h2
                   style={{
-                    fontFamily: 'Georgia, serif',
+                    fontFamily: 'var(--font-display)',
                     fontSize: '1.5rem',
                     fontWeight: 300,
                     fontStyle: 'italic',
