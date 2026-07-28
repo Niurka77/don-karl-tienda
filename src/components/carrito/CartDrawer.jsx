@@ -227,7 +227,7 @@ const CartDrawer = () => {
               {/* Botón WhatsApp */}
               <button
                 onClick={handleWhatsApp}
-                className="w-full py-3.5 rounded-full text-sm font-medium tracking-wide transition-all transform hover:-translate-y-0.5 shadow-md flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-none text-sm font-medium tracking-wide transition-all transform hover:-translate-y-0.5 shadow-md flex items-center justify-center gap-2"
                 style={{
                   background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
                   color: '#fff',
@@ -246,6 +246,13 @@ const CartDrawer = () => {
                 aria-label="Vaciar bolsa de compras"
               >
                 Vaciar bolsa
+              </button>
+
+              <button
+                onClick={toggleCart}
+                className="w-full text-[11px] font-mono text-muted-foreground hover:text-foreground/80 transition-colors py-1 text-center"
+              >
+                ← Seguir comprando
               </button>
             </div>
           </>

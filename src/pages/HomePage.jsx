@@ -21,9 +21,15 @@ const RevealSection = ({ children, delay = 0, className = '' }) => {
   )
 }
 
-const SectionDivider = () => (
+const SectionDivider = ({ variant = 'gradient' }) => (
   <div aria-hidden style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1.5rem' }}>
-    <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent 0%, rgba(212,120,138,0.2) 30%, rgba(212,120,138,0.2) 70%, transparent 100%)' }} />
+    {variant === 'gradient' ? (
+      <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent 0%, rgba(212,120,138,0.2) 30%, rgba(212,120,138,0.2) 70%, transparent 100%)' }} />
+    ) : (
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <div style={{ width: '40px', height: '1px', background: 'var(--color-kb-rose)' }} />
+      </div>
+    )}
   </div>
 )
 
@@ -74,7 +80,7 @@ const HomePage = () => {
         </RevealSection>
       </SectionTexture>
 
-      <SectionDivider />
+      <SectionDivider variant="short" />
 
       {/* CATEGORIES — con textura editable */}
       <SectionTexture section="categories">
