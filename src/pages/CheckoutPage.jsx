@@ -35,9 +35,9 @@ const CheckoutPage = () => {
         customer_address: '',
         customer_city: '',
         products: items.map(i => ({
-          product_id: i.id, name: i.name, talla: i.selectedSize,
-          cantidad: i.quantity, precio_unitario: i.price,
-          subtotal: i.price * i.quantity, sku: i.sku,
+          id: i.id, name: i.name, size: i.selectedSize,
+          quantity: i.quantity, price: i.price,
+          sku: i.sku,
         })),
         total,
         payment_method: 'cotizacion',
