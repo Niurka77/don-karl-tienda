@@ -190,7 +190,7 @@ const PedidosPage = () => {
       return
     }
 
-    const productos = Array.isArray(pedido.items) ? pedido.items : []
+    const productos = Array.isArray(pedido.products) ? pedido.products : []
     let total = 0
     const lines = productos.map((p, i) => {
       const precio = preciosEditados[p.id] ?? p.price ?? 0
@@ -358,7 +358,7 @@ const PedidosPage = () => {
               <div>
                 <p className="text-xs text-[#9A7480] font-sans uppercase tracking-wide mb-3">Productos</p>
                 <div className="space-y-3">
-                  {(Array.isArray(modalCotizacion.pedido.items) ? modalCotizacion.pedido.items : []).map((p, i) => (
+                  {(Array.isArray(modalCotizacion.pedido.products) ? modalCotizacion.pedido.products : []).map((p, i) => (
                     <div key={p.id || i} className="flex items-center gap-4 p-3 bg-[#FDF0F3] rounded-sm">
                       <span className="font-sans text-sm text-[#1A1118] flex-1">
                         {p.name}{p.size ? ` (${p.size})` : ''} × {p.quantity}
@@ -396,7 +396,7 @@ const PedidosPage = () => {
                 <span className="font-sans text-sm text-[#9A7480]">Total cotizado</span>
                 <span className="font-display text-xl font-bold text-[#1A1118]">
                   S/ {(
-                    (Array.isArray(modalCotizacion.pedido.items) ? modalCotizacion.pedido.items : [])
+                    (Array.isArray(modalCotizacion.pedido.products) ? modalCotizacion.pedido.products : [])
                       .reduce((sum, p) => {
                         const precio = preciosEditados[p.id] ?? p.price ?? 0
                         return sum + precio * (p.quantity || 1)
@@ -597,9 +597,9 @@ const PedidosPage = () => {
 
                     <div className="lg:col-span-2">
                       <p className="text-xs text-[#9A7480] font-sans uppercase tracking-wide mb-2">Productos</p>
-                      {Array.isArray(pedido.items) && pedido.items.length > 0 ? (
+                      {Array.isArray(pedido.products) && pedido.products.length > 0 ? (
                         <div className="space-y-1">
-                          {pedido.items.map((prod, idx) => (
+                          {pedido.products.map((prod, idx) => (
                             <div key={idx} className="flex justify-between items-center text-sm">
                               <span className="text-[#2D2030] font-sans">
                                 {prod.name} {prod.size && `(${prod.size})`} × {prod.quantity}
