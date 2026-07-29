@@ -1,11 +1,14 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import ImageWithFallback from '../ui/ImageWithFallback'
+import useCartStore from '../../store/cartStore'
 import { p } from '../../lib/theme'
-import { WHATSAPP_PHONE, CURRENCY } from '../../lib/constants'
+import { CURRENCY } from '../../lib/constants'
 
 const ProductCard = ({ product }) => {
   const [hovered, setHovered] = useState(false)
+  const navigate = useNavigate()
+  const { addItem } = useCartStore()
 
   const {
     id, name, sku,
@@ -18,9 +21,18 @@ const ProductCard = ({ product }) => {
   const tieneDescuento = discount_percent > 0
   const precio = tieneDescuento ? price_final : price_original
 
-  const productUrl = `${window.location.origin}/producto/${id}`
-  const whatsappText = `${sku ? `*${sku}*` : ''} - ${name} | ${CURRENCY} ${precio?.toFixed(2)} | ${productUrl}`
-  const whatsappUrl = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(whatsappText)}`
+  const handleCotizar = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    addItem({
+      id, name,
+      price: precio,
+      originalPrice: price_original,
+      image: image_url, sku,
+      brand, quantity: 1, stock,
+    })
+    navigate('/checkout')
+  }
 
   return (
     <div
@@ -113,7 +125,7 @@ const ProductCard = ({ product }) => {
               }}
             >
               <button
-                onClick={(e) => { e.preventDefault(); window.open(whatsappUrl, '_blank') }}
+                onClick={handleCotizar}
                 style={{
                   fontSize: '0.6rem', padding: '0.7rem 1.6rem',
                   letterSpacing: '0.18em', textTransform: 'uppercase',
@@ -132,7 +144,7 @@ const ProductCard = ({ product }) => {
               </button>
 
               <button
-                onClick={(e) => { e.preventDefault(); const u = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(whatsappText)}`; window.open(u, '_blank') }}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigator.clipboard.writeText(window.location.origin + '/producto/' + id); alert('Enlace copiado') }}
                 style={{
                   fontSize: '0.5rem', padding: '0.45rem 1.2rem',
                   letterSpacing: '0.15em', textTransform: 'uppercase',
@@ -221,7 +233,7 @@ const ProductCard = ({ product }) => {
             </div>
 
             <button
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(whatsappUrl, '_blank') }}
+              onClick={handleCotizar}
               style={{
                 fontSize: '0.5rem', padding: '0.5rem 0',
                 letterSpacing: '0.18em', textTransform: 'uppercase',
@@ -234,7 +246,7 @@ const ProductCard = ({ product }) => {
               onMouseEnter={(e) => { e.currentTarget.style.color = p.roseDeep; e.currentTarget.style.borderTopColor = `${p.roseDeep}30` }}
               onMouseLeave={(e) => { e.currentTarget.style.color = p.red; e.currentTarget.style.borderTopColor = `${p.red}15` }}
             >
-              Cotizar por WhatsApp
+              Cotizar
             </button>
           </div>
         </article>
