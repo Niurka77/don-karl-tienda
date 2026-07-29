@@ -24,7 +24,7 @@ const ConfirmarPedido = () => {
         updates.status = 'enviado'
         const { data: pedido, error: fetchError } = await supabase
           .from('orders')
-          .select('products')
+          .select('items')
           .eq('id', id)
           .single()
         if (fetchError) {
@@ -32,7 +32,7 @@ const ConfirmarPedido = () => {
           setMensaje('Error al leer el pedido')
           return
         }
-        const productos = pedido.products || []
+        const productos = pedido.items || []
         for (const p of productos) {
           await supabase.rpc('decrementar_stock', { product_id: p.id, cantidad: p.quantity || 1 })
         }

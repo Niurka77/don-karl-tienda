@@ -57,10 +57,10 @@ const BotonPDF = () => {
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
       const pw = 210, ph = 297, m = 8
 
-      // ── PAGE 1: PORTADA ──
+      // ── PAGE 1: PORTADA (centrada verticalmente, sin imágenes) ──
+      const year = new Date().getFullYear()
       doc.setFillColor(255, 255, 255)
       doc.rect(0, 0, pw, ph, 'F')
-      // degradado
       for (let y = 0; y < ph; y += 3) {
         const t = y / ph
         const r = Math.round(248 + (230 - 248) * t * 0.3)
@@ -69,38 +69,25 @@ const BotonPDF = () => {
         doc.setFillColor(r, g, b)
         doc.rect(0, y, pw, 3, 'F')
       }
+      const coverStart = 105
       doc.setDrawColor(230, 180, 195)
       doc.setLineWidth(0.3)
-      doc.line(m, 22, pw - m, 22)
+      doc.line(m, coverStart, pw - m, coverStart)
       doc.setTextColor(45, 31, 38)
       doc.setFont('helvetica', 'bold')
       doc.setFontSize(36)
-      doc.text('DON KARL', pw / 2, 40, { align: 'center' })
-      doc.setFontSize(8)
+      doc.text('DON KARL', pw / 2, coverStart + 18, { align: 'center' })
+      doc.setFontSize(9)
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(130, 110, 120)
-      doc.text('COLECCIÓN IMPORTADA', pw / 2, 47, { align: 'center', charSpace: 3 })
+      doc.text(`COLECCIÓN ${year}`, pw / 2, coverStart + 28, { align: 'center', charSpace: 4 })
       doc.setDrawColor(230, 180, 195)
-      doc.line(m, 52, pw - m, 52)
-
-      // Imagen cover (primer producto con imagen)
-      let coverDataUrl = null
-      for (const p of productos) {
-        coverDataUrl = imgMap[p.id]
-        if (coverDataUrl) break
-      }
-      if (coverDataUrl) {
-        try { doc.addImage(coverDataUrl, 'JPEG', 25, 62, 160, 160, 'cover', 'FAST') } catch (e) {}
-      }
-      const sloganY = coverDataUrl ? 235 : 160
+      doc.line(m, coverStart + 34, pw - m, coverStart + 34)
       doc.setTextColor(45, 31, 38)
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(13)
-      doc.text('Encuentra tu estilo con nosotros', pw / 2, sloganY, { align: 'center', charSpace: 0.5 })
-      doc.setFontSize(7)
-      doc.setTextColor(130, 110, 120)
-      doc.text(`Edición ${new Date().getFullYear()}`, pw / 2, sloganY + 7, { align: 'center', charSpace: 2 })
-      const redesY = sloganY + 24
+      doc.text('Encuentra tu estilo con nosotros', pw / 2, coverStart + 50, { align: 'center', charSpace: 0.5 })
+      const redesY = coverStart + 65
       doc.setFontSize(5.5)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(200, 140, 155)
@@ -198,7 +185,7 @@ const BotonPDF = () => {
         }
       }
 
-      // ── CONTRAPORTADA ──
+      // ── CONTRAPORTADA (centrada verticalmente) ──
       doc.addPage()
       doc.setFillColor(255, 255, 255)
       doc.rect(0, 0, pw, ph, 'F')
@@ -210,27 +197,27 @@ const BotonPDF = () => {
         doc.setFillColor(r, g, b)
         doc.rect(0, y, pw, 3, 'F')
       }
+      const bs = 95
       doc.setDrawColor(230, 180, 195)
       doc.setLineWidth(0.3)
-      doc.line(m, 30, pw - m, 30)
+      doc.line(m, bs, pw - m, bs)
       doc.setTextColor(45, 31, 38)
       doc.setFont('helvetica', 'bold')
       doc.setFontSize(28)
-      doc.text('¡Gracias!', pw / 2, 65, { align: 'center' })
+      doc.text('¡Gracias!', pw / 2, bs + 18, { align: 'center' })
       doc.setFontSize(10)
       doc.setFont('helvetica', 'normal')
-      doc.text('Por tu preferencia', pw / 2, 75, { align: 'center', charSpace: 2 })
+      doc.text('Por tu preferencia', pw / 2, bs + 28, { align: 'center', charSpace: 2 })
       doc.setDrawColor(230, 180, 195)
-      doc.line(m, 83, pw - m, 83)
-      const cy2 = 100
+      doc.line(m, bs + 34, pw - m, bs + 34)
       doc.setTextColor(230, 0, 0)
       doc.setFontSize(7)
       doc.setFont('helvetica', 'bold')
-      doc.text('CONTÁCTANOS', pw / 2, cy2, { align: 'center', charSpace: 3 })
+      doc.text('CONTÁCTANOS', pw / 2, bs + 46, { align: 'center', charSpace: 3 })
       doc.setFontSize(11)
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(45, 31, 38)
-      doc.text(`+51 ${WHATSAPP_PHONE.slice(1,4)} ${WHATSAPP_PHONE.slice(4,7)} ${WHATSAPP_PHONE.slice(7)}`, pw / 2, cy2 + 9, { align: 'center' })
+      doc.text(`+51 ${WHATSAPP_PHONE.slice(1,4)} ${WHATSAPP_PHONE.slice(4,7)} ${WHATSAPP_PHONE.slice(7)}`, pw / 2, bs + 55, { align: 'center' })
       doc.setFontSize(6)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(130, 110, 120)
@@ -239,13 +226,13 @@ const BotonPDF = () => {
       const tw = plat.length * 36 - 8
       let rxx = (pw - tw) / 2
       for (let j = 0; j < plat.length; j++) {
-        doc.text(plat[j], rxx + 18, cy2 + 22, { align: 'center', charSpace: 2 })
+        doc.text(plat[j], rxx + 18, bs + 68, { align: 'center', charSpace: 2 })
         doc.setFont('helvetica', 'normal')
-        doc.text(users[j], rxx + 18, cy2 + 27, { align: 'center' })
+        doc.text(users[j], rxx + 18, bs + 73, { align: 'center' })
         doc.setFont('helvetica', 'bold')
         rxx += 36
       }
-      const py = cy2 + 44
+      const py = bs + 86
       doc.setDrawColor(230, 180, 195)
       doc.line(m, py, pw - m, py)
       doc.setTextColor(130, 110, 120)

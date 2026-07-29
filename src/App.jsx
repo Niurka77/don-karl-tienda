@@ -16,6 +16,7 @@ const AdminVideos = lazy(() => import('./components/admin/AdminVideos'))
 const HeroSlidesManager = lazy(() => import('./components/admin/HeroSlidesManager'))
 const VisualConfigPage = lazy(() => import('./pages/admin/VisualConfigPage'))
 const ConfirmarPedido = lazy(() => import('./pages/ConfirmarPedido'))
+const CatalogoPage = lazy(() => import('./pages/CatalogoPage'))
 
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-kb-ivory)' }}>
@@ -78,6 +79,7 @@ function App() {
         <Route index element={<HomePage />} />
         <Route path="producto/:id" element={<ProductoPage />} />
         <Route path="checkout" element={<CheckoutPage />} />
+        <Route path="catalogo" element={<CatalogoPage />} />
       </Route>
 
       {/* Login (sin layout) */}
