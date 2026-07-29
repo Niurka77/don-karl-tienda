@@ -71,8 +71,8 @@ const CheckoutPage = () => {
       setExito({ id: orderId, nombre: nombre.trim(), telefono: telefono.trim() })
       clearCart()
     } catch (err) {
-      console.error(err)
-      setError('Error al enviar la cotización. Intenta de nuevo.')
+      console.error('Error completo:', err)
+      setError('Error: ' + (err.message || err.description || 'desconocido'))
     } finally {
       setEnviando(false)
     }
