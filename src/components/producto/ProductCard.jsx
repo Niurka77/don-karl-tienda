@@ -1,24 +1,22 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getColorHex } from '../../lib/colors'
 import ImageWithFallback from '../ui/ImageWithFallback'
 import { p } from '../../lib/theme'
 import { WHATSAPP_PHONE, CURRENCY } from '../../lib/constants'
 
-const ProductCard = ({ product, avgRating = null, reviewCount = 0 }) => {
+const ProductCard = ({ product }) => {
   const [hovered, setHovered] = useState(false)
 
   const {
     id, name, sku,
     price_original, discount_percent, price_final,
-    image_url, images_urls, is_new, brand, color, stock,
+    image_url, images_urls, is_new, brand, category, stock,
   } = product
 
   const mainImage = image_url || images_urls?.[0] || ''
 
   const tieneDescuento = discount_percent > 0
   const precio = tieneDescuento ? price_final : price_original
-  const colores = color ? color.split(',').map(c => c.trim()).filter(Boolean) : []
 
   const productUrl = `${window.location.origin}/producto/${id}`
   const whatsappText = `${sku ? `*${sku}*` : ''} - ${name} | ${CURRENCY} ${precio?.toFixed(2)} | ${productUrl}`
@@ -26,7 +24,6 @@ const ProductCard = ({ product, avgRating = null, reviewCount = 0 }) => {
 
   return (
     <div
-      className="group"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{ position: 'relative' }}
@@ -44,10 +41,8 @@ const ProductCard = ({ product, avgRating = null, reviewCount = 0 }) => {
             boxShadow: hovered
               ? '0 20px 60px -12px rgba(26, 17, 24, 0.15), 0 0 0 1px rgba(212, 120, 138, 0.12)'
               : '0 2px 12px rgba(26, 17, 24, 0.04), 0 0 0 1px rgba(212, 120, 138, 0.06)',
-            position: 'relative',
           }}
         >
-          {/* ── IMAGEN ── */}
           <div
             className="relative overflow-hidden"
             style={{ aspectRatio: '4/5', background: p.roseMist }}
@@ -63,88 +58,51 @@ const ProductCard = ({ product, avgRating = null, reviewCount = 0 }) => {
               loading="lazy"
             />
 
-            {/* Gradient overlay bottom */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background: 'linear-gradient(180deg, transparent 50%, rgba(26,17,24,0.08) 100%)',
-              }}
-            />
+            {is_new && (
+              <span
+                className="absolute top-3 left-3 z-10"
+                style={{
+                  fontSize: '0.45rem', padding: '0.2rem 0.55rem',
+                  letterSpacing: '0.18em', textTransform: 'uppercase',
+                  fontWeight: 600, color: '#FFFFFF', background: p.ink,
+                  borderRadius: '1px',
+                }}
+              >
+                Nuevo
+              </span>
+            )}
 
-            {/* ── BADGES ── */}
-            <div className="absolute top-4 left-4 z-10 flex flex-col gap-1.5">
-              {is_new && (
-                <span
-                  style={{
-                    fontSize: '0.5rem',
-                    padding: '0.2rem 0.6rem',
-                    letterSpacing: '0.18em',
-                    textTransform: 'uppercase',
-                    fontWeight: 600,
-                    color: '#FFFFFF',
-                    background: p.ink,
-                    borderRadius: '1px',
-                  }}
-                >
-                  Nuevo
-                </span>
-              )}
-              {tieneDescuento && (
-                <span
-                  style={{
-                    fontSize: '0.5rem',
-                    padding: '0.2rem 0.6rem',
-                    letterSpacing: '0.18em',
-                    textTransform: 'uppercase',
-                    fontWeight: 600,
-                    color: '#FFFFFF',
-                    background: p.roseDeep,
-                    borderRadius: '1px',
-                  }}
-                >
-                  -{discount_percent}%
-                </span>
-              )}
-              {stock > 0 && stock <= 2 && (
-                <span
-                  style={{
-                    fontSize: '0.5rem',
-                    padding: '0.2rem 0.6rem',
-                    letterSpacing: '0.18em',
-                    textTransform: 'uppercase',
-                    fontWeight: 600,
-                    color: '#FFFFFF',
-                    background: '#B71C1C',
-                    borderRadius: '1px',
-                  }}
-                >
-                  Stock: {stock}
-                </span>
-              )}
-            </div>
+            {tieneDescuento && (
+              <span
+                className="absolute top-3 left-3 z-10"
+                style={{
+                  fontSize: '0.45rem', padding: '0.2rem 0.55rem',
+                  letterSpacing: '0.18em', textTransform: 'uppercase',
+                  fontWeight: 600, color: '#FFFFFF', background: p.red,
+                  borderRadius: '1px',
+                  ...(is_new ? { top: '1.6rem' } : {}),
+                }}
+              >
+                -{discount_percent}%
+              </span>
+            )}
 
-            {/* ── SKU badge on image ── */}
             {sku && (
               <div
-                className="absolute top-4 right-4 z-10"
+                className="absolute bottom-3 right-3 z-10"
                 style={{
                   background: 'rgba(255,255,255,0.92)',
                   backdropFilter: 'blur(6px)',
-                  padding: '0.2rem 0.55rem',
-                  fontSize: '0.5rem',
-                  letterSpacing: '0.08em',
-                  color: p.textSoft,
+                  padding: '0.15rem 0.5rem',
+                  fontSize: '0.5rem', letterSpacing: '0.08em',
+                  color: p.textSoft, fontWeight: 500, borderRadius: '1px',
                   fontFamily: 'var(--font-sans)',
-                  fontWeight: 500,
-                  borderRadius: '1px',
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
                 }}
               >
                 {sku}
               </div>
             )}
 
-            {/* ── OVERLAY HOVER ── */}
             <div
               className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 p-6"
               style={{
@@ -157,19 +115,12 @@ const ProductCard = ({ product, avgRating = null, reviewCount = 0 }) => {
               <button
                 onClick={(e) => { e.preventDefault(); window.open(whatsappUrl, '_blank') }}
                 style={{
-                  fontSize: '0.6rem',
-                  padding: '0.7rem 1.6rem',
-                  letterSpacing: '0.18em',
-                  textTransform: 'uppercase',
-                  fontWeight: 600,
-                  color: p.ink,
-                  background: '#FFFFFF',
-                  border: 'none',
-                  cursor: 'pointer',
+                  fontSize: '0.6rem', padding: '0.7rem 1.6rem',
+                  letterSpacing: '0.18em', textTransform: 'uppercase',
+                  fontWeight: 600, color: p.ink, background: '#FFFFFF',
+                  border: 'none', cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
+                  display: 'flex', alignItems: 'center', gap: '0.4rem',
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = p.roseBlush }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = '#FFFFFF' }}
@@ -181,21 +132,15 @@ const ProductCard = ({ product, avgRating = null, reviewCount = 0 }) => {
               </button>
 
               <button
-                onClick={(e) => { e.preventDefault(); window.open(whatsappUrl, '_blank') }}
+                onClick={(e) => { e.preventDefault(); const u = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(whatsappText)}`; window.open(u, '_blank') }}
                 style={{
-                  fontSize: '0.5rem',
-                  padding: '0.45rem 1.2rem',
-                  letterSpacing: '0.15em',
-                  textTransform: 'uppercase',
-                  fontWeight: 400,
-                  color: 'rgba(255,255,255,0.8)',
+                  fontSize: '0.5rem', padding: '0.45rem 1.2rem',
+                  letterSpacing: '0.15em', textTransform: 'uppercase',
+                  fontWeight: 400, color: 'rgba(255,255,255,0.8)',
                   background: 'transparent',
                   border: '1px solid rgba(255,255,255,0.25)',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.35rem',
+                  cursor: 'pointer', transition: 'all 0.3s ease',
+                  display: 'flex', alignItems: 'center', gap: '0.35rem',
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.6)'; e.currentTarget.style.color = '#FFFFFF' }}
                 onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)' }}
@@ -208,121 +153,57 @@ const ProductCard = ({ product, avgRating = null, reviewCount = 0 }) => {
             </div>
           </div>
 
-          {/* ── INFO ── */}
-          <div
-            style={{
-              padding: '1rem 1rem 1.2rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.4rem',
-            }}
-          >
-            {/* Brand + SKU row */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              {brand ? (
-                <p
-                  style={{
-                    fontSize: '0.55rem',
-                    letterSpacing: '0.22em',
-                    textTransform: 'uppercase',
-                    fontWeight: 600,
-                    color: p.roseDeep,
-                    fontFamily: 'var(--font-sans)',
-                    margin: 0,
-                  }}
-                >
-                  {brand}
-                </p>
-              ) : <span />}
-              {sku && (
-                <p
-                  style={{
-                    fontSize: '0.5rem',
-                    letterSpacing: '0.08em',
-                    color: p.textSoft,
-                    fontFamily: 'var(--font-sans)',
-                    fontWeight: 400,
-                    margin: 0,
-                  }}
-                >
-                  {sku}
-                </p>
-              )}
-            </div>
+          <div style={{ padding: '0.85rem 0.9rem 1rem' }}>
+            {brand && (
+              <p
+                style={{
+                  fontSize: '0.55rem', letterSpacing: '0.22em',
+                  fontWeight: 600, color: p.textSoft,
+                  fontFamily: 'var(--font-sans)',
+                  margin: '0 0 0.15rem',
+                }}
+              >
+                {brand.toUpperCase()}
+              </p>
+            )}
 
-            {/* Name */}
             <h3
               style={{
                 fontFamily: 'var(--font-display)',
-                fontSize: '0.95rem',
-                fontWeight: 400,
-                color: p.textMain,
-                letterSpacing: '-0.01em',
-                lineHeight: 1.3,
-                margin: 0,
-                transition: 'color 0.3s ease',
+                fontSize: '0.85rem', fontWeight: 400,
+                color: p.ink, letterSpacing: '-0.01em',
+                lineHeight: 1.3, margin: 0,
               }}
             >
               {name}
             </h3>
 
-            {/* Colors */}
-            {colores.length > 0 && (
-              <div
+            {sku && (
+              <p
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.35rem',
-                  paddingTop: '0.15rem',
+                  fontSize: '0.5rem', letterSpacing: '0.08em',
+                  color: p.textSoft, fontWeight: 400, margin: '0.2rem 0 0',
+                  fontFamily: 'var(--font-sans)',
                 }}
               >
-                {colores.slice(0, 4).map((c, i) => (
-                  <div
-                    key={i}
-                    title={c}
-                    aria-label={`Color: ${c}`}
-                    style={{
-                      width: '10px',
-                      height: '10px',
-                      borderRadius: '50%',
-                      background: getColorHex(c),
-                      border: '1px solid rgba(26,17,24,0.08)',
-                      flexShrink: 0,
-                    }}
-                  />
-                ))}
-                {colores.length > 4 && (
-                  <span style={{ fontSize: '0.5rem', color: p.textSoft, fontWeight: 300, marginLeft: '0.15rem' }}>
-                    +{colores.length - 4}
-                  </span>
-                )}
-              </div>
+                Código: {sku}
+              </p>
             )}
 
-            {/* Price */}
             <div
               style={{
-                display: 'flex',
-                alignItems: 'baseline',
-                gap: '0.5rem',
-                paddingTop: '0.5rem',
-                marginTop: '0.3rem',
-                borderTop: '1px solid rgba(212, 120, 138, 0.1)',
+                height: '1px',
+                background: `linear-gradient(90deg, ${p.red}30, transparent)`,
+                marginTop: '0.5rem', marginBottom: '0.4rem',
               }}
-            >
+            />
+
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
               <span
                 style={{
                   fontFamily: 'var(--font-display)',
-                  fontSize: '1.15rem',
-                  fontWeight: 400,
-                  color: p.ink,
-                  letterSpacing: '-0.02em',
+                  fontSize: '1.1rem', fontWeight: 500,
+                  color: p.red, letterSpacing: '-0.02em',
                 }}
               >
                 {CURRENCY} {precio?.toFixed(2)}
@@ -330,17 +211,31 @@ const ProductCard = ({ product, avgRating = null, reviewCount = 0 }) => {
               {tieneDescuento && (
                 <span
                   style={{
-                    fontSize: '0.7rem',
-                    color: p.textSoft,
-                    textDecoration: 'line-through',
-                    fontWeight: 300,
-                    opacity: 0.5,
+                    fontSize: '0.65rem', color: p.textSoft,
+                    textDecoration: 'line-through', fontWeight: 300, opacity: 0.5,
                   }}
                 >
                   {CURRENCY} {price_original?.toFixed(2)}
                 </span>
               )}
             </div>
+
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(whatsappUrl, '_blank') }}
+              style={{
+                fontSize: '0.5rem', padding: '0.5rem 0',
+                letterSpacing: '0.18em', textTransform: 'uppercase',
+                fontWeight: 600, color: p.red, background: 'transparent',
+                border: 'none', borderTop: `1px solid ${p.red}15`,
+                cursor: 'pointer', transition: 'all 0.3s ease',
+                width: '100%', textAlign: 'center', marginTop: '0.25rem',
+                fontFamily: 'var(--font-sans)',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = p.roseDeep; e.currentTarget.style.borderTopColor = `${p.roseDeep}30` }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = p.red; e.currentTarget.style.borderTopColor = `${p.red}15` }}
+            >
+              Cotizar por WhatsApp
+            </button>
           </div>
         </article>
       </Link>

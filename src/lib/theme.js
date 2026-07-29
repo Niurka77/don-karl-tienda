@@ -26,6 +26,8 @@ export const p = {
   goldSoft: '#D4B87A',
   goldLight: '#F5E6A3',
   goldMist: '#FFF8E1',
+  // Acento promocional
+  red: '#E60000',
   // Textos
   ink: '#2D1F26',
   textMain: '#4A3340',

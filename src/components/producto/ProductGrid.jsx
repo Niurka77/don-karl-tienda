@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import ProductCard from './ProductCard'
 import FilterBar from './FilterBar'
+import SectionHeader from '../shared/SectionHeader'
 import { p } from '../../lib/theme'
 
 // ─── Skeleton de carga — editorial ───────────────────────────────────────────
@@ -430,41 +431,31 @@ const ProductGrid = () => {
           </div>
         ) : (
           <>
-            {/* Contador + separador */}
+            {/* Sección temática */}
+            {(filtros.categoria || filtros.genero) && (
+              <SectionHeader
+                title={filtros.categoria
+                  ? filtros.categoria.charAt(0).toUpperCase() + filtros.categoria.slice(1)
+                  : filtros.genero?.charAt(0).toUpperCase() + filtros.genero.slice(1)
+                }
+                subtitle="Colección"
+              />
+            )}
+
+            {/* Conteo */}
             <div
               className="flex items-center justify-between mb-8 pb-6"
               style={{ borderBottom: `1px solid ${p.roseBlush}25` }}
             >
-              {/* Título de sección */}
-              <div className="flex items-center gap-4">
-                <span
-                  style={{
-                    width: '28px',
-                    height: '1px',
-                    background: `linear-gradient(90deg, ${p.roseVivid}, ${p.gold})`,
-                    display: 'inline-block',
-                    flexShrink: 0,
-                  }}
-                />
-                <h2
-                  style={{
-                    fontFamily: 'var(--font-display)',
-                    fontSize: '1.5rem',
-                    fontWeight: 300,
-                    fontStyle: 'italic',
-                    color: p.textMain,
-                    letterSpacing: '-0.01em',
-                  }}
-                >
-                  {filtros.categoria
-                    ? filtros.categoria.charAt(0).toUpperCase() + filtros.categoria.slice(1)
-                    : filtros.genero
-                    ? filtros.genero.charAt(0).toUpperCase() + filtros.genero.slice(1)
-                    : 'Colección'}
-                </h2>
-              </div>
-
-              {/* Conteo */}
+              <span
+                style={{
+                  width: '28px',
+                  height: '1px',
+                  background: `linear-gradient(90deg, ${p.roseVivid}, ${p.gold})`,
+                  display: 'inline-block',
+                  flexShrink: 0,
+                }}
+              />
               <p
                 style={{
                   color: p.textSoft,

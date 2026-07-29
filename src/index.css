@@ -32,6 +32,9 @@
   --color-kb-gold:      #C9A84C;
   --color-kb-gold-light:#E8D08A;
 
+  /* Acento promocional */
+  --color-kb-red:      #E60000;
+
   /* Semánticos */
   --color-background:        #FDFAF9;
   --color-foreground:        #1A1118;
