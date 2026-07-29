@@ -1,37 +1,23 @@
+import HeroSection from '../components/ui/HeroSection'
+import CategoriesSection from '../components/ui/CategoriesSection'
+import AdvisorySection from '../components/ui/AdvisorySection'
+import VideoGallery from '../components/ui/VideoGallery'
 import ProductGrid from '../components/producto/ProductGrid'
 import BotonPDF from '../components/producto/BotonPDF'
-import HeroSection from '../components/ui/HeroSection'
-import TrustSection from '../components/ui/TrustSection'
-import CategoriesSection from '../components/ui/CategoriesSection'
-import VideoGallery from '../components/ui/VideoGallery'
-import SectionTexture from '../components/ui/SectionTexture'
 import { useScrollReveal } from '../hooks/useScrollReveal'
 
-const RevealSection = ({ children, delay = 0, className = '' }) => {
+const RevealSection = ({ children, delay = 0 }) => {
   const { ref, isVisible } = useScrollReveal({ threshold: 0.12 })
   return (
-    <div ref={ref} className={className}
-      style={{
-        opacity: isVisible ? 1 : 0,
-        transform: isVisible ? 'translateY(0)' : 'translateY(28px)',
-        transition: `opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
-      }}>
+    <div ref={ref} style={{
+      opacity: isVisible ? 1 : 0,
+      transform: isVisible ? 'translateY(0)' : 'translateY(28px)',
+      transition: `opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
+    }}>
       {children}
     </div>
   )
 }
-
-const SectionDivider = ({ variant = 'gradient' }) => (
-  <div aria-hidden style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1.5rem' }}>
-    {variant === 'gradient' ? (
-      <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent 0%, rgba(212,120,138,0.2) 30%, rgba(212,120,138,0.2) 70%, transparent 100%)' }} />
-    ) : (
-      <div style={{ display: 'flex', justifyContent: 'center' }}>
-        <div style={{ width: '40px', height: '1px', background: 'var(--color-kb-rose)' }} />
-      </div>
-    )}
-  </div>
-)
 
 const CatalogueHeader = () => (
   <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '3rem', gap: '1.5rem', flexWrap: 'wrap' }}>
@@ -50,72 +36,35 @@ const CatalogueHeader = () => (
   </div>
 )
 
-const VideoSectionHeader = () => (
-  <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-    <div aria-hidden style={{ width: '40px', height: '1px', background: 'linear-gradient(90deg, transparent, var(--color-kb-rose), transparent)', margin: '0 auto 1.4rem' }} />
-    <p style={{ fontFamily: 'var(--font-sans)', fontSize: '0.6rem', fontWeight: 500, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--color-kb-rose)', marginBottom: '0.75rem' }}>
-      Lifestyle
-    </p>
-    <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2rem, 4vw, 3.2rem)', fontWeight: 300, fontStyle: 'italic', color: 'var(--color-kb-obsidian)', letterSpacing: '-0.02em', lineHeight: 1.05, marginBottom: '0.75rem' }}>
-      Síguenos en redes
-    </h2>
-    <p style={{ fontFamily: 'var(--font-sans)', fontSize: '0.85rem', fontWeight: 300, color: 'var(--color-kb-mauve)', maxWidth: '340px', margin: '0 auto', lineHeight: 1.65 }}>
-      Descubre cómo nuestras clientas llevan cada pieza
-    </p>
+const SectionDivider = () => (
+  <div aria-hidden style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1.5rem' }}>
+    <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent 0%, rgba(212,120,138,0.2) 30%, rgba(212,120,138,0.2) 70%, transparent 100%)' }} />
   </div>
 )
 
 const HomePage = () => {
   return (
     <main>
-      {/* HERO — full-bleed con textura editable */}
-      <SectionTexture section="hero">
-        <HeroSection />
-      </SectionTexture>
+      <HeroSection />
 
-      {/* TRUST BAR — con textura editable */}
-      <SectionTexture section="trust">
-        <RevealSection delay={0}>
-          <TrustSection />
-        </RevealSection>
-      </SectionTexture>
-
-      <SectionDivider variant="short" />
-
-      {/* CATEGORIES — con textura editable */}
-      <SectionTexture section="categories">
-        <RevealSection delay={0}>
-          <CategoriesSection />
-        </RevealSection>
-      </SectionTexture>
+      <CategoriesSection />
 
       <SectionDivider />
 
-      {/* CATALOG — con textura editable */}
-      <SectionTexture section="catalog">
-        <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(4rem, 8vw, 7rem) 1.5rem' }}>
-          <RevealSection delay={0}>
-            <CatalogueHeader />
-          </RevealSection>
-          <RevealSection delay={80}>
-            <ProductGrid />
-          </RevealSection>
-        </section>
-      </SectionTexture>
+      <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(4rem, 8vw, 7rem) 1.5rem' }}>
+        <RevealSection delay={0}>
+          <CatalogueHeader />
+        </RevealSection>
+        <RevealSection delay={80}>
+          <ProductGrid />
+        </RevealSection>
+      </section>
 
       <SectionDivider />
 
-      {/* VIDEOS — con textura editable */}
-      <SectionTexture section="videos">
-        <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(4rem, 8vw, 7rem) 1.5rem' }}>
-          <RevealSection delay={0}>
-            <VideoSectionHeader />
-          </RevealSection>
-          <RevealSection delay={100}>
-            <VideoGallery limit={6} showTitle={false} />
-          </RevealSection>
-        </section>
-      </SectionTexture>
+      <AdvisorySection />
+
+      <VideoGallery limit={6} showTitle />
     </main>
   )
 }
