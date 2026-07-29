@@ -24,6 +24,12 @@ const generos = [
   { value: 'hombre', label: 'Hombre' },
 ]
 
+const origenes = [
+  { value: '', label: 'Todos' },
+  { value: 'importado', label: 'Importados' },
+  { value: 'nacional', label: 'Nacionales' },
+]
+
 const ordenamientos = [
   { value: 'created_at-desc', label: 'Recientes' },
   { value: 'price_original-asc', label: 'Precio: menor' },
@@ -45,11 +51,12 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
       genero: '',
       precioMin: '',
       precioMax: '',
+      origen: '',
       orden: 'created_at-desc',
     })
   }
 
-  const filtrosActivos = filtros.categoria || filtros.marca || filtros.genero || filtros.precioMin || filtros.precioMax
+  const filtrosActivos = filtros.categoria || filtros.marca || filtros.genero || filtros.precioMin || filtros.precioMax || filtros.origen
 
   const activeFilterCount = [filtros.categoria, filtros.marca, filtros.genero, filtros.precioMin, filtros.precioMax].filter(Boolean).length
 
@@ -57,7 +64,7 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
   const selectStyle = {
     width: '100%',
     fontSize: '0.85rem',
-    fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+    fontFamily: 'var(--font-sans)',
     background: 'transparent',
     border: 'none',
     borderBottom: `1.5px solid ${p.roseBlush}40`,
@@ -76,7 +83,7 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
     fontWeight: 600,
     color: p.textSoft,
     marginBottom: '0.4rem',
-    fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+    fontFamily: 'var(--font-sans)',
   }
 
   return (
@@ -97,7 +104,7 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
               textTransform: 'uppercase',
               fontWeight: 600,
               color: p.textSoft,
-              fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+              fontFamily: 'var(--font-sans)',
             }}
           >
             Filtrar
@@ -111,7 +118,7 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
               background: 'none',
               border: 'none',
               cursor: 'pointer',
-              fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+              fontFamily: 'var(--font-sans)',
             }}
             onMouseEnter={(e) => (e.currentTarget.style.color = p.roseDeep)}
             onMouseLeave={(e) => (e.currentTarget.style.color = p.textSoft)}
@@ -137,7 +144,7 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+                fontFamily: 'var(--font-sans)',
               }}
               onMouseEnter={(e) => (e.currentTarget.style.color = p.roseVivid)}
               onMouseLeave={(e) => (e.currentTarget.style.color = p.textSoft)}
@@ -158,7 +165,7 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
               letterSpacing: '0.15em',
               textTransform: 'uppercase',
               fontWeight: 600,
-              fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+              fontFamily: 'var(--font-sans)',
               background: p.roseMist,
               border: `1.5px solid ${p.roseBlush}40`,
               borderRadius: '50px',
@@ -329,6 +336,33 @@ const FilterBar = ({ filtros, onChangeFiltros }) => {
               step="0.01"
             />
           </div>
+          {/* Origen */}
+          <div className="min-w-[110px]">
+            <label htmlFor="filtro-origen" style={labelStyle}>
+              Origen
+            </label>
+            <select
+              id="filtro-origen"
+              value={filtros.origen || ''}
+              onChange={(e) => handleChange('origen', e.target.value)}
+              style={selectStyle}
+              onFocus={(e) => {
+                e.currentTarget.style.borderBottomColor = p.roseVivid
+                e.currentTarget.style.boxShadow = `0 2px 8px ${p.roseBlush}30`
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderBottomColor = `${p.roseBlush}40`
+                e.currentTarget.style.boxShadow = 'none'
+              }}
+            >
+              {origenes.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Búsqueda por nombre */}
 <div className="w-full min-w-[200px]">
   <label style={labelStyle}>Buscar producto</label>

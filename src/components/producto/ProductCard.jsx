@@ -3,348 +3,348 @@ import { Link } from 'react-router-dom'
 import { getColorHex } from '../../lib/colors'
 import ImageWithFallback from '../ui/ImageWithFallback'
 import { p } from '../../lib/theme'
+import { WHATSAPP_PHONE, CURRENCY } from '../../lib/constants'
 
-// ─── Mini estrellas ──────────────────────────────────────────────────────────
-const MiniStars = ({ rating }) => (
-  <div className="flex gap-0.5" role="img" aria-label={`${rating} de 5 estrellas`}>
-    {[1, 2, 3, 4, 5].map((s) => (
-      <svg
-        key={s}
-        className="w-3 h-3"
-        viewBox="0 0 24 24"
-        aria-hidden
-        style={{
-          fill: s <= Math.round(rating) ? p.gold : `${p.roseBlush}40`,
-        }}
-      >
-        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-      </svg>
-    ))}
-  </div>
-)
-
-// ─── ProductCard ─────────────────────────────────────────────────────────────
 const ProductCard = ({ product, avgRating = null, reviewCount = 0 }) => {
   const [hovered, setHovered] = useState(false)
 
-    const {
-    id, name,
+  const {
+    id, name, sku,
     price_original, discount_percent, price_final,
-    image_url, is_new, sku, brand, color, stock, // <--- Agregué 'stock' aquí
+    image_url, images_urls, is_new, brand, color, stock,
   } = product
+
+  const mainImage = image_url || images_urls?.[0] || ''
 
   const tieneDescuento = discount_percent > 0
   const precio = tieneDescuento ? price_final : price_original
   const colores = color ? color.split(',').map(c => c.trim()).filter(Boolean) : []
 
+  const productUrl = `${window.location.origin}/producto/${id}`
+  const whatsappText = `${sku ? `*${sku}*` : ''} - ${name} | ${CURRENCY} ${precio?.toFixed(2)} | ${productUrl}`
+  const whatsappUrl = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(whatsappText)}`
+
   return (
-    <>
-    <style>{`
-      @media (hover: none) {
-        .pc-actions { opacity: 1 !important; transform: translateY(0) !important; }
-      }
-    `}</style>
-    <Link
-      to={`/producto/${id}`}
-      className="group block"
-      aria-label={`Ver ${name}`}
+    <div
+      className="group"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      style={{ position: 'relative' }}
     >
-      <article
-        style={{
-          background: p.ivory,
-          transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s ease',
-          transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
-          boxShadow: hovered
-            ? `0 25px 70px -15px ${p.roseBlush}50, 0 10px 30px -10px ${p.ink}15, 0 0 0 1px ${p.roseBlush}30`
-            : `0 4px 20px ${p.ink}08, 0 0 0 1px ${p.champagne}30`,
-          borderRadius: '6px',
-          overflow: 'hidden',
-        }}
+      <Link
+        to={`/producto/${id}`}
+        className="block"
+        aria-label={`Ver ${name}`}
       >
-        {/* ── IMAGEN ── */}
-        <div
-          className="relative overflow-hidden"
-          style={{ aspectRatio: '4/5', background: p.roseMist }}
+        <article
+          style={{
+            background: '#FFFFFF',
+            transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+            transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
+            boxShadow: hovered
+              ? '0 20px 60px -12px rgba(26, 17, 24, 0.15), 0 0 0 1px rgba(212, 120, 138, 0.12)'
+              : '0 2px 12px rgba(26, 17, 24, 0.04), 0 0 0 1px rgba(212, 120, 138, 0.06)',
+            position: 'relative',
+          }}
         >
-          {/* Foto */}
-          <ImageWithFallback
-            src={image_url}
-            alt={name}
-            className="w-full h-full object-cover"
-            style={{
-              transition: 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
-              transform: hovered ? 'scale(1.08)' : 'scale(1)',
-            }}
-            loading="lazy"
-          />
-
-          {/* Velo oscuro suave al hover */}
+          {/* ── IMAGEN ── */}
           <div
-            className="absolute inset-0 transition-opacity duration-500"
-            style={{
-              background: `linear-gradient(180deg, transparent 40%, ${p.ink}50 100%)`,
-              opacity: hovered ? 1 : 0,
-            }}
-          />
-
-                   {/* ── BADGES superiores ── */}
-          <div className="absolute top-3 left-3 z-20 flex flex-col gap-1.5">
-            
-            {/* 1. BADGE DE STOCK BAJO (NUEVO) */}
-            {stock > 0 && stock <= 2 && (
-              <span
-                className="animate-fade-in"
-                style={{
-                  fontSize: '0.55rem',
-                  padding: '0.25rem 0.65rem',
-                  letterSpacing: '0.18em',
-                  textTransform: 'uppercase',
-                  fontWeight: 700,
-                  color: '#FFFFFF',
-                  background: `linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%)`, // Rojo elegante para urgencia
-                  borderRadius: '3px',
-                  boxShadow: `0 4px 14px rgba(211, 47, 47, 0.4)`,
-                }}
-              >
-                ¡Solo quedan {stock}!
-              </span>
-            )}
-
-            {/* 2. BADGE DE NUEVO (YA EXISTÍA) */}
-            {is_new && (
-              <span
-                className="animate-fade-in"
-                style={{
-                  fontSize: '0.55rem',
-                  padding: '0.25rem 0.65rem',
-                  letterSpacing: '0.18em',
-                  textTransform: 'uppercase',
-                  fontWeight: 500,
-                  color: p.ivory,
-                  background: p.obsidian,
-                  borderRadius: '1px',
-                }}
-              >
-                Nuevo
-              </span>
-            )}
-
-            {/* 3. BADGE DE DESCUENTO (YA EXISTÍA) */}
-            {tieneDescuento && (
-              <span
-                className="animate-fade-in"
-                style={{
-                  fontSize: '0.55rem',
-                  padding: '0.25rem 0.65rem',
-                  letterSpacing: '0.18em',
-                  textTransform: 'uppercase',
-                  fontWeight: 600,
-                  color: p.ivory,
-                  background: `linear-gradient(135deg, ${p.gold} 0%, ${p.goldSoft} 100%)`,
-                  borderRadius: '3px',
-                  boxShadow: `0 4px 14px ${p.gold}40`,
-                }}
-              >
-                −{discount_percent}%
-              </span>
-            )}
-          </div>
-
-          {/* SKU esquina derecha */}
-          {sku && (
-            <div className="absolute top-3 right-3 z-20">
-              <span
-                style={{
-                  background: p.obsidian,
-                  color: '#FFFFFF',
-                  fontSize: '0.6rem',
-                  padding: '0.3rem 0.7rem',
-                  letterSpacing: '0.12em',
-                  borderRadius: '1px',
-                  fontWeight: 500,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.3rem',
-                }}
-              >
-                <span style={{ opacity: 0.85, fontSize: '0.5rem' }}>Código:</span>
-                {sku.replace(/[^0-9]/g, '')}
-              </span>
-            </div>
-          )}
-
-          {/* ── OVERLAY DE ACCIONES (hover desktop, always visible mobile) ── */}
-          <div
-            className="absolute inset-x-0 bottom-0 z-10 flex flex-col items-center gap-2.5 pb-5 transition-all duration-500 pc-actions"
-            style={{
-              opacity: hovered ? 1 : 0,
-              transform: hovered ? 'translateY(0)' : 'translateY(16px)',
-            }}
+            className="relative overflow-hidden"
+            style={{ aspectRatio: '4/5', background: p.roseMist }}
           >
-            {/* Botón principal */}
-            <button
-              className="group/btn relative overflow-hidden"
+            <ImageWithFallback
+              src={mainImage}
+              alt={name}
+              className="w-full h-full object-cover"
               style={{
-                fontSize: '0.62rem',
-                padding: '0.7rem 1.8rem',
-                letterSpacing: '0.18em',
-                textTransform: 'uppercase',
-                fontWeight: 600,
-                color: p.ivory,
-                background: `linear-gradient(135deg, ${p.roseVivid} 0%, ${p.coral} 50%, ${p.goldSoft} 100%)`,
-                border: 'none',
-                borderRadius: '2px',
-                cursor: 'pointer',
-                boxShadow: `0 8px 24px ${p.roseVivid}50`,
-                transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
+                transition: 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
+                transform: hovered ? 'scale(1.05)' : 'scale(1)',
               }}
-              onClick={(e) => e.preventDefault()}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'scale(1.05)'
-                e.currentTarget.style.boxShadow = `0 12px 32px ${p.roseVivid}70`
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'scale(1)'
-                e.currentTarget.style.boxShadow = `0 8px 24px ${p.roseVivid}50`
-              }}
-            >
-              <span className="relative z-10 flex items-center gap-2">
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-                Agregar
-              </span>
-              {/* Shimmer effect */}
-              <span
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%)',
-                  transform: hovered ? 'translateX(120%)' : 'translateX(-120%)',
-                  transition: 'transform 1s ease',
-                }}
-              />
-            </button>
+              loading="lazy"
+            />
 
-           
-          </div>
-        </div>
-
-        {/* ── INFO ── */}
-        <div className="px-5 pt-5 pb-6 space-y-2.5">
-          {/* Marca */}
-          {brand && (
-            <p
+            {/* Gradient overlay bottom */}
+            <div
+              className="absolute inset-0 pointer-events-none"
               style={{
-                color: p.roseDeep,
-                fontSize: '0.58rem',
-                letterSpacing: '0.25em',
-                textTransform: 'uppercase',
-                fontWeight: 600,
-                fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+                background: 'linear-gradient(180deg, transparent 50%, rgba(26,17,24,0.08) 100%)',
               }}
-            >
-              {brand}
-            </p>
-          )}
+            />
 
-          {/* Nombre */}
-          <h3
-            className="leading-snug line-clamp-2 transition-colors duration-400"
-            style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: '1.05rem',
-              fontWeight: 400,
-              color: hovered ? p.roseDeep : p.textMain,
-              letterSpacing: '-0.01em',
-            }}
-          >
-            {name}
-          </h3>
-
-          {/* Colores */}
-          {colores.length > 0 && (
-            <div className="flex items-center gap-2 pt-0.5">
-              {colores.slice(0, 5).map((c, i) => (
-                <div
-                  key={i}
-                  title={c}
-                  aria-label={`Color: ${c}`}
-                  className="transition-transform duration-300 hover:scale-125 cursor-pointer"
-                  style={{
-                    width: '14px',
-                    height: '14px',
-                    borderRadius: '50%',
-                    background: getColorHex(c),
-                    border: `1.5px solid ${p.ivory}`,
-                    boxShadow: `0 1px 4px ${p.ink}20, 0 0 0 1px ${p.ink}10`,
-                  }}
-                />
-              ))}
-              {colores.length > 5 && (
+            {/* ── BADGES ── */}
+            <div className="absolute top-4 left-4 z-10 flex flex-col gap-1.5">
+              {is_new && (
                 <span
-                  style={{ color: p.textSoft, fontSize: '0.65rem', fontWeight: 300 }}
+                  style={{
+                    fontSize: '0.5rem',
+                    padding: '0.2rem 0.6rem',
+                    letterSpacing: '0.18em',
+                    textTransform: 'uppercase',
+                    fontWeight: 600,
+                    color: '#FFFFFF',
+                    background: p.ink,
+                    borderRadius: '1px',
+                  }}
                 >
-                  +{colores.length - 5}
+                  Nuevo
+                </span>
+              )}
+              {tieneDescuento && (
+                <span
+                  style={{
+                    fontSize: '0.5rem',
+                    padding: '0.2rem 0.6rem',
+                    letterSpacing: '0.18em',
+                    textTransform: 'uppercase',
+                    fontWeight: 600,
+                    color: '#FFFFFF',
+                    background: p.roseDeep,
+                    borderRadius: '1px',
+                  }}
+                >
+                  -{discount_percent}%
+                </span>
+              )}
+              {stock > 0 && stock <= 2 && (
+                <span
+                  style={{
+                    fontSize: '0.5rem',
+                    padding: '0.2rem 0.6rem',
+                    letterSpacing: '0.18em',
+                    textTransform: 'uppercase',
+                    fontWeight: 600,
+                    color: '#FFFFFF',
+                    background: '#B71C1C',
+                    borderRadius: '1px',
+                  }}
+                >
+                  Stock: {stock}
                 </span>
               )}
             </div>
-          )}
 
-          {/* Rating */}
-          {avgRating && reviewCount > 0 && (
-            <div className="flex items-center gap-2">
-              <MiniStars rating={parseFloat(avgRating)} />
-              <span
+            {/* ── SKU badge on image ── */}
+            {sku && (
+              <div
+                className="absolute top-4 right-4 z-10"
                 style={{
-                  fontSize: '0.7rem',
+                  background: 'rgba(255,255,255,0.92)',
+                  backdropFilter: 'blur(6px)',
+                  padding: '0.2rem 0.55rem',
+                  fontSize: '0.5rem',
+                  letterSpacing: '0.08em',
                   color: p.textSoft,
-                  fontWeight: 300,
+                  fontFamily: 'var(--font-sans)',
+                  fontWeight: 500,
+                  borderRadius: '1px',
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
                 }}
               >
-                ({reviewCount})
-              </span>
-            </div>
-          )}
+                {sku}
+              </div>
+            )}
 
-          {/* Precio */}
-          <div
-            className="flex items-baseline gap-2.5 pt-2.5"
-            style={{ borderTop: `1px solid ${p.roseBlush}30` }}
-          >
-            <span
+            {/* ── OVERLAY HOVER ── */}
+            <div
+              className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 p-6"
               style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: '1.35rem',
-                fontWeight: 400,
-                color: p.roseDeep,
-                letterSpacing: '-0.02em',
+                background: 'rgba(26, 17, 24, 0.55)',
+                backdropFilter: 'blur(2px)',
+                opacity: hovered ? 1 : 0,
+                transition: 'opacity 0.4s ease',
               }}
             >
-              S/ {precio?.toFixed(2)}
-            </span>
-            {tieneDescuento && (
-              <span
+              <button
+                onClick={(e) => { e.preventDefault(); window.open(whatsappUrl, '_blank') }}
                 style={{
-                  fontSize: '0.85rem',
-                  color: p.textSoft,
-                  textDecoration: 'line-through',
-                  fontWeight: 300,
-                  opacity: 0.6,
+                  fontSize: '0.6rem',
+                  padding: '0.7rem 1.6rem',
+                  letterSpacing: '0.18em',
+                  textTransform: 'uppercase',
+                  fontWeight: 600,
+                  color: p.ink,
+                  background: '#FFFFFF',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = p.roseBlush }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = '#FFFFFF' }}
+              >
+                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                </svg>
+                Cotizar
+              </button>
+
+              <button
+                onClick={(e) => { e.preventDefault(); window.open(whatsappUrl, '_blank') }}
+                style={{
+                  fontSize: '0.5rem',
+                  padding: '0.45rem 1.2rem',
+                  letterSpacing: '0.15em',
+                  textTransform: 'uppercase',
+                  fontWeight: 400,
+                  color: 'rgba(255,255,255,0.8)',
+                  background: 'transparent',
+                  border: '1px solid rgba(255,255,255,0.25)',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.6)'; e.currentTarget.style.color = '#FFFFFF' }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)' }}
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+                Compartir
+              </button>
+            </div>
+          </div>
+
+          {/* ── INFO ── */}
+          <div
+            style={{
+              padding: '1rem 1rem 1.2rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.4rem',
+            }}
+          >
+            {/* Brand + SKU row */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              {brand ? (
+                <p
+                  style={{
+                    fontSize: '0.55rem',
+                    letterSpacing: '0.22em',
+                    textTransform: 'uppercase',
+                    fontWeight: 600,
+                    color: p.roseDeep,
+                    fontFamily: 'var(--font-sans)',
+                    margin: 0,
+                  }}
+                >
+                  {brand}
+                </p>
+              ) : <span />}
+              {sku && (
+                <p
+                  style={{
+                    fontSize: '0.5rem',
+                    letterSpacing: '0.08em',
+                    color: p.textSoft,
+                    fontFamily: 'var(--font-sans)',
+                    fontWeight: 400,
+                    margin: 0,
+                  }}
+                >
+                  {sku}
+                </p>
+              )}
+            </div>
+
+            {/* Name */}
+            <h3
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: '0.95rem',
+                fontWeight: 400,
+                color: p.textMain,
+                letterSpacing: '-0.01em',
+                lineHeight: 1.3,
+                margin: 0,
+                transition: 'color 0.3s ease',
+              }}
+            >
+              {name}
+            </h3>
+
+            {/* Colors */}
+            {colores.length > 0 && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  paddingTop: '0.15rem',
                 }}
               >
-                S/ {price_original?.toFixed(2)}
-              </span>
+                {colores.slice(0, 4).map((c, i) => (
+                  <div
+                    key={i}
+                    title={c}
+                    aria-label={`Color: ${c}`}
+                    style={{
+                      width: '10px',
+                      height: '10px',
+                      borderRadius: '50%',
+                      background: getColorHex(c),
+                      border: '1px solid rgba(26,17,24,0.08)',
+                      flexShrink: 0,
+                    }}
+                  />
+                ))}
+                {colores.length > 4 && (
+                  <span style={{ fontSize: '0.5rem', color: p.textSoft, fontWeight: 300, marginLeft: '0.15rem' }}>
+                    +{colores.length - 4}
+                  </span>
+                )}
+              </div>
             )}
+
+            {/* Price */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'baseline',
+                gap: '0.5rem',
+                paddingTop: '0.5rem',
+                marginTop: '0.3rem',
+                borderTop: '1px solid rgba(212, 120, 138, 0.1)',
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: '1.15rem',
+                  fontWeight: 400,
+                  color: p.ink,
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                {CURRENCY} {precio?.toFixed(2)}
+              </span>
+              {tieneDescuento && (
+                <span
+                  style={{
+                    fontSize: '0.7rem',
+                    color: p.textSoft,
+                    textDecoration: 'line-through',
+                    fontWeight: 300,
+                    opacity: 0.5,
+                  }}
+                >
+                  {CURRENCY} {price_original?.toFixed(2)}
+                </span>
+              )}
+            </div>
           </div>
-        </div>
-      </article>
-    </Link>
-    </>
+        </article>
+      </Link>
+    </div>
   )
 }
 

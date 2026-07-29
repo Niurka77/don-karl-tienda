@@ -1,28 +1,22 @@
-import HeroSection from '../components/ui/HeroSection'
-import CategoriesSection from '../components/ui/CategoriesSection'
-import AdvisorySection from '../components/ui/AdvisorySection'
-import VideoGallery from '../components/ui/VideoGallery'
+import { useSiteConfig } from '../hooks/useSiteConfig'
+import HeroSection from '../components/sections/HeroSection'
+import AdvisorySection from '../components/sections/AdvisorySection'
 import ProductGrid from '../components/producto/ProductGrid'
 import BotonPDF from '../components/producto/BotonPDF'
-import { useScrollReveal } from '../hooks/useScrollReveal'
+import VideoGallery from '../components/ui/VideoGallery'
+import SectionTexture from '../components/shared/SectionTexture'
+import RevealSection from '../components/shared/RevealSection'
 
-const RevealSection = ({ children, delay = 0 }) => {
-  const { ref, isVisible } = useScrollReveal({ threshold: 0.12 })
-  return (
-    <div ref={ref} style={{
-      opacity: isVisible ? 1 : 0,
-      transform: isVisible ? 'translateY(0)' : 'translateY(28px)',
-      transition: `opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
-    }}>
-      {children}
-    </div>
-  )
-}
+const SectionDivider = () => (
+  <div aria-hidden style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1.5rem' }}>
+    <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent 0%, rgba(212,120,138,0.2) 30%, rgba(212,120,138,0.2) 70%, transparent 100%)' }} />
+  </div>
+)
 
 const CatalogueHeader = () => (
   <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '3rem', gap: '1.5rem', flexWrap: 'wrap' }}>
     <div>
-      <p style={{ fontFamily: 'var(--font-sans)', fontSize: '0.6rem', fontWeight: 500, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--color-kb-rose)', marginBottom: '0.6rem' }}>
+      <p className="font-sans text-xs tracking-[0.22em] uppercase text-kb-rose mb-2 font-medium">
         Colección actual
       </p>
       <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.9rem, 3.5vw, 2.8rem)', fontWeight: 300, color: 'var(--color-kb-obsidian)', letterSpacing: '-0.02em', lineHeight: 1.05 }}>
@@ -36,35 +30,74 @@ const CatalogueHeader = () => (
   </div>
 )
 
-const SectionDivider = () => (
-  <div aria-hidden style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1.5rem' }}>
-    <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent 0%, rgba(212,120,138,0.2) 30%, rgba(212,120,138,0.2) 70%, transparent 100%)' }} />
+const VideoSectionHeader = () => (
+  <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
+    <div aria-hidden style={{ width: '40px', height: '1px', background: 'linear-gradient(90deg, transparent, var(--color-kb-rose), transparent)', margin: '0 auto 1.4rem' }} />
+    <p className="font-sans text-xs tracking-[0.22em] uppercase text-kb-rose mb-3 font-medium">
+      Lifestyle
+    </p>
+    <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2rem, 4vw, 3.2rem)', fontWeight: 300, fontStyle: 'italic', color: 'var(--color-kb-obsidian)', letterSpacing: '-0.02em', lineHeight: 1.05, marginBottom: '0.75rem' }}>
+      Síguenos en redes
+    </h2>
+    <p style={{ fontFamily: 'var(--font-sans)', fontSize: '0.85rem', fontWeight: 300, color: 'var(--color-kb-mauve)', maxWidth: '340px', margin: '0 auto', lineHeight: 1.65 }}>
+      Descubre cómo nuestras clientas llevan cada pieza
+    </p>
   </div>
 )
 
 const HomePage = () => {
+  const { getText, config } = useSiteConfig()
+
   return (
     <main>
-      <HeroSection />
-
-      <CategoriesSection />
-
-      <SectionDivider />
-
-      <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(4rem, 8vw, 7rem) 1.5rem' }}>
-        <RevealSection delay={0}>
-          <CatalogueHeader />
-        </RevealSection>
-        <RevealSection delay={80}>
-          <ProductGrid />
-        </RevealSection>
-      </section>
+      <SectionTexture section="hero">
+        <HeroSection
+          title={getText('hero_title')}
+          subtitle={getText('hero_subtitle')}
+          ctaText={getText('hero_cta')}
+          backgroundImage={config.textures?.hero?.url || ''}
+          backgroundColor={config.customColors?.background || '#FFFFFF'}
+        />
+      </SectionTexture>
 
       <SectionDivider />
 
-      <AdvisorySection />
+      <SectionTexture section="catalog">
+        <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(4rem, 8vw, 7rem) 1.5rem' }}>
+          <RevealSection>
+            <CatalogueHeader />
+          </RevealSection>
+          <RevealSection delay={80}>
+            <ProductGrid />
+          </RevealSection>
+        </section>
+      </SectionTexture>
 
-      <VideoGallery limit={6} showTitle />
+      <SectionDivider />
+
+      <SectionTexture section="advisory">
+        <RevealSection>
+          <AdvisorySection
+            title={getText('advisory_title')}
+            description={getText('advisory_description')}
+            ctaText={getText('advisory_cta')}
+            backgroundColor={config.customColors?.background || '#FDF0F3'}
+          />
+        </RevealSection>
+      </SectionTexture>
+
+      <SectionDivider />
+
+      <SectionTexture section="videos">
+        <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(4rem, 8vw, 7rem) 1.5rem' }}>
+          <RevealSection>
+            <VideoSectionHeader />
+          </RevealSection>
+          <RevealSection delay={100}>
+            <VideoGallery limit={6} showTitle={false} />
+          </RevealSection>
+        </section>
+      </SectionTexture>
     </main>
   )
 }

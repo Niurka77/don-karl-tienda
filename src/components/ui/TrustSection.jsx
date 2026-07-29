@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
-import logoKB from '/logo.svg'
+import logoKB from '/kb.png'
 import { WHATSAPP_PHONE } from '../../lib/constants'
-import { useSiteConfig } from '../../hooks/useSiteConfig'
 import { p } from '../../lib/theme'
 
-// ─── Datos (fallbacks) ──────────────────────────────────────────────────────
-const defaultCheckItems = [
+// ─── Datos ───────────────────────────────────────────────────────────────────
+const checkItems = [
   {
     label: 'Productos 100% Originales',
     sub: 'Guess · Tommy Hilfiger · Calvin Klein · Michael Kors',
@@ -29,14 +28,14 @@ const defaultCheckItems = [
   },
 ]
 
-const defaultStats = [
+const stats = [
   { n: 500, s: '+', l: 'Productos importados' },
   { n: 8, s: '', l: 'Años de experiencia' },
   { n: 100, s: '%', l: 'Originales garantizados' },
   { n: 24, s: 'h', l: 'Tiempo de respuesta' },
 ]
 
-const defaultBrands = [
+const brands = [
   'GUESS', 'TOMMY HILFIGER', 'CALVIN KLEIN', 'MICHAEL KORS',
   'COACH', 'RALPH LAUREN', 'KATE SPADE',
 ]
@@ -144,21 +143,20 @@ const MagneticButton = ({ href, children }) => {
 }
 
 // Marquee de marcas
-const BrandMarquee = ({ brands: brandsProp }) => {
-  const items = brandsProp?.length ? brandsProp : brands
-  return (
+const BrandMarquee = () => (
+  <div
+    className="relative overflow-hidden py-5"
+    style={{
+      borderTop: `1px solid ${p.champagne}50`,
+      borderBottom: `1px solid ${p.champagne}50`,
+      background: `linear-gradient(90deg, ${p.cream} 0%, ${p.ivory} 50%, ${p.cream} 100%)`,
+    }}
+  >
     <div
-      className="relative overflow-hidden py-5"
-      style={{
-        borderTop: `1px solid ${p.champagne}50`,
-        borderBottom: `1px solid ${p.champagne}50`,
-      }}
+      className="flex whitespace-nowrap"
+      style={{ animation: 'kbMarquee 30s linear infinite' }}
     >
-      <div
-        className="flex whitespace-nowrap"
-        style={{ animation: 'kbMarquee 30s linear infinite' }}
-      >
-        {[...items, ...items, ...items].map((b, i) => (
+      {[...brands, ...brands, ...brands].map((b, i) => (
         <span
           key={i}
           className="mx-10 font-light tracking-[0.35em] text-[0.95rem]"
@@ -173,14 +171,13 @@ const BrandMarquee = ({ brands: brandsProp }) => {
       ))}
     </div>
   </div>
-  )
-}
+)
 
 // Blob morphing de fondo (reemplaza pétalos)
 const MorphingBlob = () => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none">
     <svg
-      className="absolute top-1/2 left-1/2 opacity-[0.18]"
+      className="absolute top-1/2 left-1/2 opacity-[0.35]"
       style={{
         width: 'min(90vw, 900px)',
         height: 'min(90vw, 900px)',
@@ -214,8 +211,8 @@ const MorphingBlob = () => (
 
 // ─── Componente principal ────────────────────────────────────────────────────
 const TrustSection = () => {
-  const { config } = useSiteConfig()
   const [isVisible, setIsVisible] = useState(false)
+  const [scrollProgress, setScrollProgress] = useState(0)
   const sectionRef = useRef(null)
 
   // Intersection Observer
@@ -233,20 +230,19 @@ const TrustSection = () => {
     return () => obs.disconnect()
   }, [])
 
-  // Mergear config con defaults (mantener iconos JSX hardcoded)
-  const checkItems = (config.trustItems?.length ? config.trustItems : defaultCheckItems).map((item, i) => ({
-    ...defaultCheckItems[i % defaultCheckItems.length],
-    label: item.label || defaultCheckItems[i % defaultCheckItems.length].label,
-    sub: item.sub || defaultCheckItems[i % defaultCheckItems.length].sub,
-  }))
-  const stats = config.trustStats?.length ? config.trustStats : defaultStats
-  const brandsList = config.brands?.length ? config.brands : defaultBrands
-  const trustTitle = config.texts?.trust_title || 'Moda importada'
-  const trustSubtitle = config.texts?.trust_subtitle || 'Tu confianza es nuestra prioridad'
-  const fc = config.footerContact || {}
-  const contactAddress = fc.address || 'Galería Chiclayo · 2do Piso'
-  const contactPhone = fc.phone || '+51 906 877 812'
-
+  // Scroll progress (para línea dorada decorativa)
+  useEffect(() => {
+    const onScroll = () => {
+      if (!sectionRef.current) return
+      const r = sectionRef.current.getBoundingClientRect()
+      const vh = window.innerHeight
+      const progress = Math.min(Math.max((vh - r.top) / (vh + r.height), 0), 1)
+      setScrollProgress(progress)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   return (
     <section
@@ -254,13 +250,14 @@ const TrustSection = () => {
       id="nosotros"
       className="relative overflow-hidden"
       style={{
+        background: `linear-gradient(180deg, ${p.cream} 0%, ${p.ivory} 50%, ${p.cream} 100%)`,
         padding: 'clamp(5rem, 12vh, 9rem) 0 clamp(4rem, 8vh, 6rem)',
-        fontFamily: 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+        fontFamily: 'var(--font-sans)',
       }}
     >
       {/* Textura de grano sutil (film look) */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-[0.02] mix-blend-multiply"
+        className="absolute inset-0 pointer-events-none opacity-[0.04] mix-blend-multiply"
         style={{
           backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.5'/></svg>")`,
         }}
@@ -268,6 +265,22 @@ const TrustSection = () => {
 
       {/* Blob morphing de fondo */}
       <MorphingBlob />
+
+      {/* Línea dorada de progreso decorativa (lateral) */}
+      <div
+        className="absolute left-6 top-0 bottom-0 w-px pointer-events-none hidden lg:block"
+        style={{ background: `${p.champagne}30` }}
+      >
+        <div
+          className="w-full origin-top"
+          style={{
+            height: `${scrollProgress * 100}%`,
+            background: `linear-gradient(180deg, ${p.goldSoft}, ${p.roseVivid})`,
+            boxShadow: `0 0 12px ${p.goldSoft}60`,
+            transition: 'height 0.1s linear',
+          }}
+        />
+      </div>
 
       {/* ─── Contenido ─── */}
       <div className="relative max-w-screen-xl mx-auto px-6 lg:px-12">
@@ -302,7 +315,7 @@ const TrustSection = () => {
               fontFamily: 'var(--font-display)',
             }}
           >
-            <SplitText text={trustTitle} inView={isVisible} />
+            <SplitText text="Moda importada" inView={isVisible} />
             <br />
             <SplitText text="desde" inView={isVisible} delay={0.35} />{' '}
             <span
@@ -327,7 +340,7 @@ const TrustSection = () => {
               transition: 'all 1s cubic-bezier(0.16, 1, 0.3, 1) 0.8s',
             }}
           >
-            {trustSubtitle}
+            En <strong style={{ color: p.textMain, fontWeight: 500 }}>KB Dresses & More</strong> curamos lo último en tendencias directamente desde Estados Unidos. Carteras, vestidos de fiesta, billeteras y accesorios de las mejores marcas del mundo — seleccionados para ti.
           </p>
         </div>
 
@@ -405,12 +418,12 @@ const TrustSection = () => {
                   {
                     icon: <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z" />,
                     label: 'Tienda física',
-                    value: contactAddress,
+                    value: 'Galería Chiclayo · 2do Piso',
                   },
                   {
                     icon: <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />,
                     label: 'WhatsApp',
-                    value: contactPhone,
+                    value: '+51 906 877 812',
                     href: `https://wa.me/${WHATSAPP_PHONE}`,
                   },
                 ].map((item, i) => {
@@ -571,7 +584,7 @@ const TrustSection = () => {
 
         {/* ─── MARQUEE DE MARCAS ─── */}
         <div className="mt-20 lg:mt-28">
-          <BrandMarquee brands={brandsList} />
+          <BrandMarquee />
         </div>
       </div>
 

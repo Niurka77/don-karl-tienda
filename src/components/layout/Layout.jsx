@@ -1,4 +1,4 @@
-import Navbar from './Navbar'
+﻿import Navbar from './Navbar'
 import Footer from './Footer'
 import WhatsAppButton from '../ui/WhatsAppButton'
 import CartDrawer from '../carrito/CartDrawer'

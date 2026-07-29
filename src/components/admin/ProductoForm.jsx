@@ -568,24 +568,24 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-[#FFF8F5] rounded-sm p-6 max-w-md w-full mx-4">
             <div className="w-6 h-px bg-[#D4788A] mb-4"></div>
-            <h3 className="font-['Cormorant_Garamond'] text-xl font-light tracking-[-0.02em] text-[#1A1118] mb-3">
+            <h3 className="font-display text-xl font-light tracking-[-0.02em] text-[#1A1118] mb-3">
               Confirmar cambios
             </h3>
-            <p className="text-sm font-['DM_Sans'] font-light text-[#2D2030] mb-6">
+            <p className="text-sm font-sans font-light text-[#2D2030] mb-6">
               ¿Estás seguro de guardar los cambios en este producto?
             </p>
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={() => responderConfirmacion(true)}
-                className="flex-1 py-2.5 bg-[#1A1118] text-white rounded-sm font-['DM_Sans'] font-medium tracking-wide hover:bg-gradient-to-r hover:from-[#D4788A] hover:to-[#B85268] transition-all duration-300"
+                className="flex-1 py-2.5 bg-[#1A1118] text-white rounded-sm font-sans font-medium tracking-wide hover:bg-gradient-to-r hover:from-[#D4788A] hover:to-[#B85268] transition-all duration-300"
               >
                 Sí, guardar
               </button>
               <button
                 type="button"
                 onClick={() => responderConfirmacion(false)}
-                className="flex-1 py-2.5 border border-[rgba(212,120,138,0.4)] text-[#2D2030] rounded-sm font-['DM_Sans'] font-medium hover:bg-[#FDF0F3] hover:border-[#D4788A] transition-all duration-300"
+                className="flex-1 py-2.5 border border-[rgba(212,120,138,0.4)] text-[#2D2030] rounded-sm font-sans font-medium hover:bg-[#FDF0F3] hover:border-[#D4788A] transition-all duration-300"
               >
                 Cancelar
               </button>
@@ -597,27 +597,27 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
       <form onSubmit={handleSubmit} ref={formRef} className="bg-[#FFF8F5] rounded-sm p-6">
         <div className="border-b border-[rgba(212,120,138,0.2)] pb-4 mb-6">
           <div className="w-6 h-px bg-[#D4788A] mb-3"></div>
-          <h2 className="font-['Cormorant_Garamond'] text-2xl font-light tracking-[-0.02em] text-[#1A1118]">
+          <h2 className="font-display text-2xl font-light tracking-[-0.02em] text-[#1A1118]">
             {esEdicion ? 'Editar producto' : 'Nuevo producto'}
           </h2>
         </div>
 
         {errorGeneral && (
           <div className="mb-6 p-4 border border-[#B85268] bg-[#FDF0F3] rounded-sm">
-            <p className="text-sm text-[#B85268] font-['DM_Sans']">{errorGeneral}</p>
+            <p className="text-sm text-[#B85268] font-sans">{errorGeneral}</p>
           </div>
         )}
 
         {exito && (
           <div className="mb-6 p-4 border border-[#D4788A] bg-[#F2C4CE] bg-opacity-30 rounded-sm">
-            <p className="text-sm text-[#1A1118] font-['DM_Sans']">{exito}</p>
+            <p className="text-sm text-[#1A1118] font-sans">{exito}</p>
           </div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* ✅ NOMBRE - PRIMERO */}
           <div className="md:col-span-2">
-            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-sans font-light text-[#9A7480] mb-2">
               Nombre del producto *
             </label>
             <input
@@ -626,25 +626,25 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
               value={formData.name}
               onChange={handleChange}
               placeholder="Vestido Floral Primavera"
-              className={`w-full border rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
+              className={`w-full border rounded-sm px-4 py-2.5 text-sm font-sans font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
                 errores.name ? 'border-[#B85268] bg-[#FDF0F3]' : 'border-[rgba(212,120,138,0.25)]'
               }`}
             />
             {errores.name && (
-              <p className="mt-1 text-xs text-[#B85268] font-['DM_Sans']">{errores.name}</p>
+              <p className="mt-1 text-xs text-[#B85268] font-sans">{errores.name}</p>
             )}
           </div>
 
           {/* ✅ CATEGORÍA - AHORA ANTES DE SKU */}
           <div>
-            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-sans font-light text-[#9A7480] mb-2">
               Categoría
             </label>
             <select
               name="category"
               value={formData.category}
               onChange={handleChange}
-              className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
+              className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-sans font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
             >
               {categorias.map((cat) => (
                 <option key={cat} value={cat}>
@@ -656,7 +656,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
 
           {/* ✅ SKU - AHORA DESPUÉS DE CATEGORÍA */}
           <div>
-            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-sans font-light text-[#9A7480] mb-2">
               SKU / Código *
             </label>
             <div className="flex gap-2">
@@ -667,7 +667,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
                 onChange={handleChange}
                 placeholder="VES-001"
                 disabled={!skuEditandoManualmente && !esEdicion}
-                className={`flex-1 border rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
+                className={`flex-1 border rounded-sm px-4 py-2.5 text-sm font-sans font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
                   errores.sku ? 'border-[#B85268] bg-[#FDF0F3]' : 'border-[rgba(212,120,138,0.25)]'
                 } ${!skuEditandoManualmente && !esEdicion ? 'bg-gray-100 cursor-not-allowed' : ''}`}
               />
@@ -676,21 +676,21 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
                   type="button"
                   onClick={skuEditandoManualmente ? () => setSkuEditandoManualmente(false) : generarSkuAutomatico}
                   disabled={generandoSku}
-                  className="px-4 py-2.5 bg-[#1A1118] text-white rounded-sm text-xs font-['DM_Sans'] font-medium hover:bg-gradient-to-r hover:from-[#D4788A] hover:to-[#B85268] transition-all duration-300 disabled:bg-[#9A7480] disabled:cursor-not-allowed whitespace-nowrap"
+                  className="px-4 py-2.5 bg-[#1A1118] text-white rounded-sm text-xs font-sans font-medium hover:bg-gradient-to-r hover:from-[#D4788A] hover:to-[#B85268] transition-all duration-300 disabled:bg-[#9A7480] disabled:cursor-not-allowed whitespace-nowrap"
                   title={skuEditandoManualmente ? "Volver a generación automática" : "Generar SKU automático según la categoría"}
                 >
                   {generandoSku ? '...' : skuEditandoManualmente ? 'Auto' : 'Editar'}
                 </button>
               )}
             </div>
-            <p className="mt-1 text-[0.65rem] text-[#9A7480] font-['DM_Sans']">
+            <p className="mt-1 text-[0.65rem] text-[#9A7480] font-sans">
               {skuEditandoManualmente || esEdicion ? 'Puedes editar el SKU manualmente' : `Click en "Auto" para generar según categoría (${prefijosCategoria[formData.category]}-XX)`}
             </p>
             {errores.sku && (
-              <p className="mt-1 text-xs text-[#B85268] font-['DM_Sans']">{errores.sku}</p>
+              <p className="mt-1 text-xs text-[#B85268] font-sans">{errores.sku}</p>
             )}
             {skuExiste && (
-              <p className="mt-1 text-xs text-orange-600 font-['DM_Sans']">⚠️ Este SKU ya existe</p>
+              <p className="mt-1 text-xs text-orange-600 font-sans">⚠️ Este SKU ya existe</p>
             )}
           </div>
 
@@ -704,14 +704,14 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
 
           {/* Género */}
           <div>
-            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-sans font-light text-[#9A7480] mb-2">
               Género
             </label>
             <select
               name="gender"
               value={formData.gender}
               onChange={handleChange}
-              className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
+              className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-sans font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
             >
               {generos.map((gen) => (
                 <option key={gen} value={gen}>
@@ -742,11 +742,11 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
 
           {/* Precio */}
           <div>
-            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-sans font-light text-[#9A7480] mb-2">
               Precio original *
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9A7480] text-sm font-['DM_Sans']">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9A7480] text-sm font-sans">
                 $
               </span>
               <input
@@ -757,19 +757,19 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
                 placeholder="120.00"
                 step="0.01"
                 min="0"
-                className={`w-full border rounded-sm pl-8 pr-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
+                className={`w-full border rounded-sm pl-8 pr-4 py-2.5 text-sm font-sans font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
                   errores.price_original ? 'border-[#B85268] bg-[#FDF0F3]' : 'border-[rgba(212,120,138,0.25)]'
                 }`}
               />
             </div>
             {errores.price_original && (
-              <p className="mt-1 text-xs text-[#B85268] font-['DM_Sans']">{errores.price_original}</p>
+              <p className="mt-1 text-xs text-[#B85268] font-sans">{errores.price_original}</p>
             )}
           </div>
 
           {/* Descuento */}
           <div>
-            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-sans font-light text-[#9A7480] mb-2">
               Descuento (%)
             </label>
             <div className="space-y-2">
@@ -782,11 +782,11 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
                   placeholder="0"
                   min="0"
                   max="99"
-                  className={`w-full border rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
+                  className={`w-full border rounded-sm px-4 py-2.5 text-sm font-sans font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
                     errores.discount_percent ? 'border-[#B85268] bg-[#FDF0F3]' : 'border-[rgba(212,120,138,0.25)]'
                   }`}
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9A7480] text-sm font-['DM_Sans']">
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9A7480] text-sm font-sans">
                   %
                 </span>
               </div>
@@ -802,7 +802,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
               
               {precioFinal !== null && precioFinal < parseFloat(formData.price_original || 0) && (
                 <div className="bg-[#FDF0F3] rounded-sm p-2 border border-[rgba(212,120,138,0.2)]">
-                  <p className="text-xs text-[#9A7480] font-['DM_Sans']">
+                  <p className="text-xs text-[#9A7480] font-sans">
                     Precio final: <span className="font-semibold text-[#1A1118]">${precioFinal.toFixed(2)}</span>
                     <span className="ml-2 line-through text-[#9A7480]">${parseFloat(formData.price_original).toFixed(2)}</span>
                   </p>
@@ -810,13 +810,13 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
               )}
             </div>
             {errores.discount_percent && (
-              <p className="mt-1 text-xs text-[#B85268] font-['DM_Sans']">{errores.discount_percent}</p>
+              <p className="mt-1 text-xs text-[#B85268] font-sans">{errores.discount_percent}</p>
             )}
           </div>
 
           {/* Stock */}
           <div>
-            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-sans font-light text-[#9A7480] mb-2">
               Stock *
             </label>
             <input
@@ -826,12 +826,12 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
               onChange={handleChange}
               placeholder="5"
               min="0"
-              className={`w-full border rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
+              className={`w-full border rounded-sm px-4 py-2.5 text-sm font-sans font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
                 errores.stock ? 'border-[#B85268] bg-[#FDF0F3]' : 'border-[rgba(212,120,138,0.25)]'
               }`}
             />
             {errores.stock && (
-              <p className="mt-1 text-xs text-[#B85268] font-['DM_Sans']">{errores.stock}</p>
+              <p className="mt-1 text-xs text-[#B85268] font-sans">{errores.stock}</p>
             )}
           </div>
 
@@ -845,11 +845,11 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
                 onChange={handleChange}
                 className="w-5 h-5 rounded-sm border-[rgba(212,120,138,0.35)] text-[#D4788A] focus:ring-[#D4788A] focus:ring-1 focus:ring-offset-0 cursor-pointer"
               />
-              <span className="text-sm font-['DM_Sans'] font-medium text-[#1A1118] tracking-wide">
+              <span className="text-sm font-sans font-medium text-[#1A1118] tracking-wide">
                 Mostrar en slider de Productos Nuevos / Destacados
               </span>
             </label>
-            <p className="text-xs text-[#9A7480] font-['DM_Sans'] mt-1 ml-8">
+            <p className="text-xs text-[#9A7480] font-sans mt-1 ml-8">
               Los productos marcados aparecerán en el slider "Recién Llegados" de la página principal
               {!esEdicion && formData.is_featured && (
                 <span className="ml-1 text-[#D4788A]">• Se creará el slide automáticamente</span>
@@ -884,7 +884,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
 
           {/* Descripción */}
           <div className="md:col-span-2">
-            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+            <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-sans font-light text-[#9A7480] mb-2">
               Descripción
             </label>
             <textarea
@@ -893,7 +893,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
               onChange={handleChange}
               rows={3}
               placeholder="Describe el producto..."
-              className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent resize-none bg-white"
+              className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-sans font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent resize-none bg-white"
             />
           </div>
         </div>
@@ -903,7 +903,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
           <button
             type="submit"
             disabled={guardando}
-            className="flex-1 py-2.5 bg-[#1A1118] text-white rounded-sm font-['DM_Sans'] font-medium tracking-wide hover:bg-gradient-to-r hover:from-[#D4788A] hover:to-[#B85268] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] disabled:bg-[#9A7480] disabled:cursor-not-allowed text-sm relative overflow-hidden group"
+            className="flex-1 py-2.5 bg-[#1A1118] text-white rounded-sm font-sans font-medium tracking-wide hover:bg-gradient-to-r hover:from-[#D4788A] hover:to-[#B85268] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] disabled:bg-[#9A7480] disabled:cursor-not-allowed text-sm relative overflow-hidden group"
           >
             <span className="relative z-10">
               {guardando ? (
@@ -923,7 +923,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
             <button
               type="button"
               onClick={onCancelar}
-              className="px-6 py-2.5 border border-[rgba(212,120,138,0.4)] text-[#2D2030] rounded-sm font-['DM_Sans'] font-medium hover:bg-[#FDF0F3] hover:border-[#D4788A] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] text-sm"
+              className="px-6 py-2.5 border border-[rgba(212,120,138,0.4)] text-[#2D2030] rounded-sm font-sans font-medium hover:bg-[#FDF0F3] hover:border-[#D4788A] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] text-sm"
             >
               Cancelar
             </button>

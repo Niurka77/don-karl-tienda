@@ -173,10 +173,7 @@ const PedidosPage = () => {
       return
     }
     
-    const items = Array.isArray(pedido.products) ? pedido.products.map(p => 
-      `- ${p.name}${p.sku ? ' [' + p.sku + ']' : ''}${p.size ? ' (' + p.size + ')' : ''} x${p.quantity}`
-    ).join('\n') : 'Sin productos';
-    const mensaje = `Hola ${pedido.customer_name}, te contactamos sobre tu pedido #${String(pedido.id).substring(0, 8).toUpperCase()}.\n\nProductos:\n${items}\n\nEstado: ${pedido.status}\nTotal: S/ ${Number(pedido.total || 0).toFixed(2)}`
+    const mensaje = `Hola ${pedido.customer_name}, te contactamos sobre tu pedido #${String(pedido.id).substring(0, 8).toUpperCase()}. Estado actual: ${pedido.status}. Total: S/ ${Number(pedido.total || 0).toFixed(2)}`
     const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`
     window.open(url, '_blank')
   }
@@ -277,20 +274,20 @@ const PedidosPage = () => {
       {modalEliminar.abierto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-sm p-6 max-w-md w-full mx-4 shadow-xl">
-            <h3 className="font-['Cormorant_Garamond'] text-xl text-[#1A1118] mb-2">Confirmar eliminación</h3>
-            <p className="text-sm text-gray-600 mb-6 font-['DM_Sans']">
+            <h3 className="font-display text-xl text-[#1A1118] mb-2">Confirmar eliminación</h3>
+            <p className="text-sm text-gray-600 mb-6 font-sans">
               ¿Estás seguro de eliminar el pedido <strong>#{String(modalEliminar.pedido?.id).substring(0, 8).toUpperCase()}</strong>? Esta acción no se puede deshacer.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setModalEliminar({ abierto: false, pedido: null })}
-                className="flex-1 py-2.5 border border-gray-300 text-gray-700 rounded-sm hover:bg-gray-50 font-['DM_Sans']"
+                className="flex-1 py-2.5 border border-gray-300 text-gray-700 rounded-sm hover:bg-gray-50 font-sans"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleEliminarPedido}
-                className="flex-1 py-2.5 bg-[#B85268] text-white rounded-sm hover:bg-[#9A3A4C] font-['DM_Sans'] transition-colors"
+                className="flex-1 py-2.5 bg-[#B85268] text-white rounded-sm hover:bg-[#9A3A4C] font-sans transition-colors"
               >
                 Sí, eliminar
               </button>
@@ -301,33 +298,33 @@ const PedidosPage = () => {
 
       {/* Header */}
       <div className="mb-6">
-        <h1 className="font-['Cormorant_Garamond'] text-3xl font-light text-[#1A1118]">Pedidos</h1>
-        <p className="text-sm text-[#9A7480] font-['DM_Sans'] mt-1">Gestiona todos los pedidos de tu tienda</p>
+        <h1 className="font-display text-3xl font-light text-[#1A1118]">Pedidos</h1>
+        <p className="text-sm text-[#9A7480] font-sans mt-1">Gestiona todos los pedidos de tu tienda</p>
       </div>
 
       {/* Estadísticas */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-sm p-4 border border-[rgba(212,120,138,0.15)] shadow-sm">
-          <p className="text-xs text-[#9A7480] font-['DM_Sans'] uppercase tracking-wide">Pedidos Hoy</p>
-          <p className="text-2xl font-bold text-[#1A1118] font-['Cormorant_Garamond'] mt-1">{stats.totalHoy}</p>
+          <p className="text-xs text-[#9A7480] font-sans uppercase tracking-wide">Pedidos Hoy</p>
+          <p className="text-2xl font-bold text-[#1A1118] font-display mt-1">{stats.totalHoy}</p>
         </div>
         <div className="bg-white rounded-sm p-4 border border-[rgba(212,120,138,0.15)] shadow-sm">
-          <p className="text-xs text-[#9A7480] font-['DM_Sans'] uppercase tracking-wide">Pendientes</p>
-          <p className="text-2xl font-bold text-yellow-600 font-['Cormorant_Garamond'] mt-1">{stats.pendientes}</p>
+          <p className="text-xs text-[#9A7480] font-sans uppercase tracking-wide">Pendientes</p>
+          <p className="text-2xl font-bold text-yellow-600 font-display mt-1">{stats.pendientes}</p>
         </div>
         <div className="bg-white rounded-sm p-4 border border-[rgba(212,120,138,0.15)] shadow-sm">
-          <p className="text-xs text-[#9A7480] font-['DM_Sans'] uppercase tracking-wide">Ingresos Semana</p>
-          <p className="text-2xl font-bold text-green-600 font-['Cormorant_Garamond'] mt-1">{formatearMoneda(stats.ingresosSemana)}</p>
+          <p className="text-xs text-[#9A7480] font-sans uppercase tracking-wide">Ingresos Semana</p>
+          <p className="text-2xl font-bold text-green-600 font-display mt-1">{formatearMoneda(stats.ingresosSemana)}</p>
         </div>
         <div className="bg-white rounded-sm p-4 border border-[rgba(212,120,138,0.15)] shadow-sm">
-          <p className="text-xs text-[#9A7480] font-['DM_Sans'] uppercase tracking-wide">Por Enviar</p>
-          <p className="text-2xl font-bold text-purple-600 font-['Cormorant_Garamond'] mt-1">{stats.porEnviar}</p>
+          <p className="text-xs text-[#9A7480] font-sans uppercase tracking-wide">Por Enviar</p>
+          <p className="text-2xl font-bold text-purple-600 font-display mt-1">{stats.porEnviar}</p>
         </div>
       </div>
 
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-sm">
-          <p className="text-sm text-red-700 font-['DM_Sans']">{error}</p>
+          <p className="text-sm text-red-700 font-sans">{error}</p>
         </div>
       )}
 
@@ -340,14 +337,14 @@ const PedidosPage = () => {
               placeholder="Buscar por nombre, teléfono, ID o email..."
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] focus:outline-none focus:ring-1 focus:ring-[#D4788A] bg-white"
+              className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-sans focus:outline-none focus:ring-1 focus:ring-[#D4788A] bg-white"
             />
           </div>
           
           <select
             value={filtroEstado}
             onChange={(e) => setFiltroEstado(e.target.value)}
-            className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] focus:outline-none focus:ring-1 focus:ring-[#D4788A] bg-white"
+            className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-sans focus:outline-none focus:ring-1 focus:ring-[#D4788A] bg-white"
           >
             <option value="">Todos los estados</option>
             <option value="pendiente">Pendiente</option>
@@ -359,7 +356,7 @@ const PedidosPage = () => {
           <select
             value={filtroFecha}
             onChange={(e) => setFiltroFecha(e.target.value)}
-            className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-['DM_Sans'] focus:outline-none focus:ring-1 focus:ring-[#D4788A] bg-white"
+            className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-sans focus:outline-none focus:ring-1 focus:ring-[#D4788A] bg-white"
           >
             <option value="">Todas las fechas</option>
             <option value="hoy">Hoy</option>
@@ -369,7 +366,7 @@ const PedidosPage = () => {
 
           <button
             onClick={() => { setBusqueda(''); setFiltroEstado(''); setFiltroFecha(''); setFechaInicio(''); setFechaFin(''); }}
-            className="px-4 py-2.5 border border-[rgba(212,120,138,0.3)] text-[#9A7480] rounded-sm text-sm font-['DM_Sans'] hover:bg-[#FDF0F3] transition-colors"
+            className="px-4 py-2.5 border border-[rgba(212,120,138,0.3)] text-[#9A7480] rounded-sm text-sm font-sans hover:bg-[#FDF0F3] transition-colors"
           >
             Limpiar filtros
           </button>
@@ -377,25 +374,25 @@ const PedidosPage = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-[rgba(212,120,138,0.15)]">
           <div>
-            <label className="block text-xs text-[#9A7480] font-['DM_Sans'] mb-1">Fecha inicio</label>
+            <label className="block text-xs text-[#9A7480] font-sans mb-1">Fecha inicio</label>
             <input
               type="date"
               value={fechaInicio}
               onChange={(e) => setFechaInicio(e.target.value)}
-              className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-3 py-2 text-sm font-['DM_Sans'] focus:outline-none focus:ring-1 focus:ring-[#D4788A]"
+              className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-3 py-2 text-sm font-sans focus:outline-none focus:ring-1 focus:ring-[#D4788A]"
             />
           </div>
           <div>
-            <label className="block text-xs text-[#9A7480] font-['DM_Sans'] mb-1">Fecha fin</label>
+            <label className="block text-xs text-[#9A7480] font-sans mb-1">Fecha fin</label>
             <input
               type="date"
               value={fechaFin}
               onChange={(e) => setFechaFin(e.target.value)}
-              className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-3 py-2 text-sm font-['DM_Sans'] focus:outline-none focus:ring-1 focus:ring-[#D4788A]"
+              className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-3 py-2 text-sm font-sans focus:outline-none focus:ring-1 focus:ring-[#D4788A]"
             />
           </div>
           <div className="flex items-end">
-            <p className="text-xs text-[#9A7480] font-['DM_Sans']">
+            <p className="text-xs text-[#9A7480] font-sans">
               {pedidosFiltrados.length} pedido(s) encontrado(s)
             </p>
           </div>
@@ -408,10 +405,10 @@ const PedidosPage = () => {
         </div>
       ) : pedidosFiltrados.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-sm border border-[rgba(212,120,138,0.15)]">
-          <p className="text-[#9A7480] font-['DM_Sans']">No se encontraron pedidos con estos filtros</p>
+          <p className="text-[#9A7480] font-sans">No se encontraron pedidos con estos filtros</p>
           <button 
             onClick={() => { setBusqueda(''); setFiltroEstado(''); setFiltroFecha(''); setFechaInicio(''); setFechaFin(''); }}
-            className="mt-3 text-[#D4788A] hover:underline text-sm font-['DM_Sans']"
+            className="mt-3 text-[#D4788A] hover:underline text-sm font-sans"
           >
             Limpiar filtros
           </button>
@@ -424,56 +421,56 @@ const PedidosPage = () => {
                 <div className="bg-[#FDF0F3] px-4 py-3 border-b border-[rgba(212,120,138,0.15)] flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <span className="font-mono text-sm font-semibold text-[#1A1118]">#{String(pedido.id).substring(0, 8).toUpperCase()}</span>
-                    <span className={`px-2.5 py-1 text-xs font-medium rounded-sm border font-['DM_Sans'] ${getEstadoColor(pedido.status)}`}>
+                    <span className={`px-2.5 py-1 text-xs font-medium rounded-sm border font-sans ${getEstadoColor(pedido.status)}`}>
                       {getEstadoLabel(pedido.status)}
                     </span>
                   </div>
                   <div className="flex items-center gap-4">
-                    <span className="text-sm text-[#9A7480] font-['DM_Sans']">{formatearFecha(pedido.created_at)}</span>
-                    <span className="text-lg font-bold text-[#1A1118] font-['Cormorant_Garamond']">{formatearMoneda(pedido.total)}</span>
+                    <span className="text-sm text-[#9A7480] font-sans">{formatearFecha(pedido.created_at)}</span>
+                    <span className="text-lg font-bold text-[#1A1118] font-display">{formatearMoneda(pedido.total)}</span>
                   </div>
                 </div>
 
                 <div className="p-4">
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <div>
-                      <p className="text-xs text-[#9A7480] font-['DM_Sans'] uppercase tracking-wide mb-1">Cliente</p>
-                      <p className="text-sm font-medium text-[#1A1118] font-['DM_Sans']">{pedido.customer_name}</p>
-                      <p className="text-xs text-[#9A7480] font-['DM_Sans'] mt-1"> {pedido.customer_phone}</p>
-                      <p className="text-xs text-[#9A7480] font-['DM_Sans']"> {pedido.customer_city}</p>
+                      <p className="text-xs text-[#9A7480] font-sans uppercase tracking-wide mb-1">Cliente</p>
+                      <p className="text-sm font-medium text-[#1A1118] font-sans">{pedido.customer_name}</p>
+                      <p className="text-xs text-[#9A7480] font-sans mt-1"> {pedido.customer_phone}</p>
+                      <p className="text-xs text-[#9A7480] font-sans"> {pedido.customer_city}</p>
                       {pedido.customer_email && (
-                        <p className="text-xs text-[#9A7480] font-['DM_Sans'] truncate">✉️ {pedido.customer_email}</p>
+                        <p className="text-xs text-[#9A7480] font-sans truncate">✉️ {pedido.customer_email}</p>
                       )}
                     </div>
 
                     <div className="lg:col-span-2">
-                      <p className="text-xs text-[#9A7480] font-['DM_Sans'] uppercase tracking-wide mb-2">Productos</p>
+                      <p className="text-xs text-[#9A7480] font-sans uppercase tracking-wide mb-2">Productos</p>
                       {Array.isArray(pedido.products) && pedido.products.length > 0 ? (
                         <div className="space-y-1">
                           {pedido.products.map((prod, idx) => (
                             <div key={idx} className="flex justify-between items-center text-sm">
-                              <span className="text-[#2D2030] font-['DM_Sans']">
-                                {prod.name} {prod.sku && <span className="text-[#9A7480] text-xs">[{prod.sku}]</span>} {prod.size && `(${prod.size})`} × {prod.quantity}
+                              <span className="text-[#2D2030] font-sans">
+                                {prod.name} {prod.size && `(${prod.size})`} × {prod.quantity}
                               </span>
-                              <span className="text-[#1A1118] font-medium font-['DM_Sans']">
+                              <span className="text-[#1A1118] font-medium font-sans">
                                 {formatearMoneda(prod.price * prod.quantity)}
                               </span>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <p className="text-xs text-[#9A7480] font-['DM_Sans'] italic">Sin productos registrados</p>
+                        <p className="text-xs text-[#9A7480] font-sans italic">Sin productos registrados</p>
                       )}
                     </div>
                   </div>
 
                   <div className="mt-4 pt-4 border-t border-[rgba(212,120,138,0.15)]">
-                    <p className="text-xs text-[#9A7480] font-['DM_Sans'] uppercase tracking-wide mb-2">Actualizar estado</p>
+                    <p className="text-xs text-[#9A7480] font-sans uppercase tracking-wide mb-2">Actualizar estado</p>
                     <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => actualizarEstado(pedido.id, 'pendiente')}
                         disabled={pedido.status === 'pendiente'}
-                        className={`px-3 py-1.5 text-xs font-medium rounded-sm font-['DM_Sans'] transition-all ${
+                        className={`px-3 py-1.5 text-xs font-medium rounded-sm font-sans transition-all ${
                           pedido.status === 'pendiente'
                             ? 'bg-yellow-100 text-yellow-700 border border-yellow-200 cursor-default'
                             : 'bg-white text-yellow-700 border border-yellow-200 hover:bg-yellow-50'
@@ -484,7 +481,7 @@ const PedidosPage = () => {
                       <button
                         onClick={() => actualizarEstado(pedido.id, 'confirmado')}
                         disabled={pedido.status === 'confirmado'}
-                        className={`px-3 py-1.5 text-xs font-medium rounded-sm font-['DM_Sans'] transition-all ${
+                        className={`px-3 py-1.5 text-xs font-medium rounded-sm font-sans transition-all ${
                           pedido.status === 'confirmado'
                             ? 'bg-blue-100 text-blue-700 border border-blue-200 cursor-default'
                             : 'bg-white text-blue-700 border border-blue-200 hover:bg-blue-50'
@@ -495,7 +492,7 @@ const PedidosPage = () => {
                       <button
                         onClick={() => actualizarEstado(pedido.id, 'enviado')}
                         disabled={pedido.status === 'enviado'}
-                        className={`px-3 py-1.5 text-xs font-medium rounded-sm font-['DM_Sans'] transition-all ${
+                        className={`px-3 py-1.5 text-xs font-medium rounded-sm font-sans transition-all ${
                           pedido.status === 'enviado'
                             ? 'bg-purple-100 text-purple-700 border border-purple-200 cursor-default'
                             : 'bg-white text-purple-700 border border-purple-200 hover:bg-purple-50'
@@ -506,7 +503,7 @@ const PedidosPage = () => {
                       <button
                         onClick={() => actualizarEstado(pedido.id, 'entregado')}
                         disabled={pedido.status === 'entregado'}
-                        className={`px-3 py-1.5 text-xs font-medium rounded-sm font-['DM_Sans'] transition-all ${
+                        className={`px-3 py-1.5 text-xs font-medium rounded-sm font-sans transition-all ${
                           pedido.status === 'entregado'
                             ? 'bg-green-100 text-green-700 border border-green-200 cursor-default'
                             : 'bg-white text-green-700 border border-green-200 hover:bg-green-50'
@@ -520,28 +517,25 @@ const PedidosPage = () => {
                     <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-[rgba(212,120,138,0.1)]">
                      <button
   onClick={() => enviarWhatsApp(pedido)}
-  className="px-3 py-1.5 text-xs font-medium rounded-sm font-['DM_Sans'] bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-all flex items-center gap-1"
+  className="px-3 py-1.5 text-xs font-medium rounded-sm font-sans bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-all flex items-center gap-1"
   title="Contactar por WhatsApp"
 >
   💬 WhatsApp
 </button>
 <button
   onClick={() => {
-    const items = Array.isArray(pedido.products) ? pedido.products.map(p => 
-      `- ${p.name}${p.sku ? ' [' + p.sku + ']' : ''}${p.size ? ' (' + p.size + ')' : ''} x${p.quantity}`
-    ).join('\n') : 'Sin productos';
-    const mensaje = `Hola ${pedido.customer_name}, te contactamos sobre tu pedido #${String(pedido.id).substring(0, 8).toUpperCase()}.\n\nProductos:\n${items}\n\nEstado: ${pedido.status}\nTotal: S/ ${Number(pedido.total || 0).toFixed(2)}`;
+    const mensaje = `Hola ${pedido.customer_name}, te contactamos sobre tu pedido #${String(pedido.id).substring(0, 8).toUpperCase()}. Estado actual: ${pedido.status}. Total: S/ ${Number(pedido.total || 0).toFixed(2)}`;
     navigator.clipboard.writeText(mensaje);
     agregarToast('Mensaje copiado al portapapeles', 'success');
   }}
-  className="px-3 py-1.5 text-xs font-medium rounded-sm font-['DM_Sans'] bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-all flex items-center gap-1"
+  className="px-3 py-1.5 text-xs font-medium rounded-sm font-sans bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-all flex items-center gap-1"
   title="Copiar mensaje para el courier"
 >
   📋 Copiar
 </button>
                       <button
                         onClick={() => setModalEliminar({ abierto: true, pedido })}
-                        className="px-3 py-1.5 text-xs font-medium rounded-sm font-['DM_Sans'] bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition-all flex items-center gap-1"
+                        className="px-3 py-1.5 text-xs font-medium rounded-sm font-sans bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition-all flex items-center gap-1"
                         title="Eliminar pedido"
                       >
                         🗑️ Eliminar
@@ -555,14 +549,14 @@ const PedidosPage = () => {
 
           {totalPaginas > 1 && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 px-2">
-              <p className="text-sm text-[#9A7480] font-['DM_Sans']">
+              <p className="text-sm text-[#9A7480] font-sans">
                 Mostrando {(paginaActual - 1) * POR_PAGINA + 1} - {Math.min(paginaActual * POR_PAGINA, pedidosFiltrados.length)} de {pedidosFiltrados.length}
               </p>
               <div className="flex items-center gap-2">
                 <button
                   disabled={paginaActual === 1}
                   onClick={() => setPaginaActual(p => p - 1)}
-                  className="px-3 py-2 border border-[rgba(212,120,138,0.3)] rounded-sm text-sm font-['DM_Sans'] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#FDF0F3] transition-colors"
+                  className="px-3 py-2 border border-[rgba(212,120,138,0.3)] rounded-sm text-sm font-sans disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#FDF0F3] transition-colors"
                 >
                   Anterior
                 </button>
@@ -578,7 +572,7 @@ const PedidosPage = () => {
                       <button
                         key={page}
                         onClick={() => setPaginaActual(page)}
-                        className={`w-8 h-8 rounded-sm text-sm font-['DM_Sans'] transition-colors ${
+                        className={`w-8 h-8 rounded-sm text-sm font-sans transition-colors ${
                           paginaActual === page ? 'bg-[#1A1118] text-white' : 'hover:bg-[#FDF0F3] text-[#9A7480]'
                         }`}
                       >
@@ -590,7 +584,7 @@ const PedidosPage = () => {
                 <button
                   disabled={paginaActual === totalPaginas}
                   onClick={() => setPaginaActual(p => p + 1)}
-                  className="px-3 py-2 border border-[rgba(212,120,138,0.3)] rounded-sm text-sm font-['DM_Sans'] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#FDF0F3] transition-colors"
+                  className="px-3 py-2 border border-[rgba(212,120,138,0.3)] rounded-sm text-sm font-sans disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#FDF0F3] transition-colors"
                 >
                   Siguiente
                 </button>

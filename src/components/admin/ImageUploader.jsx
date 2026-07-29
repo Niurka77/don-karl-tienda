@@ -78,10 +78,10 @@ const ImageUploader = ({
 
   return (
     <div className="md:col-span-2">
-      <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+      <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-sans font-light text-[#9A7480] mb-2">
         Imágenes del producto *
       </label>
-      <p className="text-xs text-[#9A7480] font-['DM_Sans'] mb-3">
+      <p className="text-xs text-[#9A7480] font-sans mb-3">
         Máximo {MAX_IMAGENES} imágenes. La primera imagen será la principal.
       </p>
 
@@ -97,7 +97,7 @@ const ImageUploader = ({
                 />
               </div>
               {index === 0 && (
-                <span className="absolute top-2 left-2 px-2 py-0.5 bg-[#D4788A] text-white text-xs font-['DM_Sans'] font-medium rounded-sm">
+                <span className="absolute top-2 left-2 px-2 py-0.5 bg-[#D4788A] text-white text-xs font-sans font-medium rounded-sm">
                   Principal
                 </span>
               )}
@@ -130,13 +130,13 @@ const ImageUploader = ({
                   d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-              <p className="text-sm text-[#2D2030] font-['DM_Sans'] font-light">
+              <p className="text-sm text-[#2D2030] font-sans font-light">
                 {imagenesCount > 0 ? `${imagenesCount} imágenes seleccionadas` : 'Arrastra imágenes o haz clic aquí'}
               </p>
-              <p className="text-xs text-[#9A7480] font-['DM_Sans'] mt-1">
+              <p className="text-xs text-[#9A7480] font-sans mt-1">
                 JPG, PNG o WebP (máx. {TAMANO_MAXIMO_MB}MB c/u)
               </p>
-              <p className="text-xs text-[#9A7480] font-['DM_Sans']">
+              <p className="text-xs text-[#9A7480] font-sans">
                 {previews.length}/{MAX_IMAGENES} imágenes
               </p>
             </div>
@@ -151,7 +151,7 @@ const ImageUploader = ({
         </div>
       )}
       {errores && (
-        <p className="mt-2 text-xs text-[#B85268] font-['DM_Sans']">{errores}</p>
+        <p className="mt-2 text-xs text-[#B85268] font-sans">{errores}</p>
       )}
     </div>
   )

@@ -46,7 +46,7 @@ export default function ImageWithFallback({ src, alt, className, style, ...props
             color: '#C9607F',
             opacity: 0.5,
             fontWeight: 600,
-            fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+            fontFamily: 'var(--font-sans)',
           }}
         >
           KB Dresses

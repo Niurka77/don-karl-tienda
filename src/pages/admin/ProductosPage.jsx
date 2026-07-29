@@ -68,7 +68,7 @@ const StockBadge = ({ stock }) => {
   }
 
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 text-[0.7rem] font-medium tracking-wide rounded-sm font-['DM_Sans'] ${variants[status]}`}>
+    <span className={`inline-flex items-center px-2.5 py-1 text-[0.7rem] font-medium tracking-wide rounded-sm font-sans ${variants[status]}`}>
       {labels[status]}
     </span>
   )
@@ -80,7 +80,7 @@ const PriceDisplay = ({ originalPrice, discountPercent }) => {
 
   if (!hasDiscount) {
     return (
-      <span className="text-sm font-medium text-[#1A1118] font-['DM_Sans']">
+      <span className="text-sm font-medium text-[#1A1118] font-sans">
         S/ {finalPrice.toFixed(2)}
       </span>
     )
@@ -88,13 +88,13 @@ const PriceDisplay = ({ originalPrice, discountPercent }) => {
 
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-xs text-[#9A7480] line-through font-['DM_Sans']">
+      <span className="text-xs text-[#9A7480] line-through font-sans">
         S/ {parseFloat(originalPrice).toFixed(2)}
       </span>
-      <span className="text-sm font-semibold text-[#B85268] font-['DM_Sans']">
+      <span className="text-sm font-semibold text-[#B85268] font-sans">
         S/ {finalPrice.toFixed(2)}
       </span>
-      <span className="text-[0.6rem] font-medium bg-[#B85268]/10 text-[#B85268] px-1.5 py-0.5 rounded-sm self-start font-['DM_Sans'] tracking-wide">
+      <span className="text-[0.6rem] font-medium bg-[#B85268]/10 text-[#B85268] px-1.5 py-0.5 rounded-sm self-start font-sans tracking-wide">
         -{discountPercent}%
       </span>
     </div>
@@ -114,7 +114,7 @@ const ProductThumbnail = ({ imageUrl, name }) => (
 
 const TableHeaderCell = ({ children, align = 'left' }) => (
   <th
-    className={`px-5 py-3.5 text-[0.6rem] tracking-widest uppercase font-['DM_Sans'] font-semibold text-[#9A7480] text-${align}`}
+    className={`px-5 py-3.5 text-[0.6rem] tracking-widest uppercase font-sans font-semibold text-[#9A7480] text-${align}`}
   >
     {children}
   </th>
@@ -173,7 +173,7 @@ const FilterSelect = ({ value, onChange, children, ariaLabel }) => (
     value={value}
     onChange={(e) => onChange(e.target.value)}
     aria-label={ariaLabel}
-    className="w-full border border-[rgba(212,120,138,0.22)] rounded-sm px-3.5 py-2.5 text-sm font-['DM_Sans'] text-[#2D2030] focus:outline-none focus:ring-1 focus:ring-[#D4788A] bg-[#FFF8F5] appearance-none cursor-pointer transition-colors hover:border-[rgba(212,120,138,0.45)]"
+    className="w-full border border-[rgba(212,120,138,0.22)] rounded-sm px-3.5 py-2.5 text-sm font-sans text-[#2D2030] focus:outline-none focus:ring-1 focus:ring-[#D4788A] bg-[#FFF8F5] appearance-none cursor-pointer transition-colors hover:border-[rgba(212,120,138,0.45)]"
   >
     {children}
   </select>
@@ -184,13 +184,13 @@ const FilterSelect = ({ value, onChange, children, ariaLabel }) => (
 const DeleteConfirmationModal = ({ product, onConfirm, onCancel }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1A1118]/60 backdrop-blur-sm">
     <div className="bg-[#FFF8F5] rounded-sm p-8 max-w-sm w-full mx-4 shadow-2xl border border-[rgba(212,120,138,0.15)]">
-      <p className="font-['Cormorant_Garamond'] text-[0.6rem] tracking-widest uppercase text-[#B85268] mb-3">
+      <p className="font-display text-[0.6rem] tracking-widest uppercase text-[#B85268] mb-3">
         Acción irreversible
       </p>
-      <h3 className="font-['Cormorant_Garamond'] text-2xl font-light text-[#1A1118] mb-3 leading-snug">
+      <h3 className="font-display text-2xl font-light text-[#1A1118] mb-3 leading-snug">
         Eliminar producto
       </h3>
-      <p className="text-sm text-[#9A7480] font-['DM_Sans'] leading-relaxed mb-7">
+      <p className="text-sm text-[#9A7480] font-sans leading-relaxed mb-7">
         Estás a punto de eliminar{' '}
         <span className="text-[#1A1118] font-medium">{product?.name}</span>.
         Esta acción no se puede deshacer.
@@ -198,13 +198,13 @@ const DeleteConfirmationModal = ({ product, onConfirm, onCancel }) => (
       <div className="flex gap-3">
         <button
           onClick={onCancel}
-          className="flex-1 py-2.5 border border-[rgba(212,120,138,0.3)] text-[#9A7480] rounded-sm hover:bg-[#FDF0F3] font-['DM_Sans'] text-sm transition-colors"
+          className="flex-1 py-2.5 border border-[rgba(212,120,138,0.3)] text-[#9A7480] rounded-sm hover:bg-[#FDF0F3] font-sans text-sm transition-colors"
         >
           Cancelar
         </button>
         <button
           onClick={onConfirm}
-          className="flex-1 py-2.5 bg-[#8A2A3D] text-white rounded-sm hover:bg-[#6E1F30] font-['DM_Sans'] text-sm font-medium transition-colors"
+          className="flex-1 py-2.5 bg-[#8A2A3D] text-white rounded-sm hover:bg-[#6E1F30] font-sans text-sm font-medium transition-colors"
         >
           Eliminar
         </button>
@@ -218,10 +218,10 @@ const DeleteConfirmationModal = ({ product, onConfirm, onCancel }) => (
 const EmptyState = ({ hasFilters, onClearFilters, onCreateProduct }) => (
   <div className="flex flex-col items-center justify-center py-24 bg-white rounded-sm border border-[rgba(212,120,138,0.12)]">
     <div className="w-12 h-px bg-[#D4788A] mb-6" />
-    <p className="font-['Cormorant_Garamond'] text-2xl font-light text-[#1A1118] mb-2">
+    <p className="font-display text-2xl font-light text-[#1A1118] mb-2">
       {hasFilters ? 'Sin resultados' : 'Sin productos'}
     </p>
-    <p className="text-sm text-[#9A7480] font-['DM_Sans'] mb-6 text-center max-w-xs leading-relaxed">
+    <p className="text-sm text-[#9A7480] font-sans mb-6 text-center max-w-xs leading-relaxed">
       {hasFilters
         ? 'Ningún producto coincide con los filtros aplicados.'
         : 'Tu inventario está vacío. Agrega el primer producto para comenzar.'}
@@ -229,14 +229,14 @@ const EmptyState = ({ hasFilters, onClearFilters, onCreateProduct }) => (
     {hasFilters ? (
       <button
         onClick={onClearFilters}
-        className="text-sm text-[#D4788A] hover:text-[#B85268] font-['DM_Sans'] font-medium underline underline-offset-4 transition-colors"
+        className="text-sm text-[#D4788A] hover:text-[#B85268] font-sans font-medium underline underline-offset-4 transition-colors"
       >
         Limpiar filtros
       </button>
     ) : (
       <button
         onClick={onCreateProduct}
-        className="px-5 py-2.5 bg-[#1A1118] text-white text-sm rounded-sm font-['DM_Sans'] font-medium tracking-wide hover:bg-[#2D2030] transition-colors"
+        className="px-5 py-2.5 bg-[#1A1118] text-white text-sm rounded-sm font-sans font-medium tracking-wide hover:bg-[#2D2030] transition-colors"
       >
         Agregar producto
       </button>
@@ -259,14 +259,14 @@ const Pagination = ({ currentPage, totalPages, totalItems, onPageChange }) => {
 
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-5 px-1">
-      <p className="text-xs text-[#9A7480] font-['DM_Sans'] tabular-nums">
+      <p className="text-xs text-[#9A7480] font-sans tabular-nums">
         {rangeStart}–{rangeEnd} de {totalItems} productos
       </p>
       <div className="flex items-center gap-1.5">
         <button
           disabled={currentPage === 1}
           onClick={() => onPageChange(currentPage - 1)}
-          className="px-3 py-2 border border-[rgba(212,120,138,0.25)] rounded-sm text-xs font-['DM_Sans'] text-[#9A7480] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#FDF0F3] transition-colors"
+          className="px-3 py-2 border border-[rgba(212,120,138,0.25)] rounded-sm text-xs font-sans text-[#9A7480] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#FDF0F3] transition-colors"
         >
           Anterior
         </button>
@@ -275,7 +275,7 @@ const Pagination = ({ currentPage, totalPages, totalItems, onPageChange }) => {
             <button
               key={page}
               onClick={() => onPageChange(page)}
-              className={`w-8 h-8 rounded-sm text-xs font-['DM_Sans'] transition-colors ${
+              className={`w-8 h-8 rounded-sm text-xs font-sans transition-colors ${
                 currentPage === page
                   ? 'bg-[#1A1118] text-white'
                   : 'text-[#9A7480] hover:bg-[#FDF0F3]'
@@ -288,7 +288,7 @@ const Pagination = ({ currentPage, totalPages, totalItems, onPageChange }) => {
         <button
           disabled={currentPage === totalPages}
           onClick={() => onPageChange(currentPage + 1)}
-          className="px-3 py-2 border border-[rgba(212,120,138,0.25)] rounded-sm text-xs font-['DM_Sans'] text-[#9A7480] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#FDF0F3] transition-colors"
+          className="px-3 py-2 border border-[rgba(212,120,138,0.25)] rounded-sm text-xs font-sans text-[#9A7480] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#FDF0F3] transition-colors"
         >
           Siguiente
         </button>
@@ -312,18 +312,18 @@ const InventorySummary = ({ products }) => {
   return (
     <div className="grid grid-cols-3 gap-3 mb-6">
       <div className="bg-white rounded-sm border border-[rgba(212,120,138,0.12)] px-4 py-3.5">
-        <p className="text-[0.6rem] tracking-widest uppercase font-['DM_Sans'] text-[#9A7480] mb-1">Total</p>
-        <p className="font-['Cormorant_Garamond'] text-2xl font-light text-[#1A1118]">{products.length}</p>
+        <p className="text-[0.6rem] tracking-widest uppercase font-sans text-[#9A7480] mb-1">Total</p>
+        <p className="font-display text-2xl font-light text-[#1A1118]">{products.length}</p>
       </div>
       <div className={`bg-white rounded-sm border px-4 py-3.5 ${summary.emptyCount > 0 ? 'border-[#8A2A3D]/20' : 'border-[rgba(212,120,138,0.12)]'}`}>
-        <p className="text-[0.6rem] tracking-widest uppercase font-['DM_Sans'] text-[#9A7480] mb-1">Agotados</p>
-        <p className={`font-['Cormorant_Garamond'] text-2xl font-light ${summary.emptyCount > 0 ? 'text-[#8A2A3D]' : 'text-[#1A1118]'}`}>
+        <p className="text-[0.6rem] tracking-widest uppercase font-sans text-[#9A7480] mb-1">Agotados</p>
+        <p className={`font-display text-2xl font-light ${summary.emptyCount > 0 ? 'text-[#8A2A3D]' : 'text-[#1A1118]'}`}>
           {summary.emptyCount}
         </p>
       </div>
       <div className={`bg-white rounded-sm border px-4 py-3.5 ${summary.criticalCount > 0 ? 'border-[#C9A84C]/25' : 'border-[rgba(212,120,138,0.12)]'}`}>
-        <p className="text-[0.6rem] tracking-widest uppercase font-['DM_Sans'] text-[#9A7480] mb-1">Stock crítico</p>
-        <p className={`font-['Cormorant_Garamond'] text-2xl font-light ${summary.criticalCount > 0 ? 'text-[#7A6020]' : 'text-[#1A1118]'}`}>
+        <p className="text-[0.6rem] tracking-widest uppercase font-sans text-[#9A7480] mb-1">Stock crítico</p>
+        <p className={`font-display text-2xl font-light ${summary.criticalCount > 0 ? 'text-[#7A6020]' : 'text-[#1A1118]'}`}>
           {summary.criticalCount}
         </p>
       </div>
@@ -522,7 +522,7 @@ const ProductosPage = () => {
       <div className="min-h-screen bg-[#FFF8F5] p-4 md:p-8">
         <button
           onClick={handleCloseForm}
-          className="mb-8 flex items-center gap-2 text-[#9A7480] hover:text-[#1A1118] transition-colors text-sm font-['DM_Sans'] group"
+          className="mb-8 flex items-center gap-2 text-[#9A7480] hover:text-[#1A1118] transition-colors text-sm font-sans group"
         >
           <svg className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M15 19l-7-7 7-7" />
@@ -555,16 +555,16 @@ const ProductosPage = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
         <div>
-          <p className="text-[0.6rem] tracking-widest uppercase font-['DM_Sans'] text-[#9A7480] mb-1.5">
+          <p className="text-[0.6rem] tracking-widest uppercase font-sans text-[#9A7480] mb-1.5">
             KB Fashion · Admin
           </p>
-          <h1 className="font-['Cormorant_Garamond'] text-4xl font-light text-[#1A1118] leading-none">
+          <h1 className="font-display text-4xl font-light text-[#1A1118] leading-none">
             Inventario
           </h1>
         </div>
         <button
           onClick={handleOpenCreate}
-          className="self-start md:self-auto px-5 py-2.5 bg-[#1A1118] text-white rounded-sm font-['DM_Sans'] text-sm font-medium tracking-wide hover:bg-[#2D2030] transition-colors"
+          className="self-start md:self-auto px-5 py-2.5 bg-[#1A1118] text-white rounded-sm font-sans text-sm font-medium tracking-wide hover:bg-[#2D2030] transition-colors"
         >
           Nuevo producto
         </button>
@@ -573,10 +573,10 @@ const ProductosPage = () => {
       {/* Error banner */}
       {loadError && (
         <div className="mb-6 p-4 bg-[#8A2A3D]/6 border border-[#8A2A3D]/20 rounded-sm flex items-center justify-between gap-4">
-          <p className="text-sm text-[#8A2A3D] font-['DM_Sans']">{loadError}</p>
+          <p className="text-sm text-[#8A2A3D] font-sans">{loadError}</p>
           <button
             onClick={fetchProducts}
-            className="text-xs text-[#8A2A3D] underline underline-offset-4 font-['DM_Sans'] hover:opacity-70 flex-shrink-0"
+            className="text-xs text-[#8A2A3D] underline underline-offset-4 font-sans hover:opacity-70 flex-shrink-0"
           >
             Reintentar
           </button>
@@ -598,7 +598,7 @@ const ProductosPage = () => {
               placeholder="Nombre, SKU o marca..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full border border-[rgba(212,120,138,0.22)] rounded-sm pl-10 pr-4 py-2.5 text-sm font-['DM_Sans'] text-[#2D2030] placeholder:text-[#9A7480]/70 focus:outline-none focus:ring-1 focus:ring-[#D4788A] bg-[#FFF8F5] transition-colors hover:border-[rgba(212,120,138,0.45)]"
+              className="w-full border border-[rgba(212,120,138,0.22)] rounded-sm pl-10 pr-4 py-2.5 text-sm font-sans text-[#2D2030] placeholder:text-[#9A7480]/70 focus:outline-none focus:ring-1 focus:ring-[#D4788A] bg-[#FFF8F5] transition-colors hover:border-[rgba(212,120,138,0.45)]"
             />
           </div>
 
@@ -637,12 +637,12 @@ const ProductosPage = () => {
 
         {hasActiveFilters && (
           <div className="mt-3 pt-3 border-t border-[rgba(212,120,138,0.1)] flex items-center justify-between">
-            <p className="text-xs text-[#9A7480] font-['DM_Sans']">
+            <p className="text-xs text-[#9A7480] font-sans">
               {filteredProducts.length} resultado{filteredProducts.length !== 1 ? 's' : ''}
             </p>
             <button
               onClick={clearFilters}
-              className="text-xs text-[#D4788A] hover:text-[#B85268] font-['DM_Sans'] underline underline-offset-4 transition-colors"
+              className="text-xs text-[#D4788A] hover:text-[#B85268] font-sans underline underline-offset-4 transition-colors"
             >
               Limpiar filtros
             </button>
@@ -689,10 +689,10 @@ const ProductosPage = () => {
                         <div className="flex items-center gap-3">
                           <ProductThumbnail imageUrl={product.image_url} name={product.name} />
                           <div className="min-w-0">
-                            <p className="text-sm font-medium text-[#1A1118] font-['DM_Sans'] truncate max-w-[200px]">
+                            <p className="text-sm font-medium text-[#1A1118] font-sans truncate max-w-[200px]">
                               {product.name}
                             </p>
-                            <p className="text-xs text-[#9A7480] font-['DM_Sans'] mt-0.5">
+                            <p className="text-xs text-[#9A7480] font-sans mt-0.5">
                               {product.category}
                               {product.brand && <span className="opacity-60"> · {product.brand}</span>}
                               {product.origin && <span className={`ml-1 px-1.5 py-0.5 text-[0.55rem] rounded-sm font-medium ${product.origin === 'nacional' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'}`}>{product.origin === 'nacional' ? 'NAC' : 'IMP'}</span>}

@@ -64,6 +64,8 @@ const Navbar = () => {
   const navItems = [
     { label: 'MUJER', action: () => navigateTo('/?genero=mujer') },
     { label: 'HOMBRE', action: () => navigateTo('/?genero=hombre') },
+    { label: 'IMPORTADOS', action: () => navigateTo('/?origen=importado') },
+    { label: 'NACIONALES', action: () => navigateTo('/?origen=nacional') },
     { label: 'CATÁLOGO', href: '/catalogo' },
     { label: 'NOSOTROS', href: '/#nosotros' },
   ]

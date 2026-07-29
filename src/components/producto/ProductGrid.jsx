@@ -73,7 +73,7 @@ const Pagination = ({ current, total, onChange }) => {
     border: active ? 'none' : `1.5px solid ${p.roseBlush}40`,
     cursor: active ? 'default' : 'pointer',
     boxShadow: active ? `0 6px 20px ${p.roseVivid}40` : 'none',
-    fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+    fontFamily: 'var(--font-sans)',
   })
 
   const ArrowStyle = (disabled) => ({
@@ -87,7 +87,7 @@ const Pagination = ({ current, total, onChange }) => {
     borderRadius: '50px',
     cursor: disabled ? 'not-allowed' : 'pointer',
     transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-    fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+    fontFamily: 'var(--font-sans)',
     background: 'transparent',
   })
 
@@ -188,6 +188,7 @@ const ProductGrid = () => {
     genero: searchParams.get('genero') || '',
     precioMin: searchParams.get('precioMin') || '',
     precioMax: searchParams.get('precioMax') || '',
+    origen: searchParams.get('origen') || '',
     orden: searchParams.get('orden') || 'created_at-desc',
   }))
 
@@ -199,6 +200,7 @@ const ProductGrid = () => {
       genero: searchParams.get('genero') || '',
       precioMin: searchParams.get('precioMin') || '',
       precioMax: searchParams.get('precioMax') || '',
+      origen: searchParams.get('origen') || '',
       orden: searchParams.get('orden') || 'created_at-desc',
     }
     setFiltros((prev) => (JSON.stringify(prev) === JSON.stringify(f) ? prev : f))
@@ -221,6 +223,7 @@ const ProductGrid = () => {
         if (filtros.genero) query = query.eq('gender', filtros.genero)
         if (filtros.precioMin) query = query.gte('price_original', parseFloat(filtros.precioMin))
         if (filtros.precioMax) query = query.lte('price_original', parseFloat(filtros.precioMax))
+        if (filtros.origen) query = query.eq('origin', filtros.origen)
         if (filtros.busqueda) query = query.ilike('name', `%${filtros.busqueda}%`)
 
         query = query.gt('stock', 0)
@@ -303,6 +306,7 @@ const ProductGrid = () => {
     if (nf.genero) p.set('genero', nf.genero)
     if (nf.precioMin) p.set('precioMin', nf.precioMin)
     if (nf.precioMax) p.set('precioMax', nf.precioMax)
+    if (nf.origen) p.set('origen', nf.origen)
     if (nf.orden && nf.orden !== 'created_at-desc') p.set('orden', nf.orden)
     setSearchParams(p)
     if (nf.busqueda) p.set('busqueda', nf.busqueda)
@@ -321,7 +325,7 @@ const ProductGrid = () => {
         <div className="relative z-10 max-w-screen-xl mx-auto px-6 lg:px-10 py-12">
           <FilterBar filtros={filtros} onChangeFiltros={handleChangeFiltros} />
           <style>{`@keyframes shimmerBg { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }`}</style>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-5 gap-y-10">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-12">
             {Array.from({ length: 8 }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
@@ -366,7 +370,7 @@ const ProductGrid = () => {
               cursor: 'pointer',
               boxShadow: `0 8px 24px ${p.roseVivid}40`,
               transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-              fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+              fontFamily: 'var(--font-sans)',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-2px)'
@@ -468,7 +472,7 @@ const ProductGrid = () => {
                   letterSpacing: '0.25em',
                   textTransform: 'uppercase',
                   fontWeight: 600,
-                  fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+                  fontFamily: 'var(--font-sans)',
                 }}
               >
                 {totalProductos} {totalProductos === 1 ? 'pieza' : 'piezas'}
@@ -476,7 +480,7 @@ const ProductGrid = () => {
             </div>
 
             {/* Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-5 gap-y-10">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-12">
               {productos.map((producto, idx) => (
                 <div
                   key={producto.id}

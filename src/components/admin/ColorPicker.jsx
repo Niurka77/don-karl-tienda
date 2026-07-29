@@ -33,7 +33,7 @@ const ColorPicker = ({
 
   return (
     <div className="md:col-span-2">
-      <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-['DM_Sans'] font-light text-[#9A7480] mb-2">
+      <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-sans font-light text-[#9A7480] mb-2">
         Colores disponibles
       </label>
       
@@ -74,14 +74,14 @@ const ColorPicker = ({
           value={colorPersonalizado}
           onChange={(e) => onColorPersonalizadoChange(e.target.value)}
           placeholder="Agregar otro color (ej: Vino, Turquesa)"
-          className="flex-1 border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2 text-sm font-['DM_Sans'] font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
+          className="flex-1 border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2 text-sm font-sans font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white"
           onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), onAgregarPersonalizado())}
         />
         <button
           type="button"
           onClick={onAgregarPersonalizado}
           disabled={!colorPersonalizado.trim()}
-          className="px-4 py-2 bg-[#1A1118] text-white rounded-sm text-sm font-['DM_Sans'] font-medium tracking-wide hover:bg-gradient-to-r hover:from-[#D4788A] hover:to-[#B85268] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] disabled:bg-[#9A7480] disabled:cursor-not-allowed"
+          className="px-4 py-2 bg-[#1A1118] text-white rounded-sm text-sm font-sans font-medium tracking-wide hover:bg-gradient-to-r hover:from-[#D4788A] hover:to-[#B85268] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] disabled:bg-[#9A7480] disabled:cursor-not-allowed"
         >
           Agregar
         </button>
@@ -95,7 +95,7 @@ const ColorPicker = ({
             return (
               <div
                 key={index}
-                className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#FDF0F3] rounded-sm text-sm font-['DM_Sans']"
+                className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#FDF0F3] rounded-sm text-sm font-sans"
               >
                 <div 
                   className="w-4 h-4 rounded-sm border border-[rgba(212,120,138,0.25)]"

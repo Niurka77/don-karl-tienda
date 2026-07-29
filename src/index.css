@@ -1,7 +1,7 @@
 /* ============================================
    IMPORTACIÓN DE FUENTES
    ============================================ */
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,200;0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@200;300;400;500;600;700&display=swap');
 
 /* ============================================
    TAILWIND CSS V4
@@ -12,50 +12,37 @@
    PALETA KB DRESSES — FEMME LUXE EDITORIAL
    ============================================ */
 @theme {
-  /* ── Rosados (identidad) ──────────────────────────────────────── */
-  --color-kb-rose:        #D4788A;
-  --color-kb-rose-deep:   #B85268;
-  --color-kb-rose-vivid:  #E8637A;
-  --color-kb-rose-blush:  #F2C4CE;
-  --color-kb-rose-mist:   #FDF0F3;
-  --color-kb-soft-pink:   #EAA8B5;
-  --color-kb-mauve:       #7A6B72;
-  --color-kb-mauve-light: #9A7480;
-  --color-kb-petal:       #F8D7DE;
+  /* Core rose palette — rico y profundo */
+  --color-kb-rose:      #D4788A;
+  --color-kb-rose-deep: #B85268;
+  --color-kb-rose-mist: #F2C4CE;
+  --color-kb-blush:     #FDF0F3;
+  --color-kb-soft-pink: #EAA8B5;
+  --color-kb-mauve:     #9A7480;
+  --color-kb-petal:     #F8D7DE;
 
-  /* ── Champagne & Nude (lujo) ──────────────────────────────────── */
-  --color-kb-champagne:     #E8D5B7;
-  --color-kb-champagne-lt:  #F5EBD9;
+  /* Neutrals dramáticos */
+  --color-kb-obsidian:  #1A1118;
+  --color-kb-charcoal:  #2D2030;
+  --color-kb-warm-gray: #7A6B72;
+  --color-kb-cream:     #FDFAF9;
+  --color-kb-ivory:     #FFF8F5;
 
-  /* ── Base cálida ──────────────────────────────────────────────── */
-  --color-kb-peach:      #FFB088;
-  --color-kb-coral:      #FF8E72;
-  --color-kb-coral-soft: #FFA78E;
-  --color-kb-apricot:    #FFCBA4;
+  /* Accent */
+  --color-kb-gold:      #C9A84C;
+  --color-kb-gold-light:#E8D08A;
 
-  /* ── Neutrals dramáticos ──────────────────────────────────────── */
-  --color-kb-obsidian:   #1A1118;
-  --color-kb-charcoal:   #2D2030;
-  --color-kb-warm-gray:  #7A6B72;
-  --color-kb-cream:      #FDFAF9;
-  --color-kb-ivory:      #FFF8F5;
-
-  /* ── Accent dorado ────────────────────────────────────────────── */
-  --color-kb-gold:       #C9A84C;
-  --color-kb-gold-light: #E8D08A;
-  --color-kb-gold-mist:  #FFF8E1;
-
-  /* ── Semánticos ───────────────────────────────────────────────── */
+  /* Semánticos */
   --color-background:        #FDFAF9;
   --color-foreground:        #1A1118;
   --color-muted:             #FDF0F3;
-  --color-muted-foreground:  #7A6B72;
+  --color-muted-foreground:  #9A7480;
   --color-border:            rgba(212, 120, 138, 0.15);
 
-  /* ── Tipografía ───────────────────────────────────────────────── */
-  --font-display: 'Cormorant Garamond', Georgia, serif;
-  --font-sans:    'DM Sans', system-ui, sans-serif;
-  --font-serif:   'Cormorant Garamond', Georgia, serif;
+  /* Tipografía */
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-sans:    'Inter', system-ui, sans-serif;
+  --font-serif:   'Playfair Display', Georgia, serif;
 }
 
 /* ============================================
@@ -74,7 +61,7 @@ body {
   background-color: var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-sans);
-  font-weight: 300;
+  font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: 0.01em;
@@ -117,6 +104,12 @@ h1, h2, h3, h4, h5, .font-heading, .font-display {
   100% { background-position:  200% center; }
 }
 
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33%       { transform: translateY(-6px) rotate(0.5deg); }
+  66%       { transform: translateY(-3px) rotate(-0.5deg); }
+}
+
 @keyframes slideInRight {
   from { transform: translateX(100%); opacity: 0; }
   to   { transform: translateX(0);    opacity: 1; }
@@ -143,7 +136,145 @@ h1, h2, h3, h4, h5, .font-heading, .font-display {
 .animate-scale-reveal  { animation: scaleReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 .animate-slide-in      { animation: slideInRight 0.45s cubic-bezier(0.16, 1, 0.3, 1); }
 .animate-slide-down    { animation: slideInDown 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+.animate-float         { animation: float 7s ease-in-out infinite; }
 .animate-pulse-soft    { animation: pulse-soft 2.5s ease-in-out infinite; }
+
+/* ============================================
+   HEADER SYSTEM — GLASSMORPHISM PROFUNDO
+   ============================================ */
+
+/* Topbar de anuncios — gradiente animado */
+.kb-topbar {
+  background: linear-gradient(
+    90deg,
+    var(--color-kb-obsidian) 0%,
+    var(--color-kb-charcoal) 40%,
+    #3D1F2D 70%,
+    var(--color-kb-obsidian) 100%
+  );
+  color: var(--color-kb-rose-mist);
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 0.55rem 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.kb-topbar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 20%, rgba(212,120,138,0.06) 50%, transparent 80%);
+  animation: shimmer 4s linear infinite;
+  background-size: 200% auto;
+}
+
+/* Navbar glass */
+.kb-navbar {
+  background: rgba(253, 250, 249, 0.82);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 1px solid rgba(212, 120, 138, 0.1);
+  transition: background 0.4s ease, box-shadow 0.4s ease, padding 0.4s ease;
+}
+
+.kb-navbar.scrolled {
+  background: rgba(253, 250, 249, 0.96);
+  box-shadow: 0 1px 0 rgba(212,120,138,0.12), 0 8px 32px rgba(26,17,24,0.06);
+  padding-top: 0.6rem !important;
+  padding-bottom: 0.6rem !important;
+}
+
+/* Logo transición al hacer scroll */
+.kb-logo {
+  transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease;
+  filter: drop-shadow(0 2px 8px rgba(212,120,138,0.12));
+}
+
+.kb-logo:hover {
+  filter: drop-shadow(0 4px 16px rgba(212,120,138,0.28));
+}
+
+/* Nav links editorial */
+.kb-nav-link {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-kb-charcoal);
+  position: relative;
+  padding-bottom: 2px;
+  transition: color 0.3s ease;
+}
+
+.kb-nav-link::before {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--color-kb-rose), var(--color-kb-soft-pink));
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.kb-nav-link:hover {
+  color: var(--color-kb-rose);
+}
+
+.kb-nav-link:hover::before {
+  width: 100%;
+}
+
+/* Separador decorativo nav */
+.kb-nav-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--color-kb-rose-mist);
+  flex-shrink: 0;
+}
+
+/* Botón carrito premium */
+.kb-cart-btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(212,120,138,0.2);
+  background: rgba(242,196,206,0.08);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.kb-cart-btn:hover {
+  background: rgba(212,120,138,0.12);
+  border-color: var(--color-kb-rose);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(212,120,138,0.2);
+}
+
+.kb-cart-badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  background: linear-gradient(135deg, var(--color-kb-rose), var(--color-kb-rose-deep));
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 600;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--color-kb-ivory);
+  animation: scaleReveal 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
 
 /* ============================================
    MARQUEE — barra de texto deslizante
@@ -370,7 +501,7 @@ h1, h2, h3, h4, h5, .font-heading, .font-display {
 }
 
 .product-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px);
   box-shadow: 0 20px 60px rgba(26,17,24,0.1), 0 6px 20px rgba(212,120,138,0.08);
 }
 
@@ -387,7 +518,7 @@ h1, h2, h3, h4, h5, .font-heading, .font-display {
 }
 
 .product-grid {
-  @apply grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-5 gap-y-12;
+  @apply grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-5 gap-y-10;
 }
 
 /* ============================================
@@ -484,7 +615,7 @@ h1, h2, h3, h4, h5, .font-heading, .font-display {
   color: var(--color-kb-ivory);
   padding: 0.85rem 1.25rem;
   border-radius: 3px;
-  border-left: 2px solid var(--color-kb-rose);
+  border-left: 3px solid var(--color-kb-rose);
   box-shadow: 0 8px 32px rgba(26,17,24,0.2);
   font-size: 0.82rem;
   font-weight: 300;

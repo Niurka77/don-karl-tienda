@@ -109,7 +109,7 @@ const UrgencyBadge = ({ days }) => {
   }
 
   return (
-    <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border font-['DM_Sans'] ${styles[level]}`}>
+    <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border font-sans ${styles[level]}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${indicators[level]}`} />
       {URGENCY_LEVELS[level].label} · {days} días
     </span>
@@ -125,10 +125,10 @@ const StatCard = ({ title, value, accent, linkTo }) => (
       className="absolute top-0 left-0 w-full h-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
       style={{ background: 'linear-gradient(90deg, #D4788A, #B85268)' }}
     />
-    <p className="text-[10px] font-['DM_Sans'] uppercase tracking-[0.12em] text-[#9A7480] mb-3">
+    <p className="text-[10px] font-sans uppercase tracking-[0.12em] text-[#9A7480] mb-3">
       {title}
     </p>
-    <p className={`font-['Cormorant_Garamond'] text-3xl font-light tracking-tight ${accent ? 'text-[#B85268]' : 'text-[#1A1118]'}`}>
+    <p className={`font-display text-3xl font-light tracking-tight ${accent ? 'text-[#B85268]' : 'text-[#1A1118]'}`}>
       {value}
     </p>
   </Link>
@@ -147,11 +147,11 @@ const DashboardSkeleton = () => (
 
 const ErrorBanner = ({ message, onRetry }) => (
   <div className="flex items-center justify-between p-4 bg-[#8A2A3D]/5 border border-[#8A2A3D]/20 rounded-sm mb-6">
-    <p className="text-sm text-[#8A2A3D] font-['DM_Sans']">{message}</p>
+    <p className="text-sm text-[#8A2A3D] font-sans">{message}</p>
     {onRetry && (
       <button
         onClick={onRetry}
-        className="text-xs font-medium text-[#8A2A3D] underline underline-offset-2 hover:no-underline font-['DM_Sans']"
+        className="text-xs font-medium text-[#8A2A3D] underline underline-offset-2 hover:no-underline font-sans"
       >
         Reintentar
       </button>
@@ -163,9 +163,9 @@ const SectionHeader = ({ title, subtitle, badge }) => (
   <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-6">
     <div>
       <div className="w-5 h-px bg-[#D4788A] mb-3" />
-      <h2 className="font-['Cormorant_Garamond'] text-xl font-light text-[#1A1118]">{title}</h2>
+      <h2 className="font-display text-xl font-light text-[#1A1118]">{title}</h2>
       {subtitle && (
-        <p className="text-xs text-[#9A7480] font-['DM_Sans'] mt-1">{subtitle}</p>
+        <p className="text-xs text-[#9A7480] font-sans mt-1">{subtitle}</p>
       )}
     </div>
     {badge}
@@ -212,16 +212,16 @@ const StagnantProductCard = ({ product, discountValue, onDiscountChange, onApply
           loading="lazy"
         />
         <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-[#1A1118] font-['DM_Sans'] truncate">{product.name}</h3>
+          <h3 className="font-medium text-[#1A1118] font-sans truncate">{product.name}</h3>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
-            <span className="text-xs text-[#9A7480] font-['DM_Sans']">
+            <span className="text-xs text-[#9A7480] font-sans">
               Stock: <strong className="text-[#1A1118]">{product.stock}</strong>
             </span>
-            <span className="text-xs text-[#9A7480] font-['DM_Sans']">
+            <span className="text-xs text-[#9A7480] font-sans">
               Precio: <strong className="text-[#1A1118]">{formatCurrency(product.price_original)}</strong>
             </span>
             {(product.discount_percent ?? 0) > 0 && (
-              <span className="text-xs text-[#B85268] font-medium font-['DM_Sans']">
+              <span className="text-xs text-[#B85268] font-medium font-sans">
                 -{product.discount_percent}% activo
               </span>
             )}
@@ -233,17 +233,17 @@ const StagnantProductCard = ({ product, discountValue, onDiscountChange, onApply
       </div>
 
       <div className="bg-[#FDF0F3] rounded-sm p-4 mb-4 border border-[rgba(212,120,138,0.15)]">
-        <p className="text-xs font-semibold text-[#1A1118] font-['DM_Sans'] mb-1">
+        <p className="text-xs font-semibold text-[#1A1118] font-sans mb-1">
           Recomendación: <span className="text-[#B85268]">-{recommended}%</span>
         </p>
-        <p className="text-xs text-[#9A7480] font-['DM_Sans'] leading-relaxed">
+        <p className="text-xs text-[#9A7480] font-sans leading-relaxed">
           {urgencyRationale[level]}
         </p>
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-end gap-4">
         <div className="flex-1">
-          <label className="block text-xs font-medium text-[#1A1118] font-['DM_Sans'] mb-1.5">
+          <label className="block text-xs font-medium text-[#1A1118] font-sans mb-1.5">
             Descuento personalizado
           </label>
           <div className="flex items-center gap-2">
@@ -253,28 +253,28 @@ const StagnantProductCard = ({ product, discountValue, onDiscountChange, onApply
               max={DISCOUNT_HARD_CAP}
               value={discountValue}
               onChange={(e) => onDiscountChange(product.id, e.target.value)}
-              className="w-24 px-3 py-2 border border-[rgba(212,120,138,0.25)] rounded-sm text-sm text-[#1A1118] bg-white focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-[#D4788A] font-['DM_Sans']"
+              className="w-24 px-3 py-2 border border-[rgba(212,120,138,0.25)] rounded-sm text-sm text-[#1A1118] bg-white focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-[#D4788A] font-sans"
             />
-            <span className="text-sm text-[#9A7480] font-['DM_Sans']">%</span>
+            <span className="text-sm text-[#9A7480] font-sans">%</span>
           </div>
         </div>
 
         <div className="bg-[#FFF8F5] rounded-sm p-3 border border-[rgba(212,120,138,0.12)] min-w-[160px]">
-          <p className="text-[10px] text-[#9A7480] font-['DM_Sans'] uppercase tracking-wide mb-1">
+          <p className="text-[10px] text-[#9A7480] font-sans uppercase tracking-wide mb-1">
             Precio final
           </p>
           <div className="flex items-baseline gap-2">
-            <span className="font-['Cormorant_Garamond'] text-xl font-light text-[#1A1118]">
+            <span className="font-display text-xl font-light text-[#1A1118]">
               {formatCurrency(finalPrice)}
             </span>
             {discountValue > 0 && (
-              <span className="text-xs text-[#9A7480] line-through font-['DM_Sans']">
+              <span className="text-xs text-[#9A7480] line-through font-sans">
                 {formatCurrency(product.price_original)}
               </span>
             )}
           </div>
           {saving > 0 && (
-            <p className="text-xs text-[#B85268] font-medium mt-0.5 font-['DM_Sans']">
+            <p className="text-xs text-[#B85268] font-medium mt-0.5 font-sans">
               Ahorro {formatCurrency(saving)}
             </p>
           )}
@@ -283,7 +283,7 @@ const StagnantProductCard = ({ product, discountValue, onDiscountChange, onApply
         <button
           onClick={() => onApply(product, discountValue)}
           disabled={isApplying}
-          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#1A1118] text-[#FFF8F5] rounded-sm text-sm font-semibold font-['DM_Sans'] hover:bg-[#2D2030] disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#1A1118] text-[#FFF8F5] rounded-sm text-sm font-semibold font-sans hover:bg-[#2D2030] disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
         >
           {isApplying ? (
             <>
@@ -319,8 +319,8 @@ const RecentAdjustmentCard = ({ product, onReadjust, onConfirm }) => {
           loading="lazy"
         />
         <div>
-          <p className="text-sm font-medium text-[#1A1118] font-['DM_Sans']">{product.name}</p>
-          <div className="flex items-center gap-2 text-xs text-[#9A7480] mt-0.5 font-['DM_Sans']">
+          <p className="text-sm font-medium text-[#1A1118] font-sans">{product.name}</p>
+          <div className="flex items-center gap-2 text-xs text-[#9A7480] mt-0.5 font-sans">
             <span className="line-through">-{product.previousDiscount}%</span>
             <span>→</span>
             <span className="text-[#B85268] font-semibold">-{product.discount_percent}%</span>
@@ -333,13 +333,13 @@ const RecentAdjustmentCard = ({ product, onReadjust, onConfirm }) => {
       <div className="flex gap-2 flex-shrink-0">
         <button
           onClick={() => onReadjust(product)}
-          className="px-3 py-1.5 text-xs font-medium text-[#8A6520] bg-[#C9A84C]/10 border border-[#C9A84C]/20 rounded-sm hover:bg-[#C9A84C]/20 transition-colors font-['DM_Sans']"
+          className="px-3 py-1.5 text-xs font-medium text-[#8A6520] bg-[#C9A84C]/10 border border-[#C9A84C]/20 rounded-sm hover:bg-[#C9A84C]/20 transition-colors font-sans"
         >
           Ajustar más
         </button>
         <button
           onClick={() => onConfirm(product.id)}
-          className="px-3 py-1.5 text-xs font-medium text-[#FFF8F5] bg-[#1A1118] rounded-sm hover:bg-[#2D2030] transition-colors font-['DM_Sans']"
+          className="px-3 py-1.5 text-xs font-medium text-[#FFF8F5] bg-[#1A1118] rounded-sm hover:bg-[#2D2030] transition-colors font-sans"
         >
           Listo
         </button>
@@ -640,13 +640,13 @@ const DashboardPage = () => {
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
         <div>
-          <p className="text-[10px] font-['DM_Sans'] uppercase tracking-[0.15em] text-[#9A7480] mb-2">
+          <p className="text-[10px] font-sans uppercase tracking-[0.15em] text-[#9A7480] mb-2">
             KB Dresses & More
           </p>
-          <h1 className="font-['Cormorant_Garamond'] text-4xl font-light tracking-tight text-[#1A1118]">
+          <h1 className="font-display text-4xl font-light tracking-tight text-[#1A1118]">
             Dashboard
           </h1>
-          <p className="text-sm text-[#9A7480] font-['DM_Sans'] mt-1">
+          <p className="text-sm text-[#9A7480] font-sans mt-1">
             Resumen operativo de tu tienda
           </p>
         </div>
@@ -654,7 +654,7 @@ const DashboardPage = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={handleExportCSV}
-            className="px-4 py-2 border border-[rgba(212,120,138,0.25)] text-[#9A7480] rounded-sm text-sm font-['DM_Sans'] hover:bg-[#FDF0F3] hover:border-[rgba(212,120,138,0.4)] transition-all"
+            className="px-4 py-2 border border-[rgba(212,120,138,0.25)] text-[#9A7480] rounded-sm text-sm font-sans hover:bg-[#FDF0F3] hover:border-[rgba(212,120,138,0.4)] transition-all"
           >
             Exportar CSV
           </button>
@@ -688,7 +688,7 @@ const DashboardPage = () => {
                 title="Descuentos de esta sesión"
                 subtitle="Productos ajustados recientemente"
                 badge={
-                  <span className="text-xs font-medium text-[#B85268] bg-[#D4788A]/10 border border-[#D4788A]/20 px-2.5 py-1 rounded-full font-['DM_Sans']">
+                  <span className="text-xs font-medium text-[#B85268] bg-[#D4788A]/10 border border-[#D4788A]/20 px-2.5 py-1 rounded-full font-sans">
                     {recentAdjustments.length} ajuste{recentAdjustments.length !== 1 ? 's' : ''}
                   </span>
                 }
@@ -717,7 +717,7 @@ const DashboardPage = () => {
                     <select
                       value={dayThreshold}
                       onChange={handleDayThresholdChange}
-                      className="px-3 py-1.5 border border-[rgba(212,120,138,0.2)] rounded-sm text-xs font-['DM_Sans'] text-[#1A1118] bg-white focus:outline-none focus:ring-1 focus:ring-[#D4788A]"
+                      className="px-3 py-1.5 border border-[rgba(212,120,138,0.2)] rounded-sm text-xs font-sans text-[#1A1118] bg-white focus:outline-none focus:ring-1 focus:ring-[#D4788A]"
                     >
                       {DAY_FILTER_OPTIONS.map(({ value, label }) => (
                         <option key={value} value={value}>{label}</option>
@@ -728,7 +728,7 @@ const DashboardPage = () => {
                       placeholder="Buscar producto..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="px-3 py-1.5 border border-[rgba(212,120,138,0.2)] rounded-sm text-xs font-['DM_Sans'] text-[#1A1118] bg-white placeholder:text-[#9A7480] focus:outline-none focus:ring-1 focus:ring-[#D4788A] w-40"
+                      className="px-3 py-1.5 border border-[rgba(212,120,138,0.2)] rounded-sm text-xs font-sans text-[#1A1118] bg-white placeholder:text-[#9A7480] focus:outline-none focus:ring-1 focus:ring-[#D4788A] w-40"
                     />
                   </div>
                 }
@@ -748,7 +748,7 @@ const DashboardPage = () => {
               </div>
 
               {filteredStagnantProducts.length > 5 && (
-                <p className="text-xs text-[#9A7480] font-['DM_Sans'] text-center mt-5 pt-5 border-t border-[rgba(212,120,138,0.1)]">
+                <p className="text-xs text-[#9A7480] font-sans text-center mt-5 pt-5 border-t border-[rgba(212,120,138,0.1)]">
                   Mostrando 5 de {filteredStagnantProducts.length} productos. Ajusta los filtros para ver más.
                 </p>
               )}
@@ -787,13 +787,13 @@ const DashboardPage = () => {
             <div className="flex flex-wrap gap-3">
               <Link
                 to="/admin/productos"
-                className="px-4 py-2 bg-[#1A1118] text-[#FFF8F5] rounded-sm text-sm font-['DM_Sans'] font-medium hover:bg-[#2D2030] transition-colors"
+                className="px-4 py-2 bg-[#1A1118] text-[#FFF8F5] rounded-sm text-sm font-sans font-medium hover:bg-[#2D2030] transition-colors"
               >
                 Nuevo producto
               </Link>
               <Link
                 to="/admin/pedidos"
-                className="px-4 py-2 border border-[rgba(212,120,138,0.25)] text-[#9A7480] rounded-sm text-sm font-['DM_Sans'] font-medium hover:bg-[#FDF0F3] transition-colors"
+                className="px-4 py-2 border border-[rgba(212,120,138,0.25)] text-[#9A7480] rounded-sm text-sm font-sans font-medium hover:bg-[#FDF0F3] transition-colors"
               >
                 Ver pedidos
               </Link>
@@ -801,7 +801,7 @@ const DashboardPage = () => {
                 to="/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-4 py-2 border border-[rgba(212,120,138,0.25)] text-[#9A7480] rounded-sm text-sm font-['DM_Sans'] font-medium hover:bg-[#FDF0F3] transition-colors"
+                className="px-4 py-2 border border-[rgba(212,120,138,0.25)] text-[#9A7480] rounded-sm text-sm font-sans font-medium hover:bg-[#FDF0F3] transition-colors"
               >
                 Ver tienda
               </Link>

@@ -1,35 +1,20 @@
 import { useSiteConfig } from '../../hooks/useSiteConfig'
 
 export default function SectionTexture({ section, children, className = '' }) {
-  const { getTextureStyle, getDecorations, getSectionBg } = useSiteConfig()
+  const { getTextureStyle, getDecorations } = useSiteConfig()
   const textureStyle = getTextureStyle(section)
   const decorations = getDecorations(section)
-  const bgColor = getSectionBg(section)
   const hasTexture = textureStyle.backgroundImage
   const hasDecos = decorations.length > 0
-  const hasBg = !!bgColor
 
-  const sectionId = `section-${section}`
-
-  // Si no hay nada configurado, solo renderizar contenido
-  if (!hasTexture && !hasDecos && !hasBg) {
-    return <div id={sectionId} className={className}>{children}</div>
+  if (!hasTexture && !hasDecos) {
+    return <div className={className}>{children}</div>
   }
 
-  // Modo color: si hay bgColor, se usa color solido (sin textura)
-  // Modo textura: si no hay bgColor pero si textura, se usa textura
-  const useColorMode = hasBg
-
   return (
-    <div
-      id={sectionId}
-      className={`relative ${className}`}
-      style={useColorMode ? { backgroundColor: bgColor } : undefined}
-    >
-      {/* Textura (solo si NO hay color) */}
-      {!useColorMode && hasTexture && <div style={textureStyle} />}
+    <div className={`relative ${className}`}>
+      {hasTexture && <div style={textureStyle} />}
 
-      {/* Decoraciones flotantes (siempre) */}
       {decorations.map((deco) => (
         <img
           key={deco.id}
@@ -48,7 +33,6 @@ export default function SectionTexture({ section, children, className = '' }) {
         />
       ))}
 
-      {/* Contenido */}
       <div className="relative z-20">{children}</div>
     </div>
   )

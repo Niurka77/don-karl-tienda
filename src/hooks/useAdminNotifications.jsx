@@ -100,7 +100,7 @@ export const useAdminNotifications = () => {
             'bg-[#FDF0F3] border-[#D4788A] text-[#1A1118]'
           }`}
         >
-          <p className="text-sm font-['DM_Sans'] font-medium">{toast.mensaje}</p>
+          <p className="text-sm font-sans font-medium">{toast.mensaje}</p>
           <button 
             onClick={() => eliminarToast(toast.id)} 
             className="text-lg leading-none hover:opacity-70"

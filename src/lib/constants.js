@@ -8,4 +8,3 @@ export const WHATSAPP_MESSAGES = {
 }
 
 export const CURRENCY = 'S/'
-export const CURRENCY_NAME = 'Soles'
