@@ -29,6 +29,11 @@ const PedidosPage = () => {
   // Modal de eliminación
   const [modalEliminar, setModalEliminar] = useState({ abierto: false, pedido: null })
 
+  // Modal de cotización
+  const [modalCotizacion, setModalCotizacion] = useState({ abierto: false, pedido: null })
+  const [preciosEditados, setPreciosEditados] = useState({})
+  const [notasCotizacion, setNotasCotizacion] = useState('')
+
   // 🔔 Usar hook centralizado de notificaciones
   const { agregarToast, ToastContainer } = useAdminNotifications()
 
@@ -178,10 +183,37 @@ const PedidosPage = () => {
     window.open(url, '_blank')
   }
 
+  const enviarCotizacionWhatsApp = (pedido) => {
+    const telefono = pedido.customer_phone?.replace(/\D/g, '') || ''
+    if (!telefono) {
+      agregarToast('No hay número de teléfono', 'warning')
+      return
+    }
+
+    const productos = Array.isArray(pedido.products) ? pedido.products : []
+    let total = 0
+    const lines = productos.map((p, i) => {
+      const precio = preciosEditados[p.id] ?? p.price ?? 0
+      const sub = precio * (p.quantity || 1)
+      total += sub
+      return `${i + 1}. ${p.name}${p.size ? ` (${p.size})` : ''} x${p.quantity} — S/ ${Number(precio).toFixed(2)} c/u\n   Subtotal: S/ ${sub.toFixed(2)}`
+    })
+
+    const idCorto = String(pedido.id).substring(0, 8).toUpperCase()
+    const notaAdicional = notasCotizacion ? `\n\n📝 *Notas:* ${notasCotizacion}` : ''
+
+    const mensaje = `¡Hola *${pedido.customer_name}*!\n\nAquí está tu cotización de *KB Dresses & More*:\n\n📍 Pedido: #${idCorto}\n\n${lines.join('\n')}\n\n*Total: S/ ${total.toFixed(2)}*${notaAdicional}\n\nPara confirmar, solo responde este mensaje.\n\n¡Gracias por confiar en KB! ✦`
+
+    const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`
+    window.open(url, '_blank')
+  }
+
   const getEstadoColor = (status) => {
     const colores = {
+      cotizacion: 'bg-orange-100 text-orange-700 border-orange-200',
       pendiente: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-      confirmado: 'bg-blue-100 text-blue-700 border-blue-200',
+      aceptado: 'bg-teal-100 text-teal-700 border-teal-200',
+      pagado: 'bg-blue-100 text-blue-700 border-blue-200',
       enviado: 'bg-purple-100 text-purple-700 border-purple-200',
       entregado: 'bg-green-100 text-green-700 border-green-200',
     }
@@ -190,8 +222,10 @@ const PedidosPage = () => {
 
   const getEstadoLabel = (status) => {
     const labels = {
+      cotizacion: '📋 Cotización',
       pendiente: '⏳ Pendiente',
-      confirmado: '✅ Confirmado',
+      aceptado: '👍 Aceptado',
+      pagado: '💰 Pagado',
       enviado: '🚚 Enviado',
       entregado: '✓ Entregado',
     }
@@ -296,6 +330,122 @@ const PedidosPage = () => {
         </div>
       )}
 
+      {/* Modal Gestión de Cotización */}
+      {modalCotizacion.abierto && modalCotizacion.pedido && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-sm max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl">
+            <div className="sticky top-0 bg-white border-b border-[rgba(212,120,138,0.15)] px-6 py-4 flex items-center justify-between z-10">
+              <h3 className="font-display text-xl text-[#1A1118]">
+                Cotización #{String(modalCotizacion.pedido.id).substring(0, 8).toUpperCase()}
+              </h3>
+              <button
+                onClick={() => setModalCotizacion({ abierto: false, pedido: null })}
+                className="text-[#9A7480] hover:text-[#1A1118] text-xl leading-none"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Cliente */}
+              <div>
+                <p className="text-xs text-[#9A7480] font-sans uppercase tracking-wide mb-2">Cliente</p>
+                <p className="font-sans text-sm text-[#1A1118] font-medium">{modalCotizacion.pedido.customer_name}</p>
+                <p className="font-sans text-xs text-[#9A7480]">{modalCotizacion.pedido.customer_phone}</p>
+              </div>
+
+              {/* Productos con precio editable */}
+              <div>
+                <p className="text-xs text-[#9A7480] font-sans uppercase tracking-wide mb-3">Productos</p>
+                <div className="space-y-3">
+                  {(Array.isArray(modalCotizacion.pedido.products) ? modalCotizacion.pedido.products : []).map((p, i) => (
+                    <div key={p.id || i} className="flex items-center gap-4 p-3 bg-[#FDF0F3] rounded-sm">
+                      <span className="font-sans text-sm text-[#1A1118] flex-1">
+                        {p.name}{p.size ? ` (${p.size})` : ''} × {p.quantity}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-sans text-xs text-[#9A7480]">S/</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={preciosEditados[p.id] ?? p.price ?? ''}
+                          onChange={(e) => setPreciosEditados(prev => ({ ...prev, [p.id]: parseFloat(e.target.value) || 0 }))}
+                          className="w-24 border border-[rgba(212,120,138,0.25)] rounded-sm px-3 py-1.5 text-sm font-sans text-right focus:outline-none focus:ring-1 focus:ring-[#D4788A]"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Notas */}
+              <div>
+                <p className="text-xs text-[#9A7480] font-sans uppercase tracking-wide mb-2">Notas para el cliente</p>
+                <textarea
+                  value={notasCotizacion}
+                  onChange={(e) => setNotasCotizacion(e.target.value)}
+                  placeholder="Ej: El vestido azul está disponible solo en talla M..."
+                  rows={3}
+                  className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-sans focus:outline-none focus:ring-1 focus:ring-[#D4788A] resize-none"
+                />
+              </div>
+
+              {/* Total calculado */}
+              <div className="pt-3 border-t border-[rgba(212,120,138,0.15)] flex justify-between items-center">
+                <span className="font-sans text-sm text-[#9A7480]">Total cotizado</span>
+                <span className="font-display text-xl font-bold text-[#1A1118]">
+                  S/ {(
+                    (Array.isArray(modalCotizacion.pedido.products) ? modalCotizacion.pedido.products : [])
+                      .reduce((sum, p) => {
+                        const precio = preciosEditados[p.id] ?? p.price ?? 0
+                        return sum + precio * (p.quantity || 1)
+                      }, 0)
+                  ).toFixed(2)}
+                </span>
+              </div>
+            </div>
+
+            {/* Acciones */}
+            <div className="sticky bottom-0 bg-white border-t border-[rgba(212,120,138,0.15)] px-6 py-4 flex flex-wrap gap-3">
+              <button
+                onClick={() => enviarCotizacionWhatsApp(modalCotizacion.pedido)}
+                className="flex-1 min-w-[200px] px-4 py-2.5 text-xs font-semibold tracking-widest uppercase rounded-sm font-sans bg-green-600 text-white hover:bg-green-700 transition-all flex items-center justify-center gap-2"
+              >
+                💬 Enviar cotización por WhatsApp
+              </button>
+              <button
+                onClick={async () => {
+                  await actualizarEstado(modalCotizacion.pedido.id, 'aceptado')
+                  setModalCotizacion({ abierto: false, pedido: null })
+                }}
+                className="px-4 py-2.5 text-xs font-semibold tracking-widest uppercase rounded-sm font-sans bg-teal-600 text-white hover:bg-teal-700 transition-all"
+              >
+                Aceptado
+              </button>
+              <button
+                onClick={async () => {
+                  await actualizarEstado(modalCotizacion.pedido.id, 'pagado')
+                  setModalCotizacion({ abierto: false, pedido: null })
+                }}
+                className="px-4 py-2.5 text-xs font-semibold tracking-widest uppercase rounded-sm font-sans bg-blue-600 text-white hover:bg-blue-700 transition-all"
+              >
+                Pagado
+              </button>
+              <button
+                onClick={async () => {
+                  await actualizarEstado(modalCotizacion.pedido.id, 'enviado')
+                  setModalCotizacion({ abierto: false, pedido: null })
+                }}
+                className="px-4 py-2.5 text-xs font-semibold tracking-widest uppercase rounded-sm font-sans bg-purple-600 text-white hover:bg-purple-700 transition-all"
+              >
+                Enviado
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-6">
         <h1 className="font-display text-3xl font-light text-[#1A1118]">Pedidos</h1>
@@ -347,8 +497,10 @@ const PedidosPage = () => {
             className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-sans focus:outline-none focus:ring-1 focus:ring-[#D4788A] bg-white"
           >
             <option value="">Todos los estados</option>
+            <option value="cotizacion">Cotización</option>
             <option value="pendiente">Pendiente</option>
-            <option value="confirmado">Confirmado</option>
+            <option value="aceptado">Aceptado</option>
+            <option value="pagado">Pagado</option>
             <option value="enviado">Enviado</option>
             <option value="entregado">Entregado</option>
           </select>
@@ -464,9 +616,21 @@ const PedidosPage = () => {
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-4 border-t border-[rgba(212,120,138,0.15)]">
+                    <div className="mt-4 pt-4 border-t border-[rgba(212,120,138,0.15)]">
                     <p className="text-xs text-[#9A7480] font-sans uppercase tracking-wide mb-2">Actualizar estado</p>
                     <div className="flex flex-wrap gap-2">
+                      {pedido.status === 'cotizacion' && (
+                        <button
+                          onClick={() => {
+                            setPreciosEditados({})
+                            setNotasCotizacion('')
+                            setModalCotizacion({ abierto: true, pedido })
+                          }}
+                          className="px-3 py-1.5 text-xs font-medium rounded-sm font-sans bg-orange-100 text-orange-700 border border-orange-200 hover:bg-orange-200 transition-all"
+                        >
+                          📋 Gestionar cotización
+                        </button>
+                      )}
                       <button
                         onClick={() => actualizarEstado(pedido.id, 'pendiente')}
                         disabled={pedido.status === 'pendiente'}
@@ -479,15 +643,26 @@ const PedidosPage = () => {
                         Pendiente
                       </button>
                       <button
-                        onClick={() => actualizarEstado(pedido.id, 'confirmado')}
-                        disabled={pedido.status === 'confirmado'}
+                        onClick={() => actualizarEstado(pedido.id, 'aceptado')}
+                        disabled={pedido.status === 'aceptado'}
                         className={`px-3 py-1.5 text-xs font-medium rounded-sm font-sans transition-all ${
-                          pedido.status === 'confirmado'
+                          pedido.status === 'aceptado'
+                            ? 'bg-teal-100 text-teal-700 border border-teal-200 cursor-default'
+                            : 'bg-white text-teal-700 border border-teal-200 hover:bg-teal-50'
+                        }`}
+                      >
+                        Aceptado
+                      </button>
+                      <button
+                        onClick={() => actualizarEstado(pedido.id, 'pagado')}
+                        disabled={pedido.status === 'pagado'}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-sm font-sans transition-all ${
+                          pedido.status === 'pagado'
                             ? 'bg-blue-100 text-blue-700 border border-blue-200 cursor-default'
                             : 'bg-white text-blue-700 border border-blue-200 hover:bg-blue-50'
                         }`}
                       >
-                        Confirmado
+                        Pagado
                       </button>
                       <button
                         onClick={() => actualizarEstado(pedido.id, 'enviado')}
