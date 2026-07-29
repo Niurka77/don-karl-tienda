@@ -29,7 +29,8 @@ const CoverContent = () => (
     <div style={S.gradient(false)} />
     <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '1123px', padding: '60px 40px', boxSizing: 'border-box' }}>
       <div style={{ ...S.lineW('200px'), marginBottom: '40px' }} />
-      <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: '52px', fontWeight: 700, color: '#2d1f26', letterSpacing: '4px', marginBottom: '10px' }}>DON KARL</div>
+      <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: '52px', fontWeight: 700, color: '#2d1f26', letterSpacing: '4px', marginBottom: '6px' }}>KB</div>
+      <div style={{ fontFamily: 'Inter, Helvetica, Arial, sans-serif', fontSize: '10px', fontWeight: 400, color: '#8b6f7a', letterSpacing: '4px', marginBottom: '24px' }}> DRESSES AND MORE</div>
       <div style={{ fontFamily: 'Inter, Helvetica, Arial, sans-serif', fontSize: '12px', fontWeight: 400, color: '#8b6f7a', letterSpacing: '6px', marginBottom: '30px' }}>{`COLECCIÓN ${year}`}</div>
       <div style={{ ...S.lineW('200px'), marginBottom: '40px' }} />
       <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: '16px', fontWeight: 400, fontStyle: 'italic', color: '#2d1f26', marginBottom: '50px' }}>Encuentra tu estilo con nosotros</div>
@@ -81,7 +82,7 @@ const BackCoverContent = () => (
       <div style={{ display: 'flex', gap: '24px', justifyContent: 'center', marginBottom: '24px', flexWrap: 'wrap' }}>
         {[
           { plat: 'INSTAGRAM', user: '@donkarl_oficial' },
-          { plat: 'TIKTOK', user: '@donkarl_oficial' },
+          { plat: 'TIKTOK', user: '@kb.dresses.more' },
           { plat: 'FACEBOOK', user: '@donkarl_tienda' },
         ].map(({ plat, user }) => (
           <div key={plat} style={{ textAlign: 'center' }}>
@@ -97,7 +98,7 @@ const BackCoverContent = () => (
       <div style={{ fontFamily: 'Inter, Helvetica, Arial, sans-serif', fontSize: '9px', fontWeight: 700, letterSpacing: '2px', color: '#8b6f7a', marginBottom: '4px' }}>ENVÍOS</div>
       <div style={{ fontFamily: 'Inter, Helvetica, Arial, sans-serif', fontSize: '8px', color: '#2d1f26', marginBottom: '30px' }}>A todo el Perú</div>
       <div style={{ ...S.lineW('200px'), marginBottom: '20px' }} />
-      <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: '14px', fontWeight: 700, color: '#2d1f26', letterSpacing: '3px' }}>DON KARL</div>
+      <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: '14px', fontWeight: 700, color: '#2d1f26', letterSpacing: '3px' }}>KB</div>
     </div>
   </>
 )
@@ -237,7 +238,7 @@ const BotonPDF = () => {
         }
       }
 
-      doc.save(`Catalogo_Don_Karl_${new Date().toISOString().split('T')[0]}.pdf`)
+      doc.save(`Catalogo_KB_${new Date().toISOString().split('T')[0]}.pdf`)
     } catch (err) {
       console.error('Error PDF:', err)
       alert('Error al generar el PDF')

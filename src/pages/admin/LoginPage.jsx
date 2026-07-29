@@ -36,7 +36,7 @@ const LoginPage = () => {
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            Don Karl
+            KB DRESSES AND MORE
           </h1>
           <p className="text-gray-500">Panel de Administración</p>
         </div>
