@@ -1,341 +1,287 @@
-import { useState } from 'react'
+import React, { useState, useRef, useEffect, useCallback, createContext, useContext } from 'react'
 import { supabase } from '../../lib/supabase'
-import { WHATSAPP_PHONE, CURRENCY } from '../../lib/constants'
+import { CURRENCY } from '../../lib/constants'
 
-const loadImage = (url, id) => {
-  return new Promise((resolve) => {
-    const img = new Image()
-    img.crossOrigin = 'anonymous'
-    img.onload = () => {
-      const canvas = document.createElement('canvas')
-      canvas.width = img.naturalWidth
-      canvas.height = img.naturalHeight
-      const ctx = canvas.getContext('2d')
-      ctx.drawImage(img, 0, 0)
-      resolve({ id, dataUrl: canvas.toDataURL('image/jpeg', 0.85) })
+const year = new Date().getFullYear()
+
+// ─── ESTILOS INLINE COMPLETOS (sin herencia CSS) ───
+const S = {
+  page: { width: '794px', minHeight: '1123px', background: '#ffffff', overflow: 'hidden', position: 'relative', fontFamily: 'Inter, Helvetica, Arial, sans-serif', boxSizing: 'border-box' },
+  gradient: (invertido) => ({
+    position: 'absolute', inset: 0,
+    background: `linear-gradient(180deg, #f8ebf0 0%, rgba(248,235,240,0.8) 40%, rgba(255,255,255,0.95) 100%)`,
+    pointerEvents: 'none',
+  }),
+  line: { height: '1px', background: '#e6b4c3', border: 'none', margin: '0 auto' },
+  lineW: (w) => ({ width: w, height: '1px', background: '#e6b4c3', border: 'none', margin: '0 auto' }),
+  brandTxt: { fontFamily: 'Inter, Helvetica, Arial, sans-serif', fontWeight: 700, fontSize: '9px', letterSpacing: '2px', color: '#644650', textTransform: 'uppercase' },
+  nameTxt: { fontFamily: 'Georgia, "Times New Roman", serif', fontWeight: 400, fontSize: '13px', color: '#2d1f26', lineHeight: 1.3 },
+  subtxt: { fontFamily: 'Inter, Helvetica, Arial, sans-serif', fontWeight: 400, fontSize: '8px', color: '#8b6f7a', letterSpacing: '1px' },
+  priceTxt: { fontFamily: 'Georgia, "Times New Roman", serif', fontWeight: 700, fontSize: '18px', color: '#e60000' },
+}
+
+const CatalogPage = React.forwardRef(({ children, style }, ref) => (
+  <div ref={ref} style={{ ...S.page, ...style }}>{children}</div>
+))
+
+const CoverContent = () => (
+  <>
+    <div style={S.gradient(false)} />
+    <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '1123px', padding: '60px 40px', boxSizing: 'border-box' }}>
+      <div style={{ ...S.lineW('200px'), marginBottom: '40px' }} />
+      <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: '52px', fontWeight: 700, color: '#2d1f26', letterSpacing: '4px', marginBottom: '10px' }}>DON KARL</div>
+      <div style={{ fontFamily: 'Inter, Helvetica, Arial, sans-serif', fontSize: '12px', fontWeight: 400, color: '#8b6f7a', letterSpacing: '6px', marginBottom: '30px' }}>{`COLECCIÓN ${year}`}</div>
+      <div style={{ ...S.lineW('200px'), marginBottom: '40px' }} />
+      <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: '16px', fontWeight: 400, fontStyle: 'italic', color: '#2d1f26', marginBottom: '50px' }}>Encuentra tu estilo con nosotros</div>
+      <div style={{ display: 'flex', gap: '30px', justifyContent: 'center', marginBottom: '30px' }}>
+        {['INSTAGRAM', 'TIKTOK', 'FACEBOOK', 'WHATSAPP'].map(r => (
+          <span key={r} style={{ fontFamily: 'Inter, Helvetica, Arial, sans-serif', fontSize: '8px', fontWeight: 700, letterSpacing: '3px', color: '#c88c9d' }}>{r}</span>
+        ))}
+      </div>
+      <div style={{ ...S.lineW('200px'), marginBottom: '20px' }} />
+      <div style={{ fontFamily: 'Inter, Helvetica, Arial, sans-serif', fontSize: '8px', fontWeight: 400, color: '#8b6f7a' }}>{new Date().toLocaleDateString('es-PE')}</div>
+    </div>
+  </>
+)
+
+const ProductCard_ = ({ prod, imgUrl }) => (
+  <div style={{ background: '#ffffff', boxShadow: '0 1px 6px rgba(0,0,0,0.04), 0 0 0 1px rgba(230,180,195,0.15)', overflow: 'hidden', position: 'relative' }}>
+    <div style={{ width: '100%', aspectRatio: '1/1.05', background: '#ffe8ef', overflow: 'hidden', position: 'relative' }}>
+      {imgUrl ? (
+        <img src={imgUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} crossOrigin="anonymous" />
+      ) : (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+          <span style={{ fontSize: '10px', letterSpacing: '2px', color: '#c9607f', opacity: 0.5, fontFamily: 'Inter, Helvetica, Arial, sans-serif', fontWeight: 600 }}>KB</span>
+        </div>
+      )}
+      {prod.is_new && <span style={{ position: 'absolute', top: '6px', left: '6px', background: '#2d1f26', color: '#fff', fontSize: '7px', fontWeight: 700, letterSpacing: '2px', padding: '2px 8px', fontFamily: 'Inter, Helvetica, Arial, sans-serif' }}>NUEVO</span>}
+      {prod.sku && <span style={{ position: 'absolute', bottom: '6px', right: '6px', background: 'rgba(255,255,255,0.9)', fontSize: '7px', color: '#8b6f7a', padding: '1px 6px', fontFamily: 'Inter, Helvetica, Arial, sans-serif', fontWeight: 500 }}>{prod.sku}</span>}
+    </div>
+    <div style={{ padding: '10px 10px 12px' }}>
+      {prod.brand && <div style={S.brandTxt}>{prod.brand.toUpperCase()}</div>}
+      <div style={{ ...S.nameTxt, marginTop: '2px' }}>{prod.name}</div>
+      {prod.color && <div style={{ ...S.subtxt, marginTop: '3px' }}>{prod.color.charAt(0).toUpperCase() + prod.color.slice(1)}</div>}
+      <div style={{ height: '1px', background: 'linear-gradient(90deg, #e60000 30%, transparent)', margin: '8px 0 6px' }} />
+      <div style={S.priceTxt}>{`${CURRENCY} ${Number(prod.discount_percent > 0 ? prod.price_final : prod.price_original).toFixed(2)}`}</div>
+      {prod.discount_percent > 0 && <div style={{ ...S.subtxt, marginTop: '1px', textDecoration: 'line-through' }}>{`${CURRENCY} ${Number(prod.price_original).toFixed(2)}`}</div>}
+    </div>
+  </div>
+)
+
+const BackCoverContent = () => (
+  <>
+    <div style={S.gradient(true)} />
+    <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '1123px', padding: '60px 40px', boxSizing: 'border-box' }}>
+      <div style={{ ...S.lineW('200px'), marginBottom: '30px' }} />
+      <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: '36px', fontWeight: 700, color: '#2d1f26', marginBottom: '8px' }}>¡Gracias!</div>
+      <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: '14px', color: '#2d1f26', marginBottom: '24px' }}>Por tu preferencia</div>
+      <div style={{ ...S.lineW('200px'), marginBottom: '28px' }} />
+      <div style={{ fontFamily: 'Inter, Helvetica, Arial, sans-serif', fontSize: '10px', fontWeight: 700, letterSpacing: '3px', color: '#e60000', marginBottom: '6px' }}>CONTÁCTANOS</div>
+      <div style={{ fontFamily: 'Inter, Helvetica, Arial, sans-serif', fontSize: '16px', fontWeight: 400, color: '#2d1f26', marginBottom: '28px' }}>+51 906 877 812</div>
+      <div style={{ display: 'flex', gap: '24px', justifyContent: 'center', marginBottom: '24px', flexWrap: 'wrap' }}>
+        {[
+          { plat: 'INSTAGRAM', user: '@donkarl_oficial' },
+          { plat: 'TIKTOK', user: '@donkarl_oficial' },
+          { plat: 'FACEBOOK', user: '@donkarl_tienda' },
+        ].map(({ plat, user }) => (
+          <div key={plat} style={{ textAlign: 'center' }}>
+            <div style={{ fontFamily: 'Inter, Helvetica, Arial, sans-serif', fontSize: '8px', fontWeight: 700, letterSpacing: '2px', color: '#8b6f7a' }}>{plat}</div>
+            <div style={{ fontFamily: 'Inter, Helvetica, Arial, sans-serif', fontSize: '8px', color: '#2d1f26', marginTop: '2px' }}>{user}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ ...S.lineW('200px'), marginBottom: '16px' }} />
+      <div style={{ fontFamily: 'Inter, Helvetica, Arial, sans-serif', fontSize: '9px', fontWeight: 700, letterSpacing: '2px', color: '#8b6f7a', marginBottom: '6px' }}>MÉTODOS DE PAGO</div>
+      <div style={{ fontFamily: 'Inter, Helvetica, Arial, sans-serif', fontSize: '8px', color: '#2d1f26', marginBottom: '16px', textAlign: 'center' }}>Visa | Mastercard | Yape | Plin | Transferencia Bancaria | Efectivo</div>
+      <div style={{ ...S.lineW('200px'), marginBottom: '16px' }} />
+      <div style={{ fontFamily: 'Inter, Helvetica, Arial, sans-serif', fontSize: '9px', fontWeight: 700, letterSpacing: '2px', color: '#8b6f7a', marginBottom: '4px' }}>ENVÍOS</div>
+      <div style={{ fontFamily: 'Inter, Helvetica, Arial, sans-serif', fontSize: '8px', color: '#2d1f26', marginBottom: '30px' }}>A todo el Perú</div>
+      <div style={{ ...S.lineW('200px'), marginBottom: '20px' }} />
+      <div style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: '14px', fontWeight: 700, color: '#2d1f26', letterSpacing: '3px' }}>DON KARL</div>
+    </div>
+  </>
+)
+
+const CatalogRenderer = ({ productos, onReady }) => {
+  const coverRef = useRef(null)
+  const backRef = useRef(null)
+  const pageRefs = useRef([])
+  const [imgMap, setImgMap] = useState({})
+  const [ready, setReady] = useState(false)
+
+  // Cargar imágenes
+  useEffect(() => {
+    let mounted = true
+    const loadAll = async () => {
+      const map = {}
+      for (const prod of productos) {
+        const url = prod.image_url || prod.images_urls?.[0]
+        if (!url) continue
+        const img = new Image()
+        img.crossOrigin = 'anonymous'
+        await new Promise((resolve) => {
+          img.onload = resolve
+          img.onerror = resolve
+          img.src = url
+        })
+        if (mounted) map[prod.id] = url
+      }
+      if (mounted) { setImgMap(map); setReady(true) }
     }
-    img.onerror = () => resolve({ id, dataUrl: null })
-    img.src = url
-  })
+    loadAll()
+    return () => { mounted = false }
+  }, [productos])
+
+  const porPag = 4
+  const cols = 2
+  const pages = []
+  for (let i = 0; i < productos.length; i += porPag) {
+    pages.push(productos.slice(i, i + porPag))
+  }
+
+  useEffect(() => {
+    if (!ready) return
+    const timer = setTimeout(() => {
+      onReady({ coverRef, pageRefs: pageRefs.current, backRef, totalPages: pages.length + 2 })
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [ready, onReady, pages.length])
+
+  if (!ready) return null
+
+  return (
+    <div style={{ position: 'fixed', left: '-9999px', top: 0, zIndex: -9999, background: '#ffffff' }}>
+      {/* Portada */}
+      <CatalogPage ref={coverRef}><CoverContent /></CatalogPage>
+      {/* Productos */}
+      {pages.map((prods, pi) => (
+        <CatalogPage key={pi} ref={(el) => { pageRefs.current[pi] = el }}>
+          <div style={{ padding: '24px 20px', display: 'flex', flexWrap: 'wrap', gap: '16px', boxSizing: 'border-box' }}>
+            {prods.map((prod) => (
+              <div key={prod.id} style={{ width: 'calc(50% - 8px)', boxSizing: 'border-box' }}>
+                <ProductCard_ prod={prod} imgUrl={imgMap[prod.id]} />
+              </div>
+            ))}
+          </div>
+          {prods.length < porPag && <div style={{ flex: 1 }} />}
+        </CatalogPage>
+      ))}
+      {/* Contraportada */}
+      <CatalogPage ref={backRef}><BackCoverContent /></CatalogPage>
+    </div>
+  )
 }
 
 const BotonPDF = () => {
-  const [generando, setGenerando] = useState(false)
+  const [state, setState] = useState('idle')
+  const [productos, setProductos] = useState(null)
+  const rendererRef = useRef(null)
 
-  const generarPDF = async () => {
-    if (generando) return
-    setGenerando(true)
+  const handleClick = async () => {
+    if (state !== 'idle') return
+    setState('loading')
 
     try {
-      const { data: productos, error } = await supabase
+      const { data, error } = await supabase
         .from('products')
         .select('*')
         .gt('stock', 0)
         .order('category')
         .order('name')
-
       if (error) throw error
-      if (!productos || productos.length === 0) {
-        alert('No hay productos disponibles.')
-        setGenerando(false)
-        return
-      }
-
-      // ── Precargar imágenes ──
-      const imgPromises = productos.map((p) => {
-        const url = p.image_url || p.images_urls?.[0] || ''
-        return url ? loadImage(url, p.id) : Promise.resolve({ id: p.id, dataUrl: null })
-      })
-      const resultados = await Promise.all(imgPromises)
-      const imgMap = {}
-      for (const r of resultados) {
-        imgMap[r.id] = r.dataUrl
-      }
-
-      const { default: jsPDF } = await import('jspdf')
-      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-      const pw = 210, ph = 297, m = 10
-
-      const degrade = (doc, ph, invertido) => {
-        for (let y = 0; y < ph; y += 3) {
-          const t = y / ph
-          const f = invertido ? (1 - t) : t
-          const r = Math.round(248 + (230 - 248) * f * 0.3)
-          const g = Math.round(235 + (180 - 235) * f * 0.3)
-          const b = Math.round(240 + (195 - 240) * f * 0.3)
-          doc.setFillColor(r, g, b)
-          doc.rect(0, y, pw, 3, 'F')
-        }
-      }
-
-      // ═══════════════════════════════════════════════════
-      // PÁGINA 1 — PORTADA
-      // ═══════════════════════════════════════════════════
-      doc.setFillColor(255, 255, 255)
-      doc.rect(0, 0, pw, ph, 'F')
-      degrade(doc, ph, false)
-
-      const cy = 110
-      doc.setDrawColor(200, 150, 165)
-      doc.setLineWidth(0.4)
-      doc.line(m, cy - 8, pw - m, cy - 8)
-      doc.setTextColor(45, 31, 38)
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(42)
-      doc.text('DON KARL', pw / 2, cy + 8, { align: 'center' })
-      doc.setFontSize(10)
-      doc.setFont('helvetica', 'normal')
-      doc.setTextColor(130, 110, 120)
-      doc.text(`COLECCIÓN ${new Date().getFullYear()}`, pw / 2, cy + 22, { align: 'center', charSpace: 4 })
-      doc.setDrawColor(200, 150, 165)
-      doc.line(m, cy + 30, pw - m, cy + 30)
-      doc.setTextColor(45, 31, 38)
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(14)
-      doc.text('Encuentra tu estilo con nosotros', pw / 2, cy + 48, { align: 'center' })
-      const rY = cy + 66
-      doc.setFontSize(6)
-      doc.setFont('helvetica', 'bold')
-      doc.setTextColor(200, 140, 155)
-      const rs = ['INSTAGRAM', 'TIKTOK', 'FACEBOOK', 'WHATSAPP']
-      const rw = rs.length * 38 - 8
-      let rx = (pw - rw) / 2
-      for (const r of rs) {
-        doc.text(r, rx + 19, rY, { align: 'center', charSpace: 3 })
-        rx += 38
-      }
-      doc.setDrawColor(200, 150, 165)
-      doc.line(m, rY + 7, pw - m, rY + 7)
-      doc.setFontSize(6)
-      doc.setFont('helvetica', 'normal')
-      doc.setTextColor(130, 110, 120)
-      doc.text(new Date().toLocaleDateString('es-PE'), pw / 2, rY + 16, { align: 'center' })
-
-      // ═══════════════════════════════════════════════════
-      // PÁGINAS DE PRODUCTOS
-      // ═══════════════════════════════════════════════════
-      const cols = 2, gap = 6
-      const cardW = ((pw - m * 2) - gap) / cols
-      const imgH = cardW * 1.05
-      const infoH = 24
-      const rowH = imgH + infoH
-      const porPag = 4
-
-      for (let i = 0; i < productos.length; i++) {
-        const idx = i % porPag
-        if (idx === 0) {
-          doc.addPage()
-          doc.setFillColor(255, 255, 255)
-          doc.rect(0, 0, pw, ph, 'F')
-        }
-        const col = idx % cols
-        const row = Math.floor(idx / cols)
-        const x = m + col * (cardW + gap)
-        const cy2 = 8 + row * rowH
-        const prod = productos[i]
-        const precio = prod.discount_percent > 0 ? prod.price_final : prod.price_original
-
-        doc.setFillColor(255, 255, 255)
-        doc.setDrawColor(230, 220, 215)
-        doc.roundedRect(x, cy2, cardW, rowH - 2, 1, 1, 'FD')
-
-        const dUrl = imgMap[prod.id]
-        if (dUrl) {
-          try { doc.addImage(dUrl, 'JPEG', x + 0.5, cy2 + 0.5, cardW - 1, imgH - 1, undefined, 'FAST') } catch (e) {}
-        }
-
-        if (prod.is_new) {
-          doc.setFillColor(45, 31, 38)
-          doc.rect(x + 1.5, cy2 + 1.5, 13, 4, 'F')
-          doc.setTextColor(255, 255, 255)
-          doc.setFontSize(5)
-          doc.setFont('helvetica', 'bold')
-          doc.text('NUEVO', x + 8, cy2 + 4.5, { align: 'center' })
-        }
-        if (prod.sku) {
-          doc.setFillColor(255, 255, 255)
-          doc.roundedRect(x + cardW - 20, cy2 + imgH - 6, 19, 5, 0.5, 0.5, 'F')
-          doc.setTextColor(130, 110, 120)
-          doc.setFontSize(4.5)
-          doc.setFont('helvetica', 'normal')
-          doc.text(prod.sku, x + cardW - 10.5, cy2 + imgH - 2, { align: 'center' })
-        }
-
-        const iy = cy2 + imgH + 2
-        if (prod.brand) {
-          doc.setTextColor(100, 70, 80)
-          doc.setFontSize(6)
-          doc.setFont('helvetica', 'bold')
-          doc.text(prod.brand.toUpperCase(), x + 2, iy + 2.5)
-        }
-        doc.setTextColor(45, 31, 38)
-        doc.setFontSize(7.5)
-        doc.setFont('helvetica', 'normal')
-        const nl = doc.splitTextToSize(prod.name, cardW - 4)
-        doc.text(nl.slice(0, 2), x + 2, iy + 8)
-        if (prod.color) {
-          doc.setTextColor(130, 110, 120)
-          doc.setFontSize(5)
-          doc.setFont('helvetica', 'normal')
-          doc.text(prod.color.charAt(0).toUpperCase() + prod.color.slice(1), x + 2, iy + 14.5)
-        }
-        doc.setTextColor(230, 0, 0)
-        doc.setFontSize(10.5)
-        doc.setFont('helvetica', 'bold')
-        doc.text(`${CURRENCY} ${Number(precio).toFixed(2)}`, x + 2, iy + 21.5)
-        if (prod.discount_percent > 0) {
-          doc.setTextColor(130, 110, 120)
-          doc.setFontSize(5.5)
-          doc.setFont('helvetica', 'normal')
-          const dt = `${CURRENCY} ${Number(prod.price_original).toFixed(2)}`
-          doc.text(dt, x + 30, iy + 21)
-          doc.line(x + 30, iy + 21.4, x + 30 + doc.getTextWidth(dt), iy + 21.4)
-        }
-      }
-
-      // ═══════════════════════════════════════════════════
-      // CONTRAPORTADA — centrada verticalmente
-      // ═══════════════════════════════════════════════════
-      doc.addPage()
-      doc.setFillColor(255, 255, 255)
-      doc.rect(0, 0, pw, ph, 'F')
-      degrade(doc, ph, true)
-
-      // bloque centrado: desde y=65 hasta y=240 (175mm de contenido centrado en 297mm)
-      const bs = 50
-      doc.setDrawColor(200, 150, 165)
-      doc.setLineWidth(0.4)
-      doc.line(m, bs, pw - m, bs)
-
-      doc.setTextColor(45, 31, 38)
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(32)
-      doc.text('¡Gracias!', pw / 2, bs + 22, { align: 'center' })
-      doc.setFontSize(12)
-      doc.setFont('helvetica', 'normal')
-      doc.text('Por tu preferencia', pw / 2, bs + 36, { align: 'center', charSpace: 2 })
-
-      doc.setDrawColor(200, 150, 165)
-      doc.line(m, bs + 46, pw - m, bs + 46)
-
-      doc.setTextColor(230, 0, 0)
-      doc.setFontSize(9)
-      doc.setFont('helvetica', 'bold')
-      doc.text('CONTÁCTANOS', pw / 2, bs + 62, { align: 'center', charSpace: 3 })
-      doc.setFontSize(14)
-      doc.setFont('helvetica', 'normal')
-      doc.setTextColor(45, 31, 38)
-      doc.text(`+51 ${WHATSAPP_PHONE.slice(1,4)} ${WHATSAPP_PHONE.slice(4,7)} ${WHATSAPP_PHONE.slice(7)}`, pw / 2, bs + 76, { align: 'center' })
-
-      const rY2 = bs + 96
-      doc.setFontSize(7)
-      doc.setFont('helvetica', 'bold')
-      doc.setTextColor(130, 110, 120)
-      const plat = ['INSTAGRAM', 'TIKTOK', 'FACEBOOK']
-      const usrs = ['@donkarl_oficial', '@donkarl_oficial', '@donkarl_tienda']
-      const tw2 = plat.length * 38 - 8
-      let rxx = (pw - tw2) / 2
-      for (let j = 0; j < plat.length; j++) {
-        doc.text(plat[j], rxx + 19, rY2, { align: 'center', charSpace: 2 })
-        doc.setFont('helvetica', 'normal')
-        doc.text(usrs[j], rxx + 19, rY2 + 5.5, { align: 'center' })
-        doc.setFont('helvetica', 'bold')
-        rxx += 38
-      }
-
-      const py2 = rY2 + 22
-      doc.setDrawColor(200, 150, 165)
-      doc.line(m, py2, pw - m, py2)
-      doc.setTextColor(130, 110, 120)
-      doc.setFontSize(8)
-      doc.setFont('helvetica', 'bold')
-      doc.text('MÉTODOS DE PAGO', pw / 2, py2 + 10, { align: 'center', charSpace: 2 })
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(7)
-      doc.setTextColor(45, 31, 38)
-      doc.text('Visa | Mastercard | Yape | Plin | Transferencia Bancaria | Efectivo', pw / 2, py2 + 20, { align: 'center' })
-
-      doc.setDrawColor(200, 150, 165)
-      doc.line(m, py2 + 28, pw - m, py2 + 28)
-      doc.setFontSize(8)
-      doc.setFont('helvetica', 'bold')
-      doc.setTextColor(130, 110, 120)
-      doc.text('ENVÍOS', pw / 2, py2 + 40, { align: 'center', charSpace: 2 })
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(7)
-      doc.setTextColor(45, 31, 38)
-      doc.text('A todo el Perú', pw / 2, py2 + 50, { align: 'center' })
-
-      doc.setDrawColor(200, 150, 165)
-      doc.line(m, ph - 24, pw - m, ph - 24)
-      doc.setTextColor(45, 31, 38)
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(12)
-      doc.text('DON KARL', pw / 2, ph - 14, { align: 'center', charSpace: 3 })
-
-      // ═══════════════════════════════════════════════════
-      // FOOTER solo en páginas de productos
-      // ═══════════════════════════════════════════════════
-      const total = doc.getNumberOfPages()
-      for (let i = 2; i < total; i++) {
-        doc.setPage(i)
-        doc.setTextColor(150, 140, 145)
-        doc.setFontSize(5)
-        doc.setFont('helvetica', 'normal')
-        doc.text(
-          `Página ${i} de ${total} | Contáctanos al +51 ${WHATSAPP_PHONE.slice(1)} | Envíos a todo el Perú`,
-          pw / 2, ph - 3, { align: 'center' }
-        )
-      }
-
-      const fecha = new Date().toISOString().split('T')[0]
-      doc.save(`Catalogo_Don_Karl_${fecha}.pdf`)
+      if (!data || data.length === 0) { alert('No hay productos.'); setState('idle'); return }
+      setProductos(data)
+      setState('generating')
     } catch (err) {
-      console.error('Error:', err)
-      alert('Error al generar el catálogo.')
-    } finally {
-      setGenerando(false)
+      console.error(err); alert('Error al obtener productos.'); setState('idle')
     }
   }
 
+  const handleReady = useCallback(async (info) => {
+    const { coverRef, pageRefs, backRef, totalPages } = info
+    try {
+      await document.fonts.ready
+      await new Promise(r => setTimeout(r, 300))
+
+      const { default: jsPDF } = await import('jspdf')
+      const { default: h2c } = await import('html2canvas')
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+      const pw = 210, ph = 297
+
+      const capture = async (el) => {
+        if (!el) return null
+        const canvas = await h2c(el, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: false,
+          backgroundColor: '#ffffff',
+          logging: false,
+          width: 794,
+          height: 1123,
+          onclone: (d) => {
+            const imgs = d.querySelectorAll('img')
+            imgs.forEach(img => { img.style.display = 'block'; img.style.maxWidth = '100%' })
+          }
+        })
+        return canvas.toDataURL('image/jpeg', 0.92)
+      }
+
+      const pages = pageRefs || []
+      const allRefs = [coverRef.current, ...pages, backRef.current]
+
+      for (let i = 0; i < allRefs.length; i++) {
+        if (i > 0) doc.addPage()
+        const dataUrl = await capture(allRefs[i])
+        if (dataUrl) {
+          try { doc.addImage(dataUrl, 'JPEG', 0, 0, pw, ph, undefined, 'FAST') } catch (e) { console.error(e) }
+        }
+      }
+
+      doc.save(`Catalogo_Don_Karl_${new Date().toISOString().split('T')[0]}.pdf`)
+    } catch (err) {
+      console.error('Error PDF:', err)
+      alert('Error al generar el PDF')
+    } finally {
+      setProductos(null)
+      setState('idle')
+    }
+  }, [])
+
   return (
-    <button
-      onClick={generarPDF}
-      disabled={generando}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        padding: '0.5rem 1rem',
-        background: generando ? '#E8D5B7' : '#2D1F26',
-        color: generando ? '#8B6F7A' : '#FFFFFF',
-        border: 'none',
-        borderRadius: '2px',
-        fontSize: '0.7rem',
-        letterSpacing: '0.2em',
-        textTransform: 'uppercase',
-        fontWeight: 600,
-        cursor: generando ? 'not-allowed' : 'pointer',
-        transition: 'all 0.3s ease',
-        fontFamily: 'var(--font-sans)',
-      }}
-      onMouseEnter={(e) => { if (!generando) { e.currentTarget.style.background = '#C9607F'; e.currentTarget.style.transform = 'translateY(-1px)' } }}
-      onMouseLeave={(e) => { if (!generando) { e.currentTarget.style.background = '#2D1F26'; e.currentTarget.style.transform = 'translateY(0)' } }}
-    >
-      {generando ? (
-        <>
-          <span className="w-4 h-4 border-2 border-[#8B6F7A] border-t-transparent rounded-full animate-spin" />
-          Generando...
-        </>
-      ) : (
-        <>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          Descargar Catálogo PDF
-        </>
+    <>
+      <button
+        onClick={handleClick}
+        disabled={state !== 'idle'}
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+          padding: '0.5rem 1rem',
+          background: state !== 'idle' ? '#E8D5B7' : '#2D1F26',
+          color: state !== 'idle' ? '#8B6F7A' : '#FFFFFF',
+          border: 'none', borderRadius: '2px', fontSize: '0.7rem',
+          letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 600,
+          cursor: state !== 'idle' ? 'not-allowed' : 'pointer',
+          transition: 'all 0.3s ease', fontFamily: 'var(--font-sans)',
+        }}
+      >
+        {state !== 'idle' ? (
+          <><span className="w-4 h-4 border-2 border-[#8B6F7A] border-t-transparent rounded-full animate-spin" /> Generando...</>
+        ) : (
+          <>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Descargar Catálogo PDF
+          </>
+        )}
+      </button>
+
+      {productos && (
+        <CatalogRenderer
+          productos={productos}
+          onReady={handleReady}
+        />
       )}
-    </button>
+    </>
   )
 }
 
