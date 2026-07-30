@@ -1,9 +1,60 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import useAuthStore from '../../store/authStore'
+import { NotificationProvider, useNotificationCenter } from '../../context/NotificationContext'
 
-const AdminLayout = () => {
+const NotificationBell = () => {
+  const { notifications, unreadCount, marcarLeidas } = useNotificationCenter()
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+
+  useEffect(() => {
+    const handleClick = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  return (
+    <div ref={ref} className="relative">
+      <button onClick={() => { setOpen(!open); if (!open) marcarLeidas() }} className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
+        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center">
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
+        )}
+      </button>
+      {open && (
+        <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-[70vh] flex flex-col">
+          <div className="px-4 py-3 border-b border-gray-100">
+            <p className="text-sm font-semibold text-gray-800">Notificaciones</p>
+          </div>
+          <div className="overflow-y-auto flex-1">
+            {notifications.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-8">Sin notificaciones</p>
+            ) : (
+              notifications.slice(0, 50).map(n => (
+                <Link key={n.id} to={n.link || '#'} onClick={() => setOpen(false)} className={`flex items-start gap-3 px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors ${n.leido ? '' : 'bg-blue-50/40'}`}>
+                  <span className="text-lg flex-shrink-0">{n.type === 'success' ? '✅' : n.type === 'error' ? '❌' : n.type === 'warning' ? '⚠️' : 'ℹ️'}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800 truncate">{n.title}</p>
+                    {n.body && <p className="text-xs text-gray-500 truncate">{n.body}</p>}
+                    <p className="text-[10px] text-gray-400 mt-0.5">{new Date(n.timestamp).toLocaleString('es-PE')}</p>
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+const AdminLayoutInner = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, logout } = useAuthStore()
@@ -112,11 +163,12 @@ const AdminLayout = () => {
     <div className="min-h-screen bg-gray-100 flex">
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-6 border-b border-gray-200">
-          <Link to="/admin" className="text-xl font-bold text-gray-800">
-            KB
-          </Link>
-          <p className="text-xs text-gray-500 mt-1">Panel Admin</p>
+        <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+          <div>
+            <Link to="/admin" className="text-xl font-bold text-gray-800">KB</Link>
+            <p className="text-xs text-gray-500 mt-1">Panel Admin</p>
+          </div>
+          <NotificationBell />
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
@@ -174,5 +226,11 @@ const AdminLayout = () => {
     </div>
   )
 }
+
+const AdminLayout = () => (
+  <NotificationProvider>
+    <AdminLayoutInner />
+  </NotificationProvider>
+)
 
 export default AdminLayout

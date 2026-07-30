@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAdminNotifications } from '../../hooks/useAdminNotifications'
+import { useNotificationCenter } from '../../context/NotificationContext'
 
 const PedidosPage = () => {
   const [pedidos, setPedidos] = useState([])
@@ -36,6 +37,7 @@ const PedidosPage = () => {
 
   // 🔔 Usar hook centralizado de notificaciones
   const { agregarToast, ToastContainer } = useAdminNotifications()
+  const { pushNotification } = useNotificationCenter()
 
   // Ref para detectar primera carga (evita notificación falsa)
   const primeraCargaRef = useRef(true)
@@ -53,6 +55,7 @@ const PedidosPage = () => {
           if (payload.eventType === 'INSERT') {
             setPedidos(prev => [payload.new, ...prev])
             agregarToast(`🆕 Nuevo pedido de ${payload.new.customer_name}`, 'success')
+            pushNotification({ title: 'Nuevo pedido', body: `${payload.new.customer_name ?? 'Cliente'} — pendiente`, type: 'success', link: '/admin/pedidos' })
             calcularEstadisticas()
             try {
               const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACAf39/f4B/f3+AgH9/f3+Af39/gIB/f39/gH9/f4B/f3+AgH9/f3+Af39/gIB/f39/gH9/f4B/f3+AgH9/f39/gH9/f4B/f3+AgH9/f39/gH9/f4B/f3+AgH9/f39/gH9/f4B/f4B/f39/gH9/f4B/f4B/f3+AgH9/f4B/f4B/f3+AgH9/f4B/f4B/f3+AgH9/gH9/f39/gH9/gH+Af39/gH9/gH+Af39/gH9/gH+Af39/gH9/gICAf39/gH9/gICAf3+AgH9/gICAf3+AgH9/gICAf3+AgH+AgICAf3+AgH+AgICAf3+AgH+AgICAf3+AgH+AgICAf3+AgICAf39/gICAf3+AgICAf3+AgICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf4B/gICAf4B/gICAf4B/gICAf4B/gICAf4B/gICAf4B/gICAf4B/gICAf4B/gICAf4B/gICAf4B/gICAf4B/gICAf4B/gICAf4B/gICAf4B/gICAf4B/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf4B/gICAf39/gICAf4B/gICAf3+AgH+AgICAf3+AgH+AgICAf39/gH+AgICAf39/gH+AgH+Af39/gH+Af39/gH+Af39/gH+Af39/gH9/f39/gH9/gH9/f39/gH9/gH9/f4B/f39/gH9/gH9/f4B/f39/gH9/f4B/f39/gH9/f4B/f39/f4B/f39/f4B/f39/f4B/f39/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f3+')
@@ -162,6 +165,11 @@ const PedidosPage = () => {
       
       setPedidos(pedidos.map(p => p.id === id ? { ...p, status: nuevoEstado } : p))
       agregarToast(`Estado actualizado a "${nuevoEstado}"`, 'success')
+      const pedidoActual = pedidos.find(p => p.id === id)
+      if (pedidoActual && ['pagado', 'cancelado', 'enviado', 'entregado'].includes(nuevoEstado)) {
+        const typeMap = { pagado: 'success', cancelado: 'error', enviado: 'info', entregado: 'success' }
+        pushNotification({ title: `Pedido ${nuevoEstado}`, body: `${pedidoActual.customer_name ?? 'Cliente'} — ${nuevoEstado}`, type: typeMap[nuevoEstado], link: '/admin/pedidos' })
+      }
       calcularEstadisticas()
     } catch (err) {
       console.error('Error al actualizar:', err)

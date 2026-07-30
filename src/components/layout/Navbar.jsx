@@ -62,12 +62,12 @@ const Navbar = () => {
 
   // ── Items de navegación ─────────────────────────────────────────────────
   const navItems = [
-    { label: 'MUJER', action: () => navigateTo('/?genero=mujer') },
-    { label: 'HOMBRE', action: () => navigateTo('/?genero=hombre') },
-    { label: 'IMPORTADOS', action: () => navigateTo('/?origen=importado') },
-    { label: 'NACIONALES', action: () => navigateTo('/?origen=nacional') },
-    { label: 'CATÁLOGO', href: '/catalogo' },
-    { label: 'NOSOTROS', href: '/#nosotros' },
+    { label: 'Mujer', action: () => navigateTo('/?genero=mujer') },
+    { label: 'Hombre', action: () => navigateTo('/?genero=hombre') },
+    { label: 'Importados', action: () => navigateTo('/?origen=importado') },
+    { label: 'Nacionales', action: () => navigateTo('/?origen=nacional') },
+    { label: 'Catálogo', href: '/catalogo' },
+    { label: 'Nosotros', href: '/#nosotros' },
   ]
 
   return (
@@ -94,95 +94,74 @@ const Navbar = () => {
       </div>
 
       {/* ── NAVBAR ──────────────────────────────────────────────────────── */}
-      <nav className={`kb-navbar ${scrolled ? 'kb-navbar--compact' : ''}`}>
-        <div className="kb-navbar__inner">
+      <nav className="kb-navbar">
 
-          {/* Logo */}
-          <Link to="/" className="kb-logo">
-            <img
-              src={kbLogo}
-              alt="KB Dresses and More"
-              className="kb-logo__img"
-            />
-          </Link>
+        {/* Logo */}
+        <Link to="/" className="kb-logo">
+          <img
+            src={kbLogo}
+            alt="KB Dresses and More"
+            className="kb-logo__img"
+          />
+        </Link>
 
-          {/* Nav links — desktop */}
-          <div className="kb-nav">
-            {navItems.map((item, i) =>
-              item.href ? (
-                <a key={i} href={item.href} className="kb-nav__link">
-                  {item.label}
-                </a>
-              ) : (
-                <button key={i} onClick={item.action} className="kb-nav__link kb-nav__link--btn">
-                  {item.label}
-                </button>
-              )
-            )}
-          </div>
-
-          {/* Acciones — desktop */}
-          <div className="kb-actions">
-            <a
-              href={`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(WHATSAPP_MESSAGES.help)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="kb-actions__link"
-            >
-              AYUDA
-            </a>
-            <a
-              href={`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(WHATSAPP_MESSAGES.contact)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="kb-actions__link"
-            >
-              CONTACTO
-            </a>
-
-            <span className="kb-actions__divider" />
-
-            {/* Búsqueda */}
-            {searchOpen ? (
-              <form onSubmit={handleSearch} className="kb-search">
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Buscar..."
-                  className="kb-search__input"
-                  onBlur={() => { if (!searchQuery.trim()) setSearchOpen(false) }}
-                />
-              </form>
+        {/* Nav links — desktop */}
+        <div className="kb-nav">
+          {navItems.map((item, i) =>
+            item.href ? (
+              <a key={i} href={item.href} className="kb-nav__link">
+                {item.label}
+              </a>
             ) : (
-              <button onClick={() => setSearchOpen(true)} className="kb-icon-btn" aria-label="Buscar">
-                <svg className="kb-icon-btn__svg" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                </svg>
-                <span className="hide-mobile kb-search-label">Buscar</span>
+              <button key={i} onClick={item.action} className="kb-nav__link kb-nav__link--btn">
+                {item.label}
               </button>
-            )}
-
-            {/* Carrito */}
-            <Link to="/checkout" className="kb-cart" aria-label="Carrito">
-              <svg className="kb-cart__icon" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-            </Link>
-          </div>
-
-          {/* Hamburguesa — mobile */}
-          <button
-            className="kb-hamburger"
-            onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label="Menú"
-          >
-            <span className={`kb-hamburger__line ${mobileOpen ? 'is-open' : ''}`} />
-            <span className={`kb-hamburger__line kb-hamburger__line--mid ${mobileOpen ? 'is-open' : ''}`} />
-            <span className={`kb-hamburger__line ${mobileOpen ? 'is-open' : ''}`} />
-          </button>
+            )
+          )}
         </div>
+
+        {/* Acciones — desktop */}
+        <div className="kb-actions">
+
+          {/* Búsqueda */}
+          {searchOpen ? (
+            <form onSubmit={handleSearch} className="kb-search">
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar..."
+                className="kb-search__input"
+                onBlur={() => { if (!searchQuery.trim()) setSearchOpen(false) }}
+              />
+            </form>
+          ) : (
+            <button onClick={() => setSearchOpen(true)} className="kb-icon-btn" aria-label="Buscar">
+              <svg className="kb-icon-btn__svg" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+              </svg>
+            </button>
+          )}
+
+          {/* Carrito */}
+          <Link to="/checkout" className="kb-cart" aria-label="Carrito">
+            <svg className="kb-cart__icon" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+          </Link>
+        </div>
+
+        {/* Hamburguesa — mobile */}
+        <button
+          className="kb-hamburger"
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label="Menú"
+        >
+          <span className={`kb-hamburger__line ${mobileOpen ? 'is-open' : ''}`} />
+          <span className={`kb-hamburger__line kb-hamburger__line--mid ${mobileOpen ? 'is-open' : ''}`} />
+          <span className={`kb-hamburger__line ${mobileOpen ? 'is-open' : ''}`} />
+        </button>
       </nav>
 
       {/* ── MENÚ MOBILE ────────────────────────────────────────────────── */}
