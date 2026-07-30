@@ -32,18 +32,19 @@ const CheckoutPage = () => {
       const pedido = {
         customer_name: nombre.trim(),
         customer_phone: telefono.trim(),
-        products: items.map(i => ({
+        items: items.map(i => ({
           id: i.id, name: i.name, size: i.selectedSize,
           quantity: i.quantity, price: i.price,
           sku: i.sku,
         })),
         total,
-        payment_method: 'cotizacion',
-        status: 'cotizacion',
+        status: 'pendiente',
       }
 
+      console.log('📦 Insertando pedido:', JSON.stringify(pedido, null, 2))
       const { data, error: e } = await supabase.from('orders').insert([pedido]).select('id').single()
-      if (e) throw e
+      console.log('📦 Respuesta:', { data, error: e })
+      if (e) { console.error('❌ Error de Supabase:', e); throw e }
 
       const orderId = data.id
       const baseUrl = window.location.origin
@@ -64,8 +65,8 @@ const CheckoutPage = () => {
       setExito({ id: orderId, nombre: nombre.trim(), telefono: telefono.trim(), waUrl })
       clearCart()
     } catch (err) {
-      console.error('Error completo:', err)
-      setError('Error al enviar la cotización. Intenta de nuevo.')
+      console.error('❌ Error completo:', err)
+      setError('No pudimos registrar tu pedido. Inténtalo nuevamente.')
     } finally {
       setEnviando(false)
     }
@@ -179,7 +180,8 @@ const CheckoutPage = () => {
 
             {error && (
               <div style={{ padding: '0.9rem 1.2rem', border: '1px solid rgba(229,57,53,0.2)', borderLeft: '2px solid #E53935', background: 'rgba(229,57,53,0.04)', fontSize: '0.78rem', fontWeight: 300, color: '#C62828' }}>
-                {error}
+                <p>{error}</p>
+                <button type="button" onClick={() => { setError(null); setEnviando(false) }} style={{ marginTop: '0.5rem', fontSize: '0.72rem', textDecoration: 'underline', color: '#C62828', background: 'none', border: 'none', cursor: 'pointer' }}>Reintentar</button>
               </div>
             )}
 
@@ -200,7 +202,7 @@ const CheckoutPage = () => {
               <div className="flex items-center gap-3 mb-6">
                 <span style={{ width: '16px', height: '1px', background: p.rose, flexShrink: 0 }} />
                 <p className="text-editorial" style={{ color: p.charcoal, fontSize: '0.62rem', letterSpacing: '0.22em' }}>
-                  Tu lista
+                  Mi carrito
                 </p>
               </div>
 
