@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAdminNotifications } from '../../hooks/useAdminNotifications'
+import VentaRapidaModal from '../../components/admin/VentaRapidaModal'
 
 // ---------------------------------------------------------------------------
 // Tipos / constantes
@@ -537,6 +538,7 @@ const DashboardPage = () => {
   const [hasError, setHasError]           = useState(false)
   const [searchQuery, setSearchQuery]     = useState('')
   const [dayThreshold, setDayThreshold]   = useState(15)
+  const [ventaRapidaAbierto, setVentaRapidaAbierto] = useState(false)
 
   const { agregarToast, ToastContainer } = useAdminNotifications()
 
@@ -810,6 +812,12 @@ const DashboardPage = () => {
           <section className="bg-white rounded-sm border border-[rgba(212,120,138,0.12)] shadow-[0_1px_4px_rgba(26,17,24,0.03)] p-6">
             <SectionHeader title="Acciones rápidas" />
             <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => setVentaRapidaAbierto(true)}
+                className="px-4 py-2 bg-[#1A1118] text-[#FFF8F5] rounded-sm text-sm font-sans font-medium hover:bg-[#2D2030] transition-colors"
+              >
+                + Venta rápida
+              </button>
               <Link
                 to="/admin/productos"
                 className="px-4 py-2 bg-[#1A1118] text-[#FFF8F5] rounded-sm text-sm font-sans font-medium hover:bg-[#2D2030] transition-colors"
@@ -842,6 +850,7 @@ const DashboardPage = () => {
           </section>
         </div>
       )}
+      <VentaRapidaModal abierto={ventaRapidaAbierto} onCerrar={() => setVentaRapidaAbierto(false)} />
     </div>
   )
 }

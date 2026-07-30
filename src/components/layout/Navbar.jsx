@@ -202,7 +202,7 @@ const Navbar = () => {
               rel="noopener noreferrer"
               className="kb-mobile__link kb-mobile__link--accent"
             >
-              AYUDA
+              Ayuda
             </a>
             <a
               href={`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(WHATSAPP_MESSAGES.contact)}`}
@@ -210,7 +210,7 @@ const Navbar = () => {
               rel="noopener noreferrer"
               className="kb-mobile__link kb-mobile__link--accent"
             >
-              CONTACTO
+              Contacto
             </a>
           </div>
         </div>
