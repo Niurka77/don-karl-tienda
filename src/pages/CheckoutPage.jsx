@@ -43,8 +43,9 @@ const CheckoutPage = () => {
 
       console.log('📦 Insertando pedido:', JSON.stringify(pedido, null, 2))
       const { data, error: e } = await supabase.from('orders').insert([pedido]).select('id').single()
-      console.log('📦 Respuesta:', { data, error: e })
-      if (e) { console.error('❌ Error de Supabase:', e); throw e }
+      console.log('📦 Respuesta data:', JSON.stringify(data))
+      console.log('📦 Respuesta error:', JSON.stringify(e, Object.getOwnPropertyNames(e)))
+      if (e) { console.error('❌ Error de Supabase:', JSON.stringify(e, Object.getOwnPropertyNames(e))); throw e }
 
       const orderId = data.id
       const baseUrl = window.location.origin
