@@ -62,13 +62,7 @@ const CheckoutPage = () => {
 
       const waUrl = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(textoDonKarl)}`
 
-      if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-        window.location.href = waUrl
-      } else {
-        window.open(waUrl, '_blank')
-      }
-
-      setExito({ id: orderId, nombre: nombre.trim(), telefono: telefono.trim() })
+      setExito({ id: orderId, nombre: nombre.trim(), telefono: telefono.trim(), waUrl })
       clearCart()
     } catch (err) {
       console.error('Error completo:', err)
@@ -116,8 +110,18 @@ const CheckoutPage = () => {
         </p>
 
         <p style={{ fontSize: '0.78rem', fontWeight: 300, color: `${p.mauve}B3`, lineHeight: 1.6, marginBottom: '2.5rem' }}>
-          Te hemos enviado los detalles por WhatsApp. Nos pondremos en contacto contigo pronto.
+          Tu cotización se ha guardado correctamente.
         </p>
+
+        <a
+          href={exito.waUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full block text-center py-3 rounded-sm text-sm font-semibold uppercase tracking-widest transition-all hover:-translate-y-0.5"
+          style={{ background: '#25D366', color: '#FFFFFF', fontFamily: 'var(--font-sans)', marginBottom: '1rem' }}
+        >
+          💬 Abrir WhatsApp
+        </a>
 
         <div style={{ height: '1px', background: `${p.roseBlush}20`, marginBottom: '2rem' }} />
 
