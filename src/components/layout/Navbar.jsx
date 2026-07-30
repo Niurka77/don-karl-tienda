@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { WHATSAPP_PHONE, WHATSAPP_MESSAGES } from '../../lib/constants'
 import { useSiteConfig } from '../../hooks/useSiteConfig'
 import { p } from '../../lib/theme'
-import kbLogo from '/logo-icon.svg'
+import kbLogo from '/kb.svg'
 import './Navbar.css'
 
 const Navbar = () => {
@@ -96,18 +96,9 @@ const Navbar = () => {
       {/* ── NAVBAR ──────────────────────────────────────────────────────── */}
       <nav className="kb-navbar">
 
-        {/* Logo */}
-        <Link to="/" className="kb-logo">
-          <img
-            src={kbLogo}
-            alt="KB Dresses and More"
-            className="kb-logo__img"
-          />
-        </Link>
-
-        {/* Nav links — desktop */}
-        <div className="kb-nav">
-          {navItems.map((item, i) =>
+        {/* Left links — desktop */}
+        <div className="kb-nav kb-nav--left">
+          {navItems.slice(0, 3).map((item, i) =>
             item.href ? (
               <a key={i} href={item.href} className="kb-nav__link">
                 {item.label}
@@ -120,36 +111,54 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Acciones — desktop */}
-        <div className="kb-actions">
+        {/* Center logo badge */}
+        <Link to="/" className="kb-logo-badge">
+          <img
+            src={kbLogo}
+            alt="KB Dresses and More"
+            className="kb-logo-badge__img"
+          />
+        </Link>
 
-          {/* Búsqueda */}
-          {searchOpen ? (
-            <form onSubmit={handleSearch} className="kb-search">
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar..."
-                className="kb-search__input"
-                onBlur={() => { if (!searchQuery.trim()) setSearchOpen(false) }}
-              />
-            </form>
-          ) : (
-            <button onClick={() => setSearchOpen(true)} className="kb-icon-btn" aria-label="Buscar">
-              <svg className="kb-icon-btn__svg" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-              </svg>
-            </button>
+        {/* Right links + actions — desktop */}
+        <div className="kb-nav kb-nav--right">
+          {navItems.slice(3).map((item, i) =>
+            item.href ? (
+              <a key={i} href={item.href} className="kb-nav__link">
+                {item.label}
+              </a>
+            ) : (
+              <button key={i} onClick={item.action} className="kb-nav__link kb-nav__link--btn">
+                {item.label}
+              </button>
+            )
           )}
-
-          {/* Carrito */}
-          <Link to="/checkout" className="kb-cart" aria-label="Carrito">
-            <svg className="kb-cart__icon" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-            </svg>
-          </Link>
+          <div className="kb-actions">
+            {searchOpen ? (
+              <form onSubmit={handleSearch} className="kb-search">
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar..."
+                  className="kb-search__input"
+                  onBlur={() => { if (!searchQuery.trim()) setSearchOpen(false) }}
+                />
+              </form>
+            ) : (
+              <button onClick={() => setSearchOpen(true)} className="kb-icon-btn" aria-label="Buscar">
+                <svg className="kb-icon-btn__svg" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+              </button>
+            )}
+            <Link to="/checkout" className="kb-cart" aria-label="Carrito">
+              <svg className="kb-cart__icon" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+            </Link>
+          </div>
         </div>
 
         {/* Hamburguesa — mobile */}
