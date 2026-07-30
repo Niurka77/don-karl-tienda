@@ -34,6 +34,7 @@ const CheckoutPage = () => {
         customer_phone: telefono.trim(),
         customer_address: '',
         customer_city: '',
+        payment_method: '',
         products: items.map(i => ({
           id: i.id, name: i.name, size: i.selectedSize,
           quantity: i.quantity, price: i.price,
