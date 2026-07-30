@@ -361,11 +361,15 @@ const useDashboardStats = (onError) => {
     pendingOrders:      0,
     weekRevenue:        0,
     monthRevenue:       0,
+    ordersToday:        0,
+    confirmedOrders:    0,
+    totalRevenue:       0,
   })
   const [isLoading, setIsLoading] = useState(true)
 
   const load = useCallback(async () => {
     try {
+      const todayStart = new Date(); todayStart.setHours(0,0,0,0)
       const oneWeekAgo  = new Date(Date.now() - 7  * 86_400_000).toISOString()
       const oneMonthAgo = new Date(Date.now() - 30 * 86_400_000).toISOString()
 
@@ -377,6 +381,9 @@ const useDashboardStats = (onError) => {
         { count: pendingOrders },
         { data: weekOrders },
         { data: monthOrders },
+        { count: ordersToday },
+        { count: confirmedOrders },
+        { data: allConfirmed },
       ] = await Promise.all([
         supabase.from('products').select('*', { count: 'exact', head: true }),
         supabase.from('products').select('*', { count: 'exact', head: true }).eq('stock', 0),
@@ -385,6 +392,9 @@ const useDashboardStats = (onError) => {
         supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pendiente'),
         supabase.from('orders').select('total').gte('created_at', oneWeekAgo).eq('status', 'entregado'),
         supabase.from('orders').select('total').gte('created_at', oneMonthAgo).eq('status', 'entregado'),
+        supabase.from('orders').select('*', { count: 'exact', head: true }).gte('created_at', todayStart.toISOString()),
+        supabase.from('orders').select('*', { count: 'exact', head: true }).in('status', ['pagado', 'preparando', 'enviado']),
+        supabase.from('orders').select('total').in('status', ['pagado', 'preparando', 'enviado', 'entregado']),
       ])
 
       const sumRevenue = (orders) =>
@@ -399,6 +409,9 @@ const useDashboardStats = (onError) => {
         pendingOrders:      pendingOrders      ?? 0,
         weekRevenue:        sumRevenue(weekOrders),
         monthRevenue:       sumRevenue(monthOrders),
+        ordersToday:        ordersToday        ?? 0,
+        confirmedOrders:    confirmedOrders    ?? 0,
+        totalRevenue:       sumRevenue(allConfirmed),
       })
     } catch {
       onError()
@@ -590,22 +603,34 @@ const DashboardPage = () => {
 
   const statCards = useMemo(() => [
     {
+      title:  'Pedidos hoy',
+      value:  stats.ordersToday,
+      linkTo: '/admin/pedidos',
+      accent: false,
+    },
+    {
+      title:  'Ventas confirmadas',
+      value:  stats.confirmedOrders,
+      linkTo: '/admin/pedidos',
+      accent: stats.confirmedOrders > 0,
+    },
+    {
+      title:  'Pendientes',
+      value:  stats.pendingOrders,
+      linkTo: '/admin/pedidos',
+      accent: stats.pendingOrders > 0,
+    },
+    {
+      title:  'Total vendido',
+      value:  formatCurrency(stats.totalRevenue),
+      linkTo: '/admin/pedidos',
+      accent: false,
+    },
+    {
       title:  'Total productos',
       value:  stats.totalProducts,
       linkTo: '/admin/productos',
       accent: false,
-    },
-    {
-      title:  'Pedidos totales',
-      value:  stats.totalOrders,
-      linkTo: '/admin/pedidos',
-      accent: false,
-    },
-    {
-      title:  'Pedidos pendientes',
-      value:  stats.pendingOrders,
-      linkTo: '/admin/pedidos',
-      accent: stats.pendingOrders > 0,
     },
     {
       title:  'Productos agotados',

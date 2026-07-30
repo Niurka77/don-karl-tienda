@@ -50,12 +50,9 @@
 
 /* ── Navbar principal ───────────────────────────────────────────────────── */
 .kb-navbar {
-  padding: 1.25rem 0;
-  transition: padding 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.kb-navbar--compact {
-  padding: 0.6rem 0;
+  height: 72px;
+  display: flex;
+  align-items: center;
 }
 
 .kb-navbar__inner {
@@ -66,6 +63,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 2rem;
+  width: 100%;
 }
 
 @media (min-width: 1024px) {
@@ -83,15 +81,15 @@
 }
 
 .kb-logo__img {
-  height: 80px;
+  height: 72px;
   object-fit: contain;
   filter: drop-shadow(0 2px 12px rgba(212, 120, 138, 0.15));
-  transition: height 0.5s cubic-bezier(0.16, 1, 0.3, 1),
-              filter 0.3s ease;
+  transition: filter 0.3s ease, transform 0.3s ease;
+  transform-origin: left center;
 }
 
 .kb-navbar--compact .kb-logo__img {
-  height: 56px;
+  transform: scale(0.78);
 }
 
 .kb-logo:hover .kb-logo__img {
