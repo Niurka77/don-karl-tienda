@@ -1,10 +1,31 @@
+import { useState, useEffect } from 'react'
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
+import { supabase } from '../../lib/supabase'
 import useAuthStore from '../../store/authStore'
 
 const AdminLayout = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, logout } = useAuthStore()
+  const [pendingCount, setPendingCount] = useState(null)
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      const { count } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pendiente')
+      setPendingCount(count ?? 0)
+    }
+    fetchCount()
+
+    const channel = supabase
+      .channel('admin-pending-count')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, fetchCount)
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [])
 
   const handleLogout = async () => {
     await logout()
@@ -38,6 +59,7 @@ const AdminLayout = () => {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
         </svg>
       ),
+      badge: pendingCount,
     },
     // 👈 NUEVO ITEM PARA VIDEOS
     {
@@ -111,7 +133,12 @@ const AdminLayout = () => {
                 }`}
               >
                 {item.icon}
-                {item.label}
+                <span className="flex-1">{item.label}</span>
+                {item.badge != null && item.badge > 0 && (
+                  <span className="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                    {item.badge > 99 ? '99+' : item.badge}
+                  </span>
+                )}
               </Link>
             )
           })}
