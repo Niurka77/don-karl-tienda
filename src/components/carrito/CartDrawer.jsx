@@ -25,7 +25,7 @@ const CartDrawer = () => {
   }
 
   const handleClearCart = () => {
-    if (window.confirm('¿Estás seguro de que deseas vaciar tu lista? Esta acción no se puede deshacer.')) {
+    if (window.confirm('¿Estás seguro de que deseas vaciar tu carrito? Esta acción no se puede deshacer.')) {
       clearCart()
     }
   }
@@ -53,7 +53,7 @@ const CartDrawer = () => {
         <div className="flex items-center justify-between p-6 border-b border-border/50">
           <div>
               <h2 id="cart-title" className="text-xl font-display font-semibold text-foreground">
-                Mi lista
+                Carrito
               </h2>
               <p className="text-[11px] font-sans text-muted-foreground mt-0.5">
               {totalItems} {totalItems === 1 ? 'artículo' : 'artículos'}
@@ -78,7 +78,7 @@ const CartDrawer = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
             </div>
-            <p className="text-foreground/60 font-medium text-sm mb-6">Tu lista está vacía</p>
+            <p className="text-foreground/60 font-medium text-sm mb-6">Tu carrito está vacío</p>
             <button
               onClick={toggleCart}
               className="text-xs font-sans border border-foreground/20 px-6 py-2 rounded-full hover:bg-foreground hover:text-background transition-all"
@@ -126,7 +126,7 @@ const CartDrawer = () => {
                       <button
                         onClick={() => removeItem(item.id, item.selectedSize)}
                         className="text-muted-foreground/40 hover:text-red-500 transition p-1"
-                        aria-label={`Eliminar ${item.name} de la lista`}
+                        aria-label={`Eliminar ${item.name} del carrito`}
                       >
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -188,7 +188,7 @@ const CartDrawer = () => {
                 className="w-full bg-foreground text-background py-3.5 rounded-full text-sm font-medium tracking-wide hover:bg-foreground/90 transition-all transform hover:-translate-y-0.5 shadow-md"
                 disabled={items.length === 0}
               >
-                Solicitar cotización →
+                Enviar pedido →
               </button>
               
               <button
@@ -196,7 +196,7 @@ const CartDrawer = () => {
                 className="w-full text-[11px] font-sans text-muted-foreground hover:text-red-500 transition-colors py-1"
                 aria-label="Vaciar bolsa de compras"
               >
-                Vaciar lista
+                Vaciar carrito
               </button>
             </div>
           </>

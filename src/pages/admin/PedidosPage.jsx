@@ -51,10 +51,14 @@ const PedidosPage = () => {
         { event: '*', schema: 'public', table: 'orders' }, 
         (payload) => {
           if (payload.eventType === 'INSERT') {
-            // Nuevo pedido insertado
             setPedidos(prev => [payload.new, ...prev])
             agregarToast(`🆕 Nuevo pedido de ${payload.new.customer_name}`, 'success')
             calcularEstadisticas()
+            try {
+              const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACAf39/f4B/f3+AgH9/f3+Af39/gIB/f39/gH9/f4B/f3+AgH9/f3+Af39/gIB/f39/gH9/f4B/f3+AgH9/f39/gH9/f4B/f3+AgH9/f39/gH9/f4B/f3+AgH9/f39/gH9/f4B/f4B/f39/gH9/f4B/f4B/f3+AgH9/f4B/f4B/f3+AgH9/f4B/f4B/f3+AgH9/gH9/f39/gH9/gH+Af39/gH9/gH+Af39/gH9/gH+Af39/gH9/gICAf39/gH9/gICAf3+AgH9/gICAf3+AgH9/gICAf3+AgH+AgICAf3+AgH+AgICAf3+AgH+AgICAf3+AgH+AgICAf3+AgICAf39/gICAf3+AgICAf3+AgICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf4B/gICAf4B/gICAf4B/gICAf4B/gICAf4B/gICAf4B/gICAf4B/gICAf4B/gICAf4B/gICAf4B/gICAf4B/gICAf4B/gICAf4B/gICAf4B/gICAf4B/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf39/gICAf4B/gICAf39/gICAf4B/gICAf3+AgH+AgICAf3+AgH+AgICAf39/gH+AgICAf39/gH+AgH+Af39/gH+Af39/gH+Af39/gH+Af39/gH9/f39/gH9/gH9/f39/gH9/gH9/f4B/f39/gH9/gH9/f4B/f39/gH9/f4B/f39/gH9/f4B/f39/f4B/f39/f4B/f39/f4B/f39/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f39/gH9/f3+')
+              audio.volume = 0.3
+              audio.play()
+            } catch {}
           } else if (payload.eventType === 'UPDATE') {
             setPedidos(prev => prev.map(p => p.id === payload.new.id ? payload.new : p))
             calcularEstadisticas()
@@ -136,6 +140,19 @@ const PedidosPage = () => {
 
   const actualizarEstado = async (id, nuevoEstado) => {
     try {
+      if (nuevoEstado === 'pagado') {
+        const { data: pedido, error: fetchError } = await supabase
+          .from('orders')
+          .select('products')
+          .eq('id', id)
+          .single()
+        if (!fetchError && pedido?.products) {
+          for (const p of pedido.products) {
+            await supabase.rpc('decrementar_stock', { product_id: p.id, cantidad: p.quantity || 1 })
+          }
+        }
+      }
+
       const { error } = await supabase
         .from('orders')
         .update({ status: nuevoEstado })
@@ -210,24 +227,28 @@ const PedidosPage = () => {
 
   const getEstadoColor = (status) => {
     const colores = {
-      cotizacion: 'bg-orange-100 text-orange-700 border-orange-200',
       pendiente: 'bg-yellow-100 text-yellow-700 border-yellow-200',
       aceptado: 'bg-teal-100 text-teal-700 border-teal-200',
       pagado: 'bg-blue-100 text-blue-700 border-blue-200',
+      preparando: 'bg-indigo-100 text-indigo-700 border-indigo-200',
       enviado: 'bg-purple-100 text-purple-700 border-purple-200',
       entregado: 'bg-green-100 text-green-700 border-green-200',
+      cancelado: 'bg-red-100 text-red-700 border-red-200',
+      expirado: 'bg-gray-200 text-gray-600 border-gray-300',
     }
     return colores[status] || 'bg-gray-100 text-gray-700 border-gray-200'
   }
 
   const getEstadoLabel = (status) => {
     const labels = {
-      cotizacion: '📋 Cotización',
       pendiente: '⏳ Pendiente',
       aceptado: '👍 Aceptado',
       pagado: '💰 Pagado',
+      preparando: '🟣 Preparando',
       enviado: '🚚 Enviado',
-      entregado: '✓ Entregado',
+      entregado: '✅ Entregado',
+      cancelado: '❌ Cancelado',
+      expirado: '⏰ Expirado',
     }
     return labels[status] || status
   }

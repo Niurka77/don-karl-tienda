@@ -52,13 +52,12 @@ const CheckoutPage = () => {
       ).join('\n')
 
       const textoDonKarl =
-        `🛍️ *NUEVA COTIZACIÓN* 🛍️\n\n` +
+        `🛍️ *NUEVO PEDIDO* 🛍️\n\n` +
+        `Pedido #${orderId.slice(0, 8).toUpperCase()}\n\n` +
         `Cliente: ${nombre.trim()}\n` +
         `Teléfono: ${telefono.trim()}\n\n` +
         `Productos:\n${listaProductos}\n\n` +
-        `Total: S/ ${total.toFixed(2)}\n\n` +
-        `✅ Pagado: ${baseUrl}/confirmar/${orderId}?accion=pagado\n` +
-        `📦 Enviado: ${baseUrl}/confirmar/${orderId}?accion=enviado`
+        `Total: S/ ${total.toFixed(2)}`
 
       const waUrl = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(textoDonKarl)}`
 
@@ -98,7 +97,7 @@ const CheckoutPage = () => {
         </div>
 
         <p className="text-editorial mb-3" style={{ color: p.rose, fontSize: '0.62rem', letterSpacing: '0.25em' }}>
-          Cotización enviada
+          Pedido registrado
         </p>
 
         <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 300, letterSpacing: '-0.02em', color: p.charcoal, marginBottom: '0.5rem' }}>
@@ -106,11 +105,11 @@ const CheckoutPage = () => {
         </h2>
 
         <p style={{ fontSize: '0.75rem', fontWeight: 300, color: p.mauve, marginBottom: '0.5rem' }}>
-          Cotización #{exito.id?.slice(0, 8).toUpperCase()}
+          Pedido #{exito.id?.slice(0, 8).toUpperCase()}
         </p>
 
         <p style={{ fontSize: '0.78rem', fontWeight: 300, color: `${p.mauve}B3`, lineHeight: 1.6, marginBottom: '2.5rem' }}>
-          Tu cotización se ha guardado correctamente.
+          Tu pedido se ha registrado. Te contactaremos pronto.
         </p>
 
         <a
@@ -136,7 +135,7 @@ const CheckoutPage = () => {
         <div className="flex items-center gap-4 mb-14">
           <span style={{ width: '24px', height: '1px', background: p.rose, display: 'inline-block' }} />
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.8rem, 4vw, 2.4rem)', fontWeight: 300, fontStyle: 'italic', letterSpacing: '-0.02em', color: p.charcoal }}>
-            Solicitar cotización
+            Enviar pedido
           </h1>
         </div>
 
@@ -191,7 +190,7 @@ const CheckoutPage = () => {
               style={{ fontSize: '0.68rem', padding: '1.1rem', opacity: enviando ? 0.6 : 1 }}
             >
               <span>
-                {enviando ? 'Enviando…' : `Enviar cotización — S/ ${total.toFixed(2)}`}
+                {enviando ? 'Enviando…' : `Enviar pedido — S/ ${total.toFixed(2)}`}
               </span>
             </button>
           </form>

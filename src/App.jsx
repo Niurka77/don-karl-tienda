@@ -15,7 +15,6 @@ const PedidosPage = lazy(() => import('./pages/admin/PedidosPage'))
 const AdminVideos = lazy(() => import('./components/admin/AdminVideos'))
 const HeroSlidesManager = lazy(() => import('./components/admin/HeroSlidesManager'))
 const VisualConfigPage = lazy(() => import('./pages/admin/VisualConfigPage'))
-const ConfirmarPedido = lazy(() => import('./pages/ConfirmarPedido'))
 const CatalogoPage = lazy(() => import('./pages/CatalogoPage'))
 
 const PageLoader = () => (
@@ -101,9 +100,6 @@ function App() {
         <Route path="/admin/slides" element={<HeroSlidesManager />} />
         <Route path="visual" element={<VisualConfigPage />} />
       </Route>
-
-      {/* Confirmación rápida (links de WhatsApp) */}
-      <Route path="/confirmar/:id" element={<ConfirmarPedido />} />
 
       {/* 404 */}
       <Route path="*" element={<NotFoundPage />} />
