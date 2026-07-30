@@ -32,7 +32,7 @@ const CheckoutPage = () => {
       const pedido = {
         customer_name: nombre.trim(),
         customer_phone: telefono.trim(),
-        items: items.map(i => ({
+        products: items.map(i => ({
           id: i.id, name: i.name, size: i.selectedSize,
           quantity: i.quantity, price: i.price,
           sku: i.sku,

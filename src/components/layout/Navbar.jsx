@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { WHATSAPP_PHONE, WHATSAPP_MESSAGES } from '../../lib/constants'
 import { useSiteConfig } from '../../hooks/useSiteConfig'
 import { p } from '../../lib/theme'
-import kbLogo from '/kb.svg'
+import kbLogo from '/logo-icon.svg'
 import './Navbar.css'
 
 const Navbar = () => {
