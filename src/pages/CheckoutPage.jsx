@@ -1,19 +1,20 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import useCartStore from '../store/cartStore'
 import { supabase } from '../lib/supabase'
 import { WHATSAPP_PHONE } from '../lib/constants'
+import { descargarOrdenPDF } from '../lib/generarOrdenPDF'
 import ImageWithFallback from '../components/ui/ImageWithFallback'
 import { p } from '../lib/theme'
 
 const CheckoutPage = () => {
-  const navigate = useNavigate()
   const { items, getTotalPrice, clearCart } = useCartStore()
   const total = getTotalPrice()
 
   const [nombre, setNombre] = useState('')
   const [telefono, setTelefono] = useState('')
   const [enviando, setEnviando] = useState(false)
+  const [descargando, setDescargando] = useState(false)
   const [error, setError] = useState(null)
   const [exito, setExito] = useState(null)
 
@@ -44,11 +45,12 @@ const CheckoutPage = () => {
       console.log('📦 Insertando pedido:', JSON.stringify(pedido, null, 2))
       const { data, error: e } = await supabase.from('orders').insert([pedido]).select('id').single()
       console.log('📦 Respuesta data:', JSON.stringify(data))
-      console.log('📦 Respuesta error:', JSON.stringify(e, Object.getOwnPropertyNames(e)))
-      if (e) { console.error('❌ Error de Supabase:', JSON.stringify(e, Object.getOwnPropertyNames(e))); throw e }
+      if (e) {
+        console.error('❌ Error de Supabase:', JSON.stringify(e, Object.getOwnPropertyNames(e)))
+        throw e
+      }
 
       const orderId = data.id
-      const baseUrl = window.location.origin
       const listaProductos = items.map(item =>
         `• ${item.name} ${item.selectedSize ? `(Talla ${item.selectedSize})` : ''} x ${item.quantity} = S/ ${(item.price * item.quantity).toFixed(2)}`
       ).join('\n')
@@ -59,17 +61,52 @@ const CheckoutPage = () => {
         `Cliente: ${nombre.trim()}\n` +
         `Teléfono: ${telefono.trim()}\n\n` +
         `Productos:\n${listaProductos}\n\n` +
-        `Total: S/ ${total.toFixed(2)}`
+        `Total: S/ ${total.toFixed(2)}\n\n` +
+        `💳 Pago: Yape · Plin · Tarjeta · Transferencia\n` +
+        `📍 Recojo en tienda (Chiclayo) o envío a todo el Perú.\n\n` +
+        `Adjunta el PDF de tu pedido para confirmarlo. ¡Gracias!`
 
       const waUrl = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(textoDonKarl)}`
 
-      setExito({ id: orderId, nombre: nombre.trim(), telefono: telefono.trim(), waUrl })
+      setExito({
+        id: orderId,
+        nombre: nombre.trim(),
+        telefono: telefono.trim(),
+        waUrl,
+        total,
+        items: items.map(i => ({
+          name: i.name,
+          sku: i.sku,
+          selectedSize: i.selectedSize,
+          quantity: i.quantity,
+          price: i.price,
+        })),
+      })
       clearCart()
     } catch (err) {
       console.error('❌ Error completo:', err)
       setError('No pudimos registrar tu pedido. Inténtalo nuevamente.')
     } finally {
       setEnviando(false)
+    }
+  }
+
+  const handleDescargarPDF = async () => {
+    if (!exito || descargando) return
+    setDescargando(true)
+    try {
+      await descargarOrdenPDF({
+        orderId: exito.id,
+        nombre: exito.nombre,
+        telefono: exito.telefono,
+        items: exito.items,
+        total: exito.total,
+      })
+    } catch (err) {
+      console.error('Error PDF:', err)
+      alert('No pudimos generar el PDF. Intenta nuevamente.')
+    } finally {
+      setDescargando(false)
     }
   }
 
@@ -110,19 +147,44 @@ const CheckoutPage = () => {
           Pedido #{exito.id?.slice(0, 8).toUpperCase()}
         </p>
 
-        <p style={{ fontSize: '0.78rem', fontWeight: 300, color: `${p.mauve}B3`, lineHeight: 1.6, marginBottom: '2.5rem' }}>
-          Tu pedido se ha registrado. Te contactaremos pronto.
+        <p style={{ fontSize: '0.78rem', fontWeight: 300, color: p.textSoft, lineHeight: 1.6, marginBottom: '2rem' }}>
+          Tu pedido se ha registrado. Descarga tu cotización en PDF y envíala por WhatsApp para agilizar la confirmación.
         </p>
+
+        <button
+          onClick={handleDescargarPDF}
+          disabled={descargando}
+          className="w-full block text-center py-3 rounded-sm text-sm font-semibold uppercase tracking-widest transition-all hover:-translate-y-0.5"
+          style={{ background: p.roseDeep, color: '#FFFFFF', fontFamily: 'var(--font-sans)', marginBottom: '0.75rem', opacity: descargando ? 0.7 : 1, cursor: descargando ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+        >
+          {descargando ? (
+            <>
+              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Generando PDF…
+            </>
+          ) : (
+            <>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Descargar mi pedido en PDF
+            </>
+          )}
+        </button>
 
         <a
           href={exito.waUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="w-full block text-center py-3 rounded-sm text-sm font-semibold uppercase tracking-widest transition-all hover:-translate-y-0.5"
-          style={{ background: '#25D366', color: '#FFFFFF', fontFamily: 'var(--font-sans)', marginBottom: '1rem' }}
+          style={{ background: '#25D366', color: '#FFFFFF', fontFamily: 'var(--font-sans)', marginBottom: '0.75rem' }}
         >
-          💬 Abrir WhatsApp
+          💬 Enviar por WhatsApp
         </a>
+
+        <p style={{ fontSize: '0.68rem', fontWeight: 300, color: `${p.textSoft}`, lineHeight: 1.5, marginBottom: '2rem' }}>
+          Adjunta el PDF junto a tu mensaje para confirmar tu pedido más rápido.
+        </p>
 
         <div style={{ height: '1px', background: `${p.roseBlush}20`, marginBottom: '2rem' }} />
 

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAdminNotifications } from '../../hooks/useAdminNotifications'
 import { useNotificationCenter } from '../../context/NotificationContext'
+import { descargarOrdenPDF } from '../../lib/generarOrdenPDF'
 
 const PedidosPage = () => {
   const [pedidos, setPedidos] = useState([])
@@ -34,6 +35,7 @@ const PedidosPage = () => {
   const [modalCotizacion, setModalCotizacion] = useState({ abierto: false, pedido: null })
   const [preciosEditados, setPreciosEditados] = useState({})
   const [notasCotizacion, setNotasCotizacion] = useState('')
+  const [descargandoPDF, setDescargandoPDF] = useState(false)
 
   // 🔔 Usar hook centralizado de notificaciones
   const { agregarToast, ToastContainer } = useAdminNotifications()
@@ -231,6 +233,37 @@ const PedidosPage = () => {
 
     const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`
     window.open(url, '_blank')
+  }
+
+  const descargarPDFCotizacion = async () => {
+    const pedido = modalCotizacion.pedido
+    if (!pedido || descargandoPDF) return
+    setDescargandoPDF(true)
+    try {
+      const productos = Array.isArray(pedido.products) ? pedido.products : []
+      const items = productos.map(p => ({
+        name: p.name,
+        sku: p.sku,
+        size: p.size,
+        quantity: p.quantity || 1,
+        price: preciosEditados[p.id] ?? p.price ?? 0,
+      }))
+      const total = items.reduce((sum, it) => sum + it.price * it.quantity, 0)
+
+      await descargarOrdenPDF({
+        orderId: pedido.id,
+        nombre: pedido.customer_name,
+        telefono: pedido.customer_phone,
+        items,
+        total,
+      })
+      agregarToast('Cotización PDF descargada', 'success')
+    } catch (err) {
+      console.error('Error cotización PDF:', err)
+      agregarToast('Error al generar el PDF', 'error')
+    } finally {
+      setDescargandoPDF(false)
+    }
   }
 
   const getEstadoColor = (status) => {
@@ -437,6 +470,25 @@ const PedidosPage = () => {
 
             {/* Acciones */}
             <div className="sticky bottom-0 bg-white border-t border-[rgba(212,120,138,0.15)] px-6 py-4 flex flex-wrap gap-3">
+              <button
+                onClick={descargarPDFCotizacion}
+                disabled={descargandoPDF}
+                className="flex-1 min-w-[200px] px-4 py-2.5 text-xs font-semibold tracking-widest uppercase rounded-sm font-sans bg-[#1A1118] text-white hover:bg-[#C9607F] transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                {descargandoPDF ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Generando…
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Descargar cotización PDF
+                  </>
+                )}
+              </button>
               <button
                 onClick={() => enviarCotizacionWhatsApp(modalCotizacion.pedido)}
                 className="flex-1 min-w-[200px] px-4 py-2.5 text-xs font-semibold tracking-widest uppercase rounded-sm font-sans bg-green-600 text-white hover:bg-green-700 transition-all flex items-center justify-center gap-2"

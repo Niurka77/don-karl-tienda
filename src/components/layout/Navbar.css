@@ -93,12 +93,23 @@
 @media (min-width: 1024px) {
   .kb-logo-badge {
     position: absolute;
-    top: -49px;
+    top: -37px;
     left: 50%;
     transform: translateX(-50%);
-    width: 130px;
-    height: 130px;
-    clip-path: inset(50% 0 0 0);
+    width: 150px;
+    height: 150px;
+    background: transparent;
+  }
+
+  .kb-logo-badge::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: #fdfafb;
+    border: 1px solid #f0f0f0;
+    clip-path: inset(100px 0 0 0);
+    z-index: -1;
   }
 
   .kb-logo-badge__img--mono {
@@ -107,8 +118,8 @@
 
   .kb-logo-badge__img--full {
     display: block;
-    width: 100px;
-    transform: translateY(32px);
+    width: 110px;
+    transform: translateY(10px);
   }
 }
 
