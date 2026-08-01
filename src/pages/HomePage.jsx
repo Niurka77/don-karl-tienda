@@ -4,6 +4,7 @@ import AdvisorySection from '../components/sections/AdvisorySection'
 import ProductGrid from '../components/producto/ProductGrid'
 import BotonPDF from '../components/producto/BotonPDF'
 import VideoGallery from '../components/ui/VideoGallery'
+import TestimonialsSection from '../components/ui/TestimonialsSection'
 import SectionTexture from '../components/shared/SectionTexture'
 import RevealSection from '../components/shared/RevealSection'
 
@@ -95,6 +96,16 @@ const HomePage = () => {
           </RevealSection>
           <RevealSection delay={100}>
             <VideoGallery limit={6} showTitle={false} />
+          </RevealSection>
+        </section>
+      </SectionTexture>
+
+      <SectionDivider />
+
+      <SectionTexture section="testimonials">
+        <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(4rem, 8vw, 7rem) 1.5rem' }}>
+          <RevealSection>
+            <TestimonialsSection getText={getText} />
           </RevealSection>
         </section>
       </SectionTexture>

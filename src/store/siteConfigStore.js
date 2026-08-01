@@ -10,6 +10,7 @@ const defaultConfig = {
     categories: { url: '', opacity: 0.03, blend: 'multiply', bgColor: '' },
     catalog: { url: '', opacity: 0.03, blend: 'multiply', bgColor: '' },
     videos: { url: '', opacity: 0.03, blend: 'multiply', bgColor: '' },
+    testimonials: { url: '', opacity: 0.03, blend: 'multiply', bgColor: '' },
     footer: { url: '', opacity: 0.05, blend: 'multiply', bgColor: '' },
   },
   // Decoraciones flotantes
@@ -29,6 +30,8 @@ const defaultConfig = {
     videos_eyebrow: 'Lifestyle',
     videos_title: 'Síguenos en redes',
     videos_subtitle: 'Descubre cómo nuestras clientas llevan cada pieza',
+    testimonials_title: 'Lo que dicen nuestras clientas',
+    testimonials_subtitle: 'Opiniones reales de quienes ya compraron con nosotros',
     advisory_title: '¿Necesitas ayuda para elegir?',
     advisory_description: 'Cuéntanos qué buscas y te asesoramos por WhatsApp para que encuentres la pieza perfecta.',
     advisory_cta: 'Hablar por WhatsApp',

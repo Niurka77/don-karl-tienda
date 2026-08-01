@@ -64,6 +64,7 @@ const ProductoPage = () => {
   const [enviandoReview, setEnviandoReview] = useState(false)
   const [reviewExito, setReviewExito] = useState('')
   const [reviewError, setReviewError] = useState('')
+  const [reviewsDisponible, setReviewsDisponible] = useState(true)
 
   useEffect(() => {
     let cancelled = false
@@ -95,9 +96,11 @@ const ProductoPage = () => {
           .eq('product_id', id)
           .eq('approved', true)
           .order('created_at', { ascending: false })
-        
+
         if (cancelled) return
-        if (!re && rev) {
+        if (re) {
+          setReviewsDisponible(false)
+        } else if (rev) {
           setReviews(rev)
           if (rev.length > 0)
             setAvgRating((rev.reduce((a, r) => a + r.rating, 0) / rev.length).toFixed(1))
@@ -725,6 +728,7 @@ useEffect(() => {
   </div>
 )}
         {/* SECCION RESEÑAS CON VER MAS */}
+        {reviewsDisponible && (
         <div className="mt-24 pt-12" style={{ borderTop: '1px solid rgba(212,120,138,0.1)' }}>
 
           <div className="flex items-end justify-between mb-10">
@@ -915,6 +919,7 @@ useEffect(() => {
             </>
           )}
         </div>
+        )}
       </div>
 
       <WhatsAppButton phoneNumber={WHATSAPP_PHONE} />

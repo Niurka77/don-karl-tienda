@@ -243,13 +243,13 @@ const ProductGrid = () => {
         const productIds = (data || []).map((p) => p.id)
         let ratingsMap = {}
         if (productIds.length > 0) {
-          const { data: reviews } = await supabase
+          const { data: reviews, error: reviewsError } = await supabase
             .from('reviews')
             .select('product_id, rating')
             .in('product_id', productIds)
             .eq('approved', true)
 
-          if (reviews) {
+          if (!reviewsError && reviews) {
             for (const r of reviews) {
               if (!ratingsMap[r.product_id]) {
                 ratingsMap[r.product_id] = { sum: 0, count: 0 }
