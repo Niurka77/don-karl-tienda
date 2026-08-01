@@ -93,7 +93,7 @@
 @media (min-width: 1024px) {
   .kb-logo-badge {
     position: absolute;
-    top: -55px;
+    top: -49px;
     left: 50%;
     transform: translateX(-50%);
     width: 130px;
@@ -108,7 +108,7 @@
   .kb-logo-badge__img--full {
     display: block;
     width: 100px;
-    transform: translateY(38px);
+    transform: translateY(32px);
   }
 }
 
