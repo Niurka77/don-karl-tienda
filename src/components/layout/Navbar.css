@@ -127,11 +127,15 @@
   .kb-nav--left {
     grid-column: 1;
     justify-content: flex-start;
+    position: relative;
+    z-index: 3;
   }
 
   .kb-nav--right {
     grid-column: 3;
     justify-content: flex-end;
+    position: relative;
+    z-index: 3;
   }
 }
 

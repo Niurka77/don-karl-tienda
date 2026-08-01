@@ -12,6 +12,7 @@ const CheckoutPage = lazy(() => import('./pages/CheckoutPage'))
 const DashboardPage = lazy(() => import('./pages/admin/DashboardPage'))
 const ProductosPage = lazy(() => import('./pages/admin/ProductosPage'))
 const PedidosPage = lazy(() => import('./pages/admin/PedidosPage'))
+const DiscountCodesPage = lazy(() => import('./pages/admin/DiscountCodesPage'))
 const AdminVideos = lazy(() => import('./components/admin/AdminVideos'))
 const HeroSlidesManager = lazy(() => import('./components/admin/HeroSlidesManager'))
 const VisualConfigPage = lazy(() => import('./pages/admin/VisualConfigPage'))
@@ -99,6 +100,7 @@ function App() {
         <Route path="videos" element={<AdminVideos />} /> 
         <Route path="/admin/slides" element={<HeroSlidesManager />} />
         <Route path="visual" element={<VisualConfigPage />} />
+        <Route path="descuentos" element={<DiscountCodesPage />} />
       </Route>
 
       {/* 404 */}
