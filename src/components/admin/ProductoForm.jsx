@@ -58,7 +58,6 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
   const [confirmacionCallback, setConfirmacionCallback] = useState(null)
   const [skuExiste, setSkuExiste] = useState(false)
   const [generandoSku, setGenerandoSku] = useState(false)
-  const [skuEditandoManualmente, setSkuEditandoManualmente] = useState(false)
 
   useEffect(() => {
     if (producto) {
@@ -123,48 +122,6 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
       setSkuExiste(false)
     }
   }, [formData.sku, producto?.id, generandoSku])
-
-  // 🆕 Generar/actualizar SKU automáticamente cuando cambia la categoría
-  useEffect(() => {
-    if (esEdicion) return // No modificar al editar
-    
-    const generarSkuAlCambiarCategoria = async () => {
-      const prefijo = prefijosCategoria[formData.category] || 'KB-PROD'
-      
-      try {
-        const { data, error } = await supabase
-          .from('products')
-          .select('sku')
-          .like('sku', `${prefijo}-%`)
-          .order('sku', { ascending: false })
-        
-        if (error) throw error
-        
-        let siguienteNumero = 1
-        
-        if (data && data.length > 0) {
-          const numeros = data
-            .map(p => {
-              const partes = p.sku.split('-')
-              const num = parseInt(partes[partes.length - 1])
-              return isNaN(num) ? 0 : num
-            })
-            .filter(n => n > 0)
-          
-          if (numeros.length > 0) {
-            siguienteNumero = Math.max(...numeros) + 1
-          }
-        }
-        
-        const nuevoSku = `${prefijo}-${String(siguienteNumero).padStart(3, '0')}`
-        setFormData(prev => ({ ...prev, sku: nuevoSku }))
-      } catch (err) {
-        console.error('Error generando SKU automático:', err)
-      }
-    }
-    
-    generarSkuAlCambiarCategoria()
-  }, [formData.category, esEdicion])
 
   // 🆕 Cuando cambia la categoría, limpiar tallas inválidas
   useEffect(() => {
@@ -383,7 +340,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
     }
 
     if (!formData.sku.trim()) {
-      nuevosErrores.sku = 'El SKU es obligatorio. Haz clic en "Auto" para generarlo automáticamente'
+      nuevosErrores.sku = 'El SKU es obligatorio'
     } else if (skuExiste) {
       nuevosErrores.sku = 'Este SKU ya existe'
     }
@@ -665,26 +622,23 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
                 name="sku"
                 value={formData.sku}
                 onChange={handleChange}
-                placeholder="VES-001"
-                disabled={!skuEditandoManualmente && !esEdicion}
+                placeholder="KB-BOL-001"
                 className={`flex-1 border rounded-sm px-4 py-2.5 text-sm font-sans font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-white ${
                   errores.sku ? 'border-[#B85268] bg-[#FDF0F3]' : 'border-[rgba(212,120,138,0.25)]'
-                } ${!skuEditandoManualmente && !esEdicion ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                }`}
               />
-              {!esEdicion && (
-                <button
-                  type="button"
-                  onClick={skuEditandoManualmente ? () => setSkuEditandoManualmente(false) : generarSkuAutomatico}
-                  disabled={generandoSku}
-                  className="px-4 py-2.5 bg-[#1A1118] text-white rounded-sm text-xs font-sans font-medium hover:bg-gradient-to-r hover:from-[#D4788A] hover:to-[#B85268] transition-all duration-300 disabled:bg-[#9A7480] disabled:cursor-not-allowed whitespace-nowrap"
-                  title={skuEditandoManualmente ? "Volver a generación automática" : "Generar SKU automático según la categoría"}
-                >
-                  {generandoSku ? '...' : skuEditandoManualmente ? 'Auto' : 'Editar'}
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={generarSkuAutomatico}
+                disabled={generandoSku}
+                className="px-4 py-2.5 bg-[#1A1118] text-white rounded-sm text-xs font-sans font-medium hover:bg-gradient-to-r hover:from-[#D4788A] hover:to-[#B85268] transition-all duration-300 disabled:bg-[#9A7480] disabled:cursor-not-allowed whitespace-nowrap"
+                title="Generar SKU automático según la categoría"
+              >
+                {generandoSku ? '...' : 'Auto'}
+              </button>
             </div>
             <p className="mt-1 text-[0.65rem] text-[#9A7480] font-sans">
-              {skuEditandoManualmente || esEdicion ? 'Puedes editar el SKU manualmente' : `Click en "Auto" para generar según categoría (${prefijosCategoria[formData.category]}-XX)`}
+              Escribe el código manualmente o pulsa "Auto" para generarlo según la categoría ({prefijosCategoria[formData.category]}-XX)
             </p>
             {errores.sku && (
               <p className="mt-1 text-xs text-[#B85268] font-sans">{errores.sku}</p>

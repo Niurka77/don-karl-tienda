@@ -210,7 +210,7 @@ const Footer = ({ onNavigate }) => {
 
       <div className="max-w-screen-xl mx-auto px-6 lg:px-10 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
         <p style={{ color: p.textSoft, fontSize: '0.75rem', letterSpacing: '0.06em', fontWeight: 300, fontFamily: 'var(--font-sans)' }}>
-          © 2025 KB Dresses & More — Todos los derechos reservados
+          © 2026 KB Dresses & More — Todos los derechos reservados
         </p>
         <p style={{ color: p.textSoft, fontSize: '0.75rem', letterSpacing: '0.04em', fontWeight: 300, fontFamily: 'var(--font-sans)' }}>
           Diseñado con{' '}
