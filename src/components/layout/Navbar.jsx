@@ -4,6 +4,7 @@ import { WHATSAPP_PHONE, WHATSAPP_MESSAGES } from '../../lib/constants'
 import { useSiteConfig } from '../../hooks/useSiteConfig'
 import { p } from '../../lib/theme'
 import kbLogo from '/kb.svg'
+import kbMonogram from '/logo-icon.svg'
 import './Navbar.css'
 
 const Navbar = () => {
@@ -114,9 +115,14 @@ const Navbar = () => {
         {/* Center logo badge */}
         <Link to="/" className="kb-logo-badge">
           <img
+            src={kbMonogram}
+            alt="KB Dresses and More"
+            className="kb-logo-badge__img kb-logo-badge__img--mono"
+          />
+          <img
             src={kbLogo}
             alt="KB Dresses and More"
-            className="kb-logo-badge__img"
+            className="kb-logo-badge__img kb-logo-badge__img--full"
           />
         </Link>
 

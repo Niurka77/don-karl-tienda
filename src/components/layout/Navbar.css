@@ -68,30 +68,48 @@
 
 /* ── Logo badge (circular container) ────────────────────────────────────── */
 .kb-logo-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #fdfafb;
+  text-decoration: none;
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+.kb-logo-badge__img--mono {
+  width: 30px;
+  height: auto;
+  object-fit: contain;
+}
+
+.kb-logo-badge__img--full {
   display: none;
 }
 
 @media (min-width: 1024px) {
   .kb-logo-badge {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    position: absolute;
+    top: -55px;
+    left: 50%;
+    transform: translateX(-50%);
     width: 130px;
     height: 130px;
-    border-radius: 50%;
-    background: #fdfafb;
-    text-decoration: none;
-    flex-shrink: 0;
-    position: relative;
-    z-index: 2;
-    margin-top: -22px;
+    clip-path: inset(50% 0 0 0);
   }
-}
 
-.kb-logo-badge__img {
-  width: 88px;
-  height: auto;
-  object-fit: contain;
+  .kb-logo-badge__img--mono {
+    display: none;
+  }
+
+  .kb-logo-badge__img--full {
+    display: block;
+    width: 100px;
+    transform: translateY(38px);
+  }
 }
 
 /* ── Nav links desktop (split left/right) ───────────────────────────────── */
@@ -107,10 +125,12 @@
   }
 
   .kb-nav--left {
+    grid-column: 1;
     justify-content: flex-start;
   }
 
   .kb-nav--right {
+    grid-column: 3;
     justify-content: flex-end;
   }
 }
