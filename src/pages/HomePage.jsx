@@ -107,24 +107,22 @@ const HomePage = () => {
       <SectionDivider />
 
       <SectionTexture section="videos">
-        <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(4rem, 8vw, 7rem) 1.5rem' }}>
-          <RevealSection>
+        <RevealSection>
+          <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1.5rem' }}>
             <VideoSectionHeader getText={getText} />
-          </RevealSection>
-          <RevealSection delay={100}>
-            <VideoGallery limit={6} showTitle={false} />
-          </RevealSection>
-        </section>
+          </div>
+        </RevealSection>
+        <RevealSection delay={100}>
+          <VideoGallery limit={6} showTitle={false} />
+        </RevealSection>
       </SectionTexture>
 
       <SectionDivider />
 
       <SectionTexture section="testimonials">
-        <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(4rem, 8vw, 7rem) 1.5rem' }}>
-          <RevealSection>
-            <TestimonialsSection getText={getText} />
-          </RevealSection>
-        </section>
+        <RevealSection>
+          <TestimonialsSection getText={getText} />
+        </RevealSection>
       </SectionTexture>
     </main>
   )
