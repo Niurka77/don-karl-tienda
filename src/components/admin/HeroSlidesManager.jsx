@@ -279,8 +279,7 @@ const HeroSlidesManager = () => {
       {/* Estadísticas */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-white rounded-sm p-4 border border-[rgba(212,120,138,0.15)]">
-          <p className="text-xs text-[#9A7480] font-sans">Total Slides</p>
-          <p className="text-2xl font-bold text-[#1A1118] font-display">{slides.length}/{MAX_SLIDES}</p>
+          <p className="text-xs text-[#9A7480] font-sans">Total de slides</p>          <p className="text-2xl font-bold text-[#1A1118] font-display">{slides.length}/{MAX_SLIDES}</p>
         </div>
         <div className="bg-white rounded-sm p-4 border border-[rgba(212,120,138,0.15)]">
           <p className="text-xs text-[#9A7480] font-sans">Activos</p>

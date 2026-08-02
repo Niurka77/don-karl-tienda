@@ -1,15 +1,15 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import useCartStore from '../../store/cartStore'
 import { WHATSAPP_PHONE, WHATSAPP_MESSAGES } from '../../lib/constants'
 import { useSiteConfig } from '../../hooks/useSiteConfig'
 import kbLogo from '/kb.svg'
-import kbMonogram from '/logo-icon.svg'
 import './Navbar.css'
 
 const Navbar = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const { config } = useSiteConfig()
   const topbarText = config.texts?.topbar_text || 'Envío gratis en compras mayores a S/ 200 — Recoge en tienda'
   const phone = config.footerContact?.phone || WHATSAPP_PHONE
@@ -72,6 +72,27 @@ const Navbar = () => {
     }, 500)
   }
 
+  // ── Ir a una sección del Home (ancla confiable) ─────────────────────────
+  const goSection = (sectionId) => {
+    closeAll()
+    const scroll = () => {
+      const target = document.getElementById(sectionId)
+      if (target) {
+        const offset = target.getBoundingClientRect().top + window.pageYOffset - 120
+        window.scrollTo({ top: offset, behavior: 'smooth' })
+        return true
+      }
+      return false
+    }
+    if (location.pathname === '/' && scroll()) return
+    navigate('/')
+    let attempts = 0
+    const tryScroll = setInterval(() => {
+      attempts++
+      if (scroll() || attempts > 20) clearInterval(tryScroll)
+    }, 150)
+  }
+
   // ── Búsqueda ────────────────────────────────────────────────────────────
   const handleSearch = (e) => {
     e.preventDefault()
@@ -97,12 +118,12 @@ const Navbar = () => {
 
   // ── Items de navegación (barra secundaria) ──────────────────────────────
   const navItems = [
-    { label: 'Shop', action: () => navigateTo('/?busqueda=') },
-    { label: 'New Arrivals', action: () => navigateTo('/?sort=recientes') },
+    { label: 'Tienda', action: () => navigateTo('/?busqueda=') },
+    { label: 'Novedades', action: () => navigateTo('/?sort=recientes') },
     { label: 'Importados', action: () => navigateTo('/?origen=importado') },
     { label: 'Nacionales', action: () => navigateTo('/?origen=nacional') },
-    { label: 'Catálogo', href: '/catalogo' },
-    { label: 'Nosotros', href: '/#nosotros' },
+    { label: 'Catálogo', action: () => navigate('/catalogo') },
+    { label: 'Nosotros', action: () => goSection('nosotros') },
   ]
 
   const searchIcon = (
@@ -136,8 +157,7 @@ const Navbar = () => {
       <nav className="kb-navbar">
         {/* Marca — izquierda */}
         <Link to="/" className="kb-brand" onClick={closeAll} aria-label="KB Dresses and More">
-          <img src={kbMonogram} alt="KB Dresses and More" className="kb-brand__img kb-brand__img--mono" />
-          <img src={kbLogo} alt="KB Dresses and More" className="kb-brand__img kb-brand__img--full" />
+          <img src={kbLogo} alt="KB Dresses and More" className="kb-brand__img" />
         </Link>
 
         {/* Búsqueda — centro (desktop) */}
@@ -181,21 +201,15 @@ const Navbar = () => {
           <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
             <path strokeLinecap="round" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
-          Shop by Categories
+          Comprar por categoría
         </button>
 
         <div className="kb-catbar__menu">
-          {navItems.map((item, i) =>
-            item.href ? (
-              <a key={i} href={item.href} className="kb-catbar__link" onClick={closeAll}>
-                {item.label}
-              </a>
-            ) : (
-              <button key={i} onClick={item.action} className="kb-catbar__link">
-                {item.label}
-              </button>
-            )
-          )}
+          {navItems.map((item, i) => (
+            <button key={i} onClick={item.action} className="kb-catbar__link">
+              {item.label}
+            </button>
+          ))}
         </div>
 
         <a
@@ -272,17 +286,11 @@ const Navbar = () => {
               />
             </form>
 
-            {navItems.map((item, i) =>
-              item.href ? (
-                <a key={i} href={item.href} onClick={closeAll} className="kb-mobile__link">
-                  {item.label}
-                </a>
-              ) : (
-                <button key={i} onClick={item.action} className="kb-mobile__link kb-mobile__link--btn">
-                  {item.label}
-                </button>
-              )
-            )}
+            {navItems.map((item, i) => (
+              <button key={i} onClick={item.action} className="kb-mobile__link kb-mobile__link--btn">
+                {item.label}
+              </button>
+            ))}
 
             {categories.length > 0 && (
               <>

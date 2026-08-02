@@ -36,7 +36,7 @@ export default function HeroSection({ title, subtitle, ctaText, backgroundImage,
   }, [slides.length])
 
   const slide = slides[current]
-  const slideTag = slide?.tag_override || 'New Collection'
+  const slideTag = slide?.tag_override || 'Nueva Colección'
   const slideTitle = slide?.title_override || slide?.products?.name || title
   const slideAccent = slide?.title_accent_override || ''
   const slideSubtitle = slide?.subtitle_override || slide?.products?.brand || subtitle

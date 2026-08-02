@@ -1,7 +1,7 @@
 import { useSiteConfig } from '../hooks/useSiteConfig'
 import HeroSection from '../components/sections/HeroSection'
 import CategoriesSection from '../components/sections/CategoriesSection'
-import PromoBanners from '../components/sections/PromoBanners'
+import AboutSection from '../components/sections/AboutSection'
 import AdvisorySection from '../components/sections/AdvisorySection'
 import ProductGrid from '../components/producto/ProductGrid'
 import BotonPDF from '../components/producto/BotonPDF'
@@ -59,7 +59,6 @@ const HomePage = () => {
           subtitle={getText('hero_subtitle')}
           ctaText={getText('hero_cta')}
           backgroundImage={config.textures?.hero?.url || ''}
-          backgroundColor={config.customColors?.background || '#FFFFFF'}
         />
       </SectionTexture>
 
@@ -86,9 +85,9 @@ const HomePage = () => {
 
       <SectionDivider />
 
-      <SectionTexture section="banners">
+      <SectionTexture section="about">
         <RevealSection>
-          <PromoBanners getText={getText} />
+          <AboutSection getText={getText} />
         </RevealSection>
       </SectionTexture>
 

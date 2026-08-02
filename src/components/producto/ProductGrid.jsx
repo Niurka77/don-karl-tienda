@@ -190,7 +190,8 @@ const ProductGrid = () => {
     precioMin: searchParams.get('precioMin') || '',
     precioMax: searchParams.get('precioMax') || '',
     origen: searchParams.get('origen') || '',
-    orden: searchParams.get('orden') || 'created_at-desc',
+    busqueda: searchParams.get('busqueda') || '',
+    orden: searchParams.get('sort') ? 'created_at-desc' : (searchParams.get('orden') || 'created_at-desc'),
   }))
 
   // Sincronizar URL → estado
@@ -202,7 +203,8 @@ const ProductGrid = () => {
       precioMin: searchParams.get('precioMin') || '',
       precioMax: searchParams.get('precioMax') || '',
       origen: searchParams.get('origen') || '',
-      orden: searchParams.get('orden') || 'created_at-desc',
+      busqueda: searchParams.get('busqueda') || '',
+      orden: searchParams.get('sort') ? 'created_at-desc' : (searchParams.get('orden') || 'created_at-desc'),
     }
     setFiltros((prev) => (JSON.stringify(prev) === JSON.stringify(f) ? prev : f))
     setPaginaActual(1)
