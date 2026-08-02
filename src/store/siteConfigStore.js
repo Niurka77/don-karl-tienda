@@ -30,8 +30,8 @@ const defaultConfig = {
     catalog_tagline: 'Moda importada directamente desde Estados Unidos',
     videos_eyebrow: 'Lifestyle',
     videos_title: 'Síguenos en redes',
-    videos_subtitle: 'Descubre cómo nuestras clientas llevan cada pieza',
-    testimonials_title: 'Lo que dicen nuestras clientas',
+    videos_subtitle: 'Descubre cómo nuestros clientes llevan cada pieza',
+    testimonials_title: 'Lo que dicen nuestros clientes',
     testimonials_subtitle: 'Opiniones reales de quienes ya compraron con nosotros',
     advisory_title: '¿Necesitas ayuda para elegir?',
     advisory_description: 'Cuéntanos qué buscas y te asesoramos por WhatsApp para que encuentres la pieza perfecta.',
@@ -101,8 +101,8 @@ const useSiteConfigStore = create(
       error: null,
 
       // Cargar config desde Supabase
-      loadConfig: async () => {
-        set({ loading: true, error: null })
+      loadConfig: async (silent = false) => {
+        if (!silent) set({ loading: true, error: null })
         try {
           const { data, error } = await supabase
             .from('site_config')
@@ -128,7 +128,6 @@ const useSiteConfigStore = create(
           set({ error: error.message, loading: false })
         }
       },
-
       // Guardar config en Supabase
       saveConfig: async (newConfig) => {
         set({ loading: true, error: null })

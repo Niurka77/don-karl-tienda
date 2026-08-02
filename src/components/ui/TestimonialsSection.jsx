@@ -41,11 +41,13 @@ const TestimonialsSection = ({ getText }) => {
   if (loading) return null
   if (testimonials.length === 0) return null
 
-  const visible = testimonials.slice(indice, indice + 3)
-  const resto = visible.length < 3 ? testimonials.slice(0, 3 - visible.length) : []
-  const tarjetas = [...visible, ...resto]
+  const total = testimonials.length
+  const visible = total > 3
+    ? [...testimonials.slice(indice), ...testimonials.slice(0, indice)].slice(0, 3)
+    : testimonials
+  const tarjetas = visible
 
-  const title = getText('testimonials_title') || 'Lo que dicen nuestras clientas'
+  const title = getText('testimonials_title') || 'Lo que dicen nuestros clientes'
   const subtitle = getText('testimonials_subtitle') || 'Opiniones reales de quienes ya compraron con nosotros'
 
   return (
@@ -100,9 +102,18 @@ const TestimonialsSection = ({ getText }) => {
               </div>
 
               <div className="flex items-center gap-3 pt-5 border-t border-[rgba(212,120,138,0.1)]">
-                <div className="w-11 h-11 rounded-full flex items-center justify-center text-white font-display text-base flex-shrink-0"
-                  style={{ background: 'linear-gradient(135deg, #D4788A, #B85268)' }}>
-                  {t.name?.charAt(0).toUpperCase() || 'C'}
+                <div
+                  className="w-11 h-11 rounded-full flex items-center justify-center text-white font-display text-base flex-shrink-0 overflow-hidden"
+                  style={{
+                    background: 'linear-gradient(135deg, #D4788A, #B85268)',
+                    borderRadius: t.photo_shape === 'square' ? '10px' : '9999px',
+                  }}
+                >
+                  {t.photo ? (
+                    <img src={t.photo} alt={t.name || ''} className="w-full h-full object-cover" />
+                  ) : (
+                    <span>{t.name?.charAt(0).toUpperCase() || 'C'}</span>
+                  )}
                 </div>
                 <div>
                   <p className="text-[#1A1118] font-sans font-medium text-sm">{t.name}</p>

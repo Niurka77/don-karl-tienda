@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react'
-import { supabase } from '../../lib/supabase'
+import { useState, useEffect, useRef } from 'react'
+import { supabase, uploadTestimonialPhoto } from '../../lib/supabase'
+import PhotoCropper from '../../components/admin/PhotoCropper'
+import { useRealtimeReload } from '../../hooks/useRealtimeReload'
 
 const TestimoniosPage = () => {
   const [testimonios, setTestimonios] = useState([])
@@ -10,21 +12,29 @@ const TestimoniosPage = () => {
     name: '',
     city: '',
     photo: '',
+    photo_shape: 'circle',
     comment: '',
     rating: 5,
     active: true,
     sort_order: 0
   })
   const [guardando, setGuardando] = useState(false)
+  const [subiendoFoto, setSubiendoFoto] = useState(false)
   const [exito, setExito] = useState('')
   const [error, setError] = useState('')
+  const [previewPhoto, setPreviewPhoto] = useState('')
+  const [cropFile, setCropFile] = useState(null)
+  const fileInputRef = useRef(null)
 
   useEffect(() => {
     cargarTestimonios()
   }, [])
 
-  const cargarTestimonios = async () => {
-    setCargando(true)
+  // 🔄 REALTIME: recargar testimonios ante cambios externos
+  useRealtimeReload('testimonials', () => cargarTestimonios(true))
+
+  const cargarTestimonios = async (silent = false) => {
+    if (!silent) setCargando(true)
     const { data, error } = await supabase
       .from('testimonials')
       .select('*')
@@ -32,7 +42,7 @@ const TestimoniosPage = () => {
       .order('created_at', { ascending: false })
 
     if (!error && data) setTestimonios(data)
-    setCargando(false)
+    if (!silent) setCargando(false)
   }
 
   const handleChange = (e) => {
@@ -41,6 +51,41 @@ const TestimoniosPage = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }))
+  }
+
+  const handlePhotoFile = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setError('')
+    setCropFile(file)
+  }
+
+  const handleCropApply = async (blob) => {
+    setCropFile(null)
+    setSubiendoFoto(true)
+    setError('')
+    try {
+      const nombre = `testimonio-${Date.now()}.png`
+      const url = await uploadTestimonialPhoto(new File([blob], nombre, { type: 'image/png' }))
+      setFormData(prev => ({ ...prev, photo: url }))
+      setPreviewPhoto(url)
+      setExito('Foto subida correctamente')
+    } catch (err) {
+      setError(err.message || 'Error al subir la foto')
+    } finally {
+      setSubiendoFoto(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const handleCropCancel = () => {
+    setCropFile(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const limpiarFoto = () => {
+    setFormData(prev => ({ ...prev, photo: '' }))
+    setPreviewPhoto('')
   }
 
   const handleSubmit = async (e) => {
@@ -57,6 +102,7 @@ const TestimoniosPage = () => {
             name: formData.name.trim(),
             city: formData.city.trim(),
             photo: formData.photo.trim(),
+            photo_shape: formData.photo_shape,
             comment: formData.comment.trim(),
             rating: parseInt(formData.rating, 10),
             active: formData.active,
@@ -74,6 +120,7 @@ const TestimoniosPage = () => {
             name: formData.name.trim(),
             city: formData.city.trim(),
             photo: formData.photo.trim(),
+            photo_shape: formData.photo_shape,
             comment: formData.comment.trim(),
             rating: parseInt(formData.rating, 10),
             active: formData.active,
@@ -84,7 +131,8 @@ const TestimoniosPage = () => {
         setExito('Testimonio agregado correctamente')
       }
 
-      setFormData({ name: '', city: '', photo: '', comment: '', rating: 5, active: true, sort_order: 0 })
+      setFormData({ name: '', city: '', photo: '', photo_shape: 'circle', comment: '', rating: 5, active: true, sort_order: 0 })
+      setPreviewPhoto('')
       setEditandoId(null)
       setMostrarFormulario(false)
       cargarTestimonios()
@@ -100,11 +148,13 @@ const TestimoniosPage = () => {
       name: t.name,
       city: t.city || '',
       photo: t.photo || '',
+      photo_shape: t.photo_shape || 'circle',
       comment: t.comment,
       rating: t.rating || 5,
       active: t.active,
       sort_order: t.sort_order || 0
     })
+    setPreviewPhoto(t.photo || '')
     setEditandoId(t.id)
     setMostrarFormulario(true)
   }
@@ -168,7 +218,8 @@ const TestimoniosPage = () => {
             setMostrarFormulario(!mostrarFormulario)
             if (!mostrarFormulario) {
               setEditandoId(null)
-              setFormData({ name: '', city: '', photo: '', comment: '', rating: 5, active: true, sort_order: 0 })
+              setFormData({ name: '', city: '', photo: '', photo_shape: 'circle', comment: '', rating: 5, active: true, sort_order: 0 })
+              setPreviewPhoto('')
             }
           }}
           className="group relative px-5 py-2.5 bg-[#1A1118] text-white rounded-sm text-sm font-sans font-medium tracking-wide overflow-hidden transition-all duration-300 hover:bg-gradient-to-r hover:from-[#D4788A] hover:to-[#B85268]"
@@ -235,16 +286,89 @@ const TestimoniosPage = () => {
 
             <div className="md:col-span-2">
               <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-sans font-light text-[#9A7480] mb-2">
-                URL de foto (opcional)
+                Foto de la clienta (opcional)
               </label>
-              <input
-                type="url"
-                name="photo"
-                value={formData.photo}
-                onChange={handleChange}
-                placeholder="https://... (si no pones nada se muestra la inicial del nombre)"
-                className="w-full border border-[rgba(212,120,138,0.25)] rounded-sm px-4 py-2.5 text-sm font-sans font-light focus:outline-none focus:ring-1 focus:ring-[#D4788A] focus:border-transparent bg-[#FFF8F5]"
-              />
+              <div className="flex flex-wrap items-center gap-4">
+                <div
+                  className="w-16 h-16 rounded-full flex items-center justify-center text-white font-display text-xl overflow-hidden flex-shrink-0 border border-[rgba(212,120,138,0.25)]"
+                  style={{
+                    background: previewPhoto ? 'transparent' : 'linear-gradient(135deg, #D4788A, #B85268)',
+                    borderRadius: formData.photo_shape === 'square' ? '12px' : '9999px',
+                  }}
+                >
+                  {previewPhoto ? (
+                    <img src={previewPhoto} alt="Vista previa" className="w-full h-full object-cover" />
+                  ) : (
+                    (formData.name || 'C').charAt(0).toUpperCase()
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 border border-[rgba(212,120,138,0.35)] rounded-sm text-sm font-sans text-[#1A1118] hover:bg-[#FDF0F3] transition-colors duration-200">
+                    <svg className="w-4 h-4 text-[#D4788A]" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+                    </svg>
+                    {subiendoFoto ? 'Subiendo...' : 'Subir foto'}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handlePhotoFile}
+                      className="hidden"
+                    />
+                  </label>
+                  {previewPhoto && (
+                    <button
+                      type="button"
+                      onClick={limpiarFoto}
+                      className="text-[0.65rem] text-[#B85268] font-sans underline underline-offset-2 hover:opacity-70"
+                    >
+                      Quitar foto
+                    </button>
+                  )}
+                </div>
+              </div>
+              <p className="text-[0.55rem] text-[#9A7480] mt-1 font-sans">JPG, PNG o WebP · máx 5MB. Si no subes foto, se muestra la inicial del nombre.</p>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-[0.6rem] tracking-[0.25em] uppercase font-sans font-light text-[#9A7480] mb-2">
+                Encuadre de la foto
+              </label>
+              <div className="flex gap-3">
+                <label className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border rounded-sm text-sm font-sans cursor-pointer transition-colors duration-200 ${
+                  formData.photo_shape === 'circle'
+                    ? 'border-[#D4788A] bg-[#FDF0F3] text-[#B85268]'
+                    : 'border-[rgba(212,120,138,0.25)] text-[#1A1118] hover:bg-[#FDF0F3]/50'
+                }`}>
+                  <span className="w-4 h-4 rounded-full border border-current flex-shrink-0"></span>
+                  Circular (avatar)
+                  <input
+                    type="radio"
+                    name="photo_shape"
+                    value="circle"
+                    checked={formData.photo_shape === 'circle'}
+                    onChange={handleChange}
+                    className="hidden"
+                  />
+                </label>
+                <label className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border rounded-sm text-sm font-sans cursor-pointer transition-colors duration-200 ${
+                  formData.photo_shape === 'square'
+                    ? 'border-[#D4788A] bg-[#FDF0F3] text-[#B85268]'
+                    : 'border-[rgba(212,120,138,0.25)] text-[#1A1118] hover:bg-[#FDF0F3]/50'
+                }`}>
+                  <span className="w-4 h-4 rounded-sm border border-current flex-shrink-0"></span>
+                  Cuadrado
+                  <input
+                    type="radio"
+                    name="photo_shape"
+                    value="square"
+                    checked={formData.photo_shape === 'square'}
+                    onChange={handleChange}
+                    className="hidden"
+                  />
+                </label>
+              </div>
             </div>
 
             <div>
@@ -382,6 +506,15 @@ const TestimoniosPage = () => {
             </tbody>
           </table>
         </div>
+      )}
+
+      {cropFile && (
+        <PhotoCropper
+          file={cropFile}
+          shape={formData.photo_shape}
+          onCancel={handleCropCancel}
+          onApply={handleCropApply}
+        />
       )}
     </div>
   )

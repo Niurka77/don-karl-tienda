@@ -45,3 +45,41 @@ export const uploadProductImage = async (file, productId = null) => {
 
   return publicUrl
 }
+
+// ✅ Función para subir fotos de testimonios (bucket site-assets)
+export const uploadTestimonialPhoto = async (file) => {
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg']
+  if (!allowedTypes.includes(file.type)) {
+    throw new Error(`Tipo de archivo no permitido: ${file.type}. Use JPG, PNG o WebP.`)
+  }
+
+  const maxSize = 5 * 1024 * 1024
+  if (file.size > maxSize) {
+    throw new Error(`Archivo demasiado grande (${(file.size / 1024 / 1024).toFixed(2)}MB). Máximo 5MB.`)
+  }
+
+  const fileExt = file.name.split('.').pop().toLowerCase()
+  const fileName = `testimonios/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${fileExt}`
+
+  const { error: uploadError } = await supabase.storage
+    .from('site-assets')
+    .upload(fileName, file, {
+      upsert: true,
+      contentType: file.type,
+    })
+
+  if (uploadError) {
+    console.error('Error subiendo foto de testimonio:', uploadError)
+    throw new Error(`Error al subir la foto: ${uploadError.message}`)
+  }
+
+  const { data: { publicUrl } } = supabase.storage
+    .from('site-assets')
+    .getPublicUrl(fileName)
+
+  if (!publicUrl) {
+    throw new Error('No se pudo obtener URL pública de la foto')
+  }
+
+  return publicUrl
+}
