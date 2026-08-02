@@ -143,8 +143,8 @@ const useDashboardStats = (onError) => {
         supabase.from('orders').select('total').gte('created_at', oneWeekAgo).eq('status', 'entregado'),
         supabase.from('orders').select('total').gte('created_at', oneMonthAgo).eq('status', 'entregado'),
         supabase.from('orders').select('*', { count: 'exact', head: true }).gte('created_at', todayStart.toISOString()),
-        supabase.from('orders').select('*', { count: 'exact', head: true }).in('status', ['pagado', 'preparando', 'enviado']),
-        supabase.from('orders').select('total').in('status', ['pagado', 'preparando', 'enviado', 'entregado']),
+        supabase.from('orders').select('*', { count: 'exact', head: true }).in('status', ['pagado', 'enviado']),
+        supabase.from('orders').select('total').in('status', ['pagado', 'enviado', 'entregado']),
       ])
 
       const sumRevenue = (orders) =>

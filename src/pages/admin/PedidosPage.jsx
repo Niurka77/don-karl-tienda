@@ -126,10 +126,11 @@ const PedidosPage = () => {
       
       const pedidosHoy = data?.filter(p => p.created_at?.startsWith(hoy)) || []
       const pendientes = data?.filter(p => p.status === 'pendiente') || []
-      const porEnviar = data?.filter(p => p.status === 'confirmado' || p.status === 'enviado') || []
+      const porEnviar = data?.filter(p => p.status === 'pagado') || []
       
+      const estadosPagados = ['pagado', 'enviado', 'entregado']
       const ingresosSemana = data
-        ?.filter(p => p.created_at >= haceUnaSemana)
+        ?.filter(p => p.created_at >= haceUnaSemana && estadosPagados.includes(p.status))
         .reduce((sum, p) => sum + Number(p.total || 0), 0) || 0
       
       setStats({
@@ -144,33 +145,58 @@ const PedidosPage = () => {
   }
 
   const actualizarEstado = async (id, nuevoEstado) => {
+    const pedidoActual = pedidos.find(p => p.id === id)
     try {
+      let estadoFinal = nuevoEstado
+      let mensaje = ''
+
       if (nuevoEstado === 'pagado') {
-        const { data: pedido, error: fetchError } = await supabase
-          .from('orders')
-          .select('products')
-          .eq('id', id)
-          .single()
-        if (!fetchError && pedido?.products) {
-          for (const p of pedido.products) {
-            await supabase.rpc('decrementar_stock', { product_id: p.id, cantidad: p.quantity || 1 })
+        const { data, error } = await supabase.rpc('procesar_pago', { order_id: id })
+        if (error) throw error
+        if (data !== 'OK') {
+          if (data === 'YA_PROCESADO') {
+            estadoFinal = pedidoActual?.status || 'pagado'
+            mensaje = 'El pedido ya estaba pagado'
+          } else if (data === 'ESTADO_INVALIDO') {
+            agregarToast('Este pedido no se puede marcar como pagado', 'error')
+            return
+          } else if (data?.startsWith('STOCK_INSUFICIENTE')) {
+            agregarToast(`Stock insuficiente: ${data.split(':')[1]}`, 'error')
+            return
+          } else if (data?.startsWith('PRODUCTO_INEXISTENTE')) {
+            agregarToast(`Producto no encontrado: ${data.split(':')[1]}`, 'error')
+            return
+          } else {
+            agregarToast('No se pudo procesar el pago', 'error')
+            return
           }
+        } else {
+          mensaje = 'Pago registrado y stock descontado'
         }
+      } else if (nuevoEstado === 'cancelado') {
+        const { data, error } = await supabase.rpc('cancelar_pedido', { order_id: id })
+        if (error) throw error
+        if (data === 'PEDIDO_ENTREGADO') {
+          agregarToast('Un pedido entregado no se puede cancelar. Es una devolución.', 'error')
+          return
+        }
+        if (data !== 'OK') {
+          agregarToast('No se pudo cancelar el pedido', 'error')
+          return
+        }
+        mensaje = ['pagado', 'enviado'].includes(pedidoActual?.status) ? 'Pedido cancelado y stock repuesto' : 'Pedido cancelado'
+      } else {
+        const { error } = await supabase.from('orders').update({ status: nuevoEstado }).eq('id', id)
+        if (error) throw error
+        mensaje = `Estado actualizado a "${nuevoEstado}"`
       }
 
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: nuevoEstado })
-        .eq('id', id)
-      
-      if (error) throw error
-      
-      setPedidos(pedidos.map(p => p.id === id ? { ...p, status: nuevoEstado } : p))
-      agregarToast(`Estado actualizado a "${nuevoEstado}"`, 'success')
-      const pedidoActual = pedidos.find(p => p.id === id)
-      if (pedidoActual && ['pagado', 'cancelado', 'enviado', 'entregado'].includes(nuevoEstado)) {
+      setPedidos(pedidos.map(p => p.id === id ? { ...p, status: estadoFinal } : p))
+      agregarToast(mensaje || `Estado actualizado a "${estadoFinal}"`, 'success')
+
+      if (pedidoActual && ['pagado', 'cancelado', 'enviado', 'entregado'].includes(estadoFinal)) {
         const typeMap = { pagado: 'success', cancelado: 'error', enviado: 'info', entregado: 'success' }
-        pushNotification({ title: `Pedido ${nuevoEstado}`, body: `${pedidoActual.customer_name ?? 'Cliente'} — ${nuevoEstado}`, type: typeMap[nuevoEstado], link: '/admin/pedidos' })
+        pushNotification({ title: `Pedido ${estadoFinal}`, body: `${pedidoActual.customer_name ?? 'Cliente'} — ${estadoFinal}`, type: typeMap[estadoFinal] || 'info', link: '/admin/pedidos' })
       }
       calcularEstadisticas()
     } catch (err) {
@@ -184,6 +210,11 @@ const PedidosPage = () => {
     if (!pedido) return
 
     try {
+      if (['pagado', 'enviado'].includes(pedido.status)) {
+        for (const p of pedido.products || []) {
+          await supabase.rpc('reponer_stock', { producto_id: p.id, cantidad: p.quantity || 1 })
+        }
+      }
       const { error } = await supabase.from('orders').delete().eq('id', pedido.id)
       if (error) throw error
 
@@ -269,13 +300,10 @@ const PedidosPage = () => {
   const getEstadoColor = (status) => {
     const colores = {
       pendiente: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-      aceptado: 'bg-teal-100 text-teal-700 border-teal-200',
       pagado: 'bg-blue-100 text-blue-700 border-blue-200',
-      preparando: 'bg-indigo-100 text-indigo-700 border-indigo-200',
       enviado: 'bg-purple-100 text-purple-700 border-purple-200',
       entregado: 'bg-green-100 text-green-700 border-green-200',
       cancelado: 'bg-red-100 text-red-700 border-red-200',
-      expirado: 'bg-gray-200 text-gray-600 border-gray-300',
     }
     return colores[status] || 'bg-gray-100 text-gray-700 border-gray-200'
   }
@@ -283,13 +311,10 @@ const PedidosPage = () => {
   const getEstadoLabel = (status) => {
     const labels = {
       pendiente: '⏳ Pendiente',
-      aceptado: '👍 Aceptado',
       pagado: '💰 Pagado',
-      preparando: '🟣 Preparando',
       enviado: '🚚 Enviado',
       entregado: '✅ Entregado',
       cancelado: '❌ Cancelado',
-      expirado: '⏰ Expirado',
     }
     return labels[status] || status
   }
@@ -497,15 +522,6 @@ const PedidosPage = () => {
               </button>
               <button
                 onClick={async () => {
-                  await actualizarEstado(modalCotizacion.pedido.id, 'aceptado')
-                  setModalCotizacion({ abierto: false, pedido: null })
-                }}
-                className="px-4 py-2.5 text-xs font-semibold tracking-widest uppercase rounded-sm font-sans bg-teal-600 text-white hover:bg-teal-700 transition-all"
-              >
-                Aceptado
-              </button>
-              <button
-                onClick={async () => {
                   await actualizarEstado(modalCotizacion.pedido.id, 'pagado')
                   setModalCotizacion({ abierto: false, pedido: null })
                 }}
@@ -580,10 +596,10 @@ const PedidosPage = () => {
             <option value="">Todos los estados</option>
             <option value="cotizacion">Cotización</option>
             <option value="pendiente">Pendiente</option>
-            <option value="aceptado">Aceptado</option>
             <option value="pagado">Pagado</option>
             <option value="enviado">Enviado</option>
             <option value="entregado">Entregado</option>
+            <option value="cancelado">Cancelado</option>
           </select>
 
           <select
@@ -722,17 +738,6 @@ const PedidosPage = () => {
                         }`}
                       >
                         Pendiente
-                      </button>
-                      <button
-                        onClick={() => actualizarEstado(pedido.id, 'aceptado')}
-                        disabled={pedido.status === 'aceptado'}
-                        className={`px-3 py-1.5 text-xs font-medium rounded-sm font-sans transition-all ${
-                          pedido.status === 'aceptado'
-                            ? 'bg-teal-100 text-teal-700 border border-teal-200 cursor-default'
-                            : 'bg-white text-teal-700 border border-teal-200 hover:bg-teal-50'
-                        }`}
-                      >
-                        Aceptado
                       </button>
                       <button
                         onClick={() => actualizarEstado(pedido.id, 'pagado')}

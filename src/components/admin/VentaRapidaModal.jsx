@@ -66,7 +66,7 @@ const VentaRapidaModal = ({ abierto, onCerrar }) => {
         customer_name: nombreCliente.trim() || 'Venta en tienda',
         products: items.map(i => ({ id: i.id, name: i.name, sku: i.sku, size: null, quantity: i.cantidad, price: i.price })),
         total,
-        status: 'entregado',
+        status: 'pendiente',
         payment_method: 'efectivo',
         created_at: new Date().toISOString(),
       }
@@ -74,9 +74,19 @@ const VentaRapidaModal = ({ abierto, onCerrar }) => {
       const { data, error } = await supabase.from('orders').insert(orderData).select().single()
       if (error) throw error
 
-      for (const item of items) {
-        await supabase.rpc('decrementar_stock', { product_id: item.id, cantidad: item.cantidad })
+      const { data: res, error: rpcError } = await supabase.rpc('procesar_pago', { order_id: data.id })
+      if (rpcError) throw rpcError
+
+      if (res !== 'OK') {
+        await supabase.from('orders').delete().eq('id', data.id)
+        const causa = res?.startsWith('STOCK_INSUFICIENTE')
+          ? `Stock insuficiente: ${res.split(':')[1]}`
+          : 'No se pudo registrar la venta'
+        agregarToast(causa, 'error')
+        return
       }
+
+      await supabase.from('orders').update({ status: 'entregado' }).eq('id', data.id)
 
       agregarToast(`Venta rápida registrada — S/ ${total.toFixed(2)}`, 'success')
       pushNotification({ title: 'Venta en tienda', body: `${items.length} producto(s) — S/ ${total.toFixed(2)}`, type: 'success', link: '/admin/pedidos' })
