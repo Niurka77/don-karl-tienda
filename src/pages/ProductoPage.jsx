@@ -94,7 +94,6 @@ const ProductoPage = () => {
           .from('reviews')
           .select('*')
           .eq('product_id', id)
-          .eq('approved', true)
           .order('created_at', { ascending: false })
 
         if (cancelled) return
@@ -151,7 +150,22 @@ useEffect(() => {
     finally { setAgregando(false) }
   }
 
-  const handleSolicitarCotizacion = () => {
+  const handleSolicitarCotizacion = async () => {
+    if (!selectedSize && tallas.length > 0) { alert('Por favor selecciona una talla'); return }
+    const precio = producto.discount_percent > 0 ? producto.price_final : producto.price_original
+    try {
+      await supabase.from('orders').insert([{
+        customer_name: 'Cotización web',
+        products: [{
+          id: producto.id, name: producto.name, size: selectedSize || null,
+          quantity: cantidad, price: precio, sku: producto.sku,
+        }],
+        total: Number((cantidad * precio).toFixed(2)),
+        status: 'cotizacion',
+      }])
+    } catch (e) {
+      console.error('Error creando cotización:', e)
+    }
     const msg = `Hola, me interesa el producto "${producto.name}" (${producto.sku || 'sin código'}). ¿Está disponible?`
     window.open(`https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(msg)}`, '_blank')
   }
@@ -198,7 +212,6 @@ useEffect(() => {
         .from('reviews')
         .select('*')
         .eq('product_id', id)
-        .eq('approved', true)
         .order('created_at', { ascending: false })
       
       if (!re && rev) {
@@ -690,32 +703,6 @@ useEffect(() => {
                 </svg>
                 {producto.stock === 0 ? 'Consultar disponibilidad' : 'Solicitar cotización'}
               </button>
-            </div>
-
-            <div style={{
-              padding: '1.2rem 1.4rem',
-              border: '1px solid rgba(212,120,138,0.15)',
-              background: 'rgba(250,237,241,0.4)',
-              borderRadius: '2px',
-            }}>
-              <p className="text-editorial mb-3" style={{ color: 'var(--color-kb-mauve)', fontSize: '0.6rem', letterSpacing: '0.2em' }}>
-                Metodos de pago
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {['Yape', 'Plin', 'Tarjeta', 'Transferencia'].map((m) => (
-                  <span
-                    key={m}
-                    style={{
-                      fontSize: '0.68rem', fontWeight: 300, letterSpacing: '0.06em',
-                      padding: '0.3rem 0.75rem', borderRadius: '2px',
-                      border: '1px solid rgba(212,120,138,0.2)',
-                      color: 'var(--color-kb-mauve)', background: 'white',
-                    }}
-                  >
-                    {m}
-                  </span>
-                ))}
-              </div>
             </div>
           </div>
         </div>

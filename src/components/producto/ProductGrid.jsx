@@ -249,7 +249,6 @@ const ProductGrid = () => {
             .from('reviews')
             .select('product_id, rating')
             .in('product_id', productIds)
-            .eq('approved', true)
 
           if (!reviewsError && reviews) {
             for (const r of reviews) {
