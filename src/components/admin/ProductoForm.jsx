@@ -452,6 +452,7 @@ const ProductoForm = ({ producto, onGuardar, onCancelar }) => {
             const { count } = await supabase
               .from('hero_slides')
               .select('*', { count: 'exact', head: true })
+              .eq('active', true)
             
             if (count !== null && count < MAX_SLIDES) {
               const { data: slidesExistentes } = await supabase

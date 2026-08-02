@@ -342,12 +342,21 @@ useEffect(() => {
 
               {producto.sku && (
                 <div className="absolute top-4 right-4 z-10">
-                  <span className="text-editorial" style={{
-                    background: 'rgba(26,17,24,0.6)', backdropFilter: 'blur(8px)',
-                    color: 'rgba(242,196,206,0.75)', fontSize: '0.55rem',
-                    padding: '0.22rem 0.6rem', letterSpacing: '0.18em', borderRadius: '1px',
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '0.45rem',
+                    background: 'var(--color-kb-obsidian)',
+                    color: '#FFFFFF', fontSize: '0.62rem',
+                    padding: '0.32rem 0.75rem', letterSpacing: '0.12em', borderRadius: '50px',
+                    boxShadow: '0 6px 18px rgba(26,17,24,0.3)',
+                    fontFamily: 'var(--font-sans)',
                   }}>
-                    {producto.sku}
+                    <span style={{
+                      fontSize: '0.45rem', letterSpacing: '0.18em',
+                      color: 'var(--color-kb-rose-mist)', fontWeight: 600,
+                    }}>
+                      CÓDIGO
+                    </span>
+                    <span style={{ fontWeight: 700 }}>{producto.sku}</span>
                   </span>
                 </div>
               )}
@@ -424,10 +433,16 @@ useEffect(() => {
                 </span>
               )}
               {producto.sku && (
-                <span className="text-editorial" style={{
-                  color: 'rgba(154,116,128,0.5)', fontSize: '0.58rem', letterSpacing: '0.18em',
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                  background: 'rgba(212,120,138,0.08)',
+                  border: '1px solid rgba(212,120,138,0.3)',
+                  color: 'var(--color-kb-rose-deep)',
+                  fontSize: '0.62rem', letterSpacing: '0.14em',
+                  padding: '0.28rem 0.75rem', borderRadius: '50px',
+                  fontWeight: 600, fontFamily: 'var(--font-sans)',
                 }}>
-                  #{producto.sku}
+                  CÓDIGO {producto.sku}
                 </span>
               )}
             </div>

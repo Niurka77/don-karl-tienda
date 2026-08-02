@@ -258,15 +258,35 @@ const ProductCard = ({ product }) => {
             </h3>
 
             {sku && (
-              <p
+              <div
                 style={{
-                  fontSize: '0.55rem', letterSpacing: '0.1em',
-                  color: p.textSoft, fontWeight: 400, margin: '0.35rem 0 0',
-                  fontFamily: 'var(--font-sans)',
+                  display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                  marginTop: '0.5rem',
+                  background: p.ink,
+                  padding: '0.28rem 0.7rem',
+                  borderRadius: '50px',
+                  boxShadow: `0 4px 12px ${p.ink}2E`,
                 }}
               >
-                Código: {sku}
-              </p>
+                <span
+                  style={{
+                    fontSize: '0.42rem', letterSpacing: '0.18em',
+                    color: p.roseBlush, fontWeight: 600,
+                    fontFamily: 'var(--font-sans)',
+                  }}
+                >
+                  CÓDIGO
+                </span>
+                <span
+                  style={{
+                    fontSize: '0.62rem', letterSpacing: '0.08em',
+                    color: '#FFFFFF', fontWeight: 700,
+                    fontFamily: 'var(--font-sans)',
+                  }}
+                >
+                  {sku}
+                </span>
+              </div>
             )}
 
             <div
