@@ -1,5 +1,7 @@
 import { useSiteConfig } from '../hooks/useSiteConfig'
 import HeroSection from '../components/sections/HeroSection'
+import CategoriesSection from '../components/sections/CategoriesSection'
+import PromoBanners from '../components/sections/PromoBanners'
 import AdvisorySection from '../components/sections/AdvisorySection'
 import ProductGrid from '../components/producto/ProductGrid'
 import BotonPDF from '../components/producto/BotonPDF'
@@ -63,6 +65,14 @@ const HomePage = () => {
 
       <SectionDivider />
 
+      <SectionTexture section="categories">
+        <RevealSection>
+          <CategoriesSection getText={getText} />
+        </RevealSection>
+      </SectionTexture>
+
+      <SectionDivider />
+
       <SectionTexture section="catalog">
         <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'clamp(4rem, 8vw, 7rem) 1.5rem' }}>
           <RevealSection>
@@ -72,6 +82,14 @@ const HomePage = () => {
             <ProductGrid />
           </RevealSection>
         </section>
+      </SectionTexture>
+
+      <SectionDivider />
+
+      <SectionTexture section="banners">
+        <RevealSection>
+          <PromoBanners getText={getText} />
+        </RevealSection>
       </SectionTexture>
 
       <SectionDivider />

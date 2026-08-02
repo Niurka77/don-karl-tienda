@@ -110,6 +110,36 @@ const ProductCard = ({ product }) => {
               />
             </div>
 
+            {/* Botón circular carrito — hover desktop */}
+            <button
+              onClick={handleAgregar}
+              aria-label={`Agregar ${name} al carrito`}
+              className="hidden sm:flex"
+              style={{
+                position: 'absolute',
+                right: '0.9rem',
+                bottom: '0.9rem',
+                zIndex: 15,
+                width: '46px',
+                height: '46px',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '50%',
+                border: 'none',
+                cursor: 'pointer',
+                background: hovered ? 'var(--color-kb-rose-deep, #B85268)' : 'rgba(255, 255, 255, 0.95)',
+                color: hovered ? '#FFFFFF' : 'var(--color-kb-rose-deep, #B85268)',
+                boxShadow: '0 8px 22px rgba(26, 17, 24, 0.16)',
+                transform: hovered ? 'translateY(0) scale(1)' : 'translateY(8px) scale(0.85)',
+                opacity: hovered ? 1 : 0,
+                transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+              }}
+            >
+              <svg width="19" height="19" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+            </button>
+
             {/* Contador de fotos */}
             {totalImagenes > 1 && (
               <span
@@ -247,53 +277,59 @@ const ProductCard = ({ product }) => {
               }}
             />
 
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.55rem' }}>
-              <span
-                style={{
-                  fontFamily: 'var(--font-display)',
-                  fontSize: '1.3rem', fontWeight: 500,
-                  color: p.roseVivid, letterSpacing: '-0.02em',
-                }}
-              >
-                {CURRENCY} {precio?.toFixed(2)}
-              </span>
-              {tieneDescuento && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.55rem' }}>
                 <span
                   style={{
-                    fontSize: '0.7rem', color: p.textSoft,
-                    textDecoration: 'line-through', fontWeight: 300, opacity: 0.55,
+                    fontFamily: 'var(--font-sans)',
+                    fontSize: '1.15rem', fontWeight: 700,
+                    color: 'var(--color-kb-rose-deep, #B85268)', letterSpacing: '-0.02em',
                   }}
                 >
-                  {CURRENCY} {price_original?.toFixed(2)}
+                  {CURRENCY} {precio?.toFixed(2)}
                 </span>
-              )}
+                {tieneDescuento && (
+                  <span
+                    style={{
+                      fontSize: '0.7rem', color: p.textSoft,
+                      textDecoration: 'line-through', fontWeight: 300, opacity: 0.55,
+                    }}
+                  >
+                    {CURRENCY} {price_original?.toFixed(2)}
+                  </span>
+                )}
+              </div>
+              {/* Estrellas gold */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.15rem', flexShrink: 0 }}>
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill="var(--color-kb-gold, #C9A84C)" aria-hidden="true">
+                    <path d="M12 2l2.9 6.26 6.6.72-4.9 4.55 1.3 6.52L12 17.27 6.1 20.05l1.3-6.52L2.5 8.98l6.6-.72L12 2z" />
+                  </svg>
+                ))}
+              </div>
             </div>
 
             <button
               onClick={handleAgregar}
               style={{
                 width: '100%', marginTop: '0.7rem',
-                fontSize: '0.58rem', padding: '0.62rem 0',
+                fontSize: '0.58rem', padding: '0.66rem 0',
                 letterSpacing: '0.2em', textTransform: 'uppercase',
-                fontWeight: 600, color: p.roseDeep,
-                background: 'transparent',
-                border: `1.5px solid ${p.roseBlush}75`,
+                fontWeight: 600, color: '#FFFFFF',
+                background: 'var(--color-kb-rose-deep, #B85268)',
+                border: '1px solid var(--color-kb-rose-deep, #B85268)',
                 borderRadius: '50px',
                 cursor: 'pointer',
                 transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
                 fontFamily: 'var(--font-sans)',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = `linear-gradient(135deg, ${p.roseVivid}, ${p.coral})`
-                e.currentTarget.style.color = '#FFFFFF'
-                e.currentTarget.style.borderColor = 'transparent'
-                e.currentTarget.style.boxShadow = `0 8px 20px ${p.roseVivid}40`
+                e.currentTarget.style.background = 'var(--color-kb-gold, #C9A84C)'
+                e.currentTarget.style.borderColor = 'var(--color-kb-gold, #C9A84C)'
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent'
-                e.currentTarget.style.color = p.roseDeep
-                e.currentTarget.style.borderColor = `${p.roseBlush}75`
-                e.currentTarget.style.boxShadow = 'none'
+                e.currentTarget.style.background = 'var(--color-kb-rose-deep, #B85268)'
+                e.currentTarget.style.borderColor = 'var(--color-kb-rose-deep, #B85268)'
               }}
             >
               Agregar al carrito

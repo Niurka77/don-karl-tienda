@@ -36,7 +36,9 @@ export default function HeroSection({ title, subtitle, ctaText, backgroundImage,
   }, [slides.length])
 
   const slide = slides[current]
+  const slideTag = slide?.tag_override || 'New Collection'
   const slideTitle = slide?.title_override || slide?.products?.name || title
+  const slideAccent = slide?.title_accent_override || ''
   const slideSubtitle = slide?.subtitle_override || slide?.products?.brand || subtitle
   const slideImage = slide?.image_override || slide?.products?.images_urls?.[0] || slide?.products?.image_url || ''
   const slidePrice = slide?.products?.price_original
@@ -44,119 +46,122 @@ export default function HeroSection({ title, subtitle, ctaText, backgroundImage,
   const hasProductLink = Boolean(slide?.product_id)
 
   return (
-    <section className="relative w-full overflow-hidden bg-white">
+    <section className="relative w-full overflow-hidden">
       <div
-        className="relative w-full h-[85vh] flex items-center justify-center overflow-hidden"
-        style={!backgroundImage && backgroundColor ? { backgroundColor } : undefined}
+        className="relative w-full min-h-[500px] flex items-center overflow-hidden"
+        style={{
+          backgroundColor: backgroundColor || 'var(--color-kb-rose-deep)',
+          backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
       >
+        {/* Overlay suave para legibilidad */}
         {backgroundImage && (
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${backgroundImage})` }}
-          />
+          <div className="absolute inset-0 bg-black/30 pointer-events-none" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-black/20 pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between w-full max-w-7xl mx-auto px-6 gap-8">
-          <div className="text-center md:text-left flex-1 max-w-xl">
-            {slide?.tag_override && (
-              <span className="inline-block font-sans text-[0.55rem] tracking-[0.25em] uppercase text-white/70 border border-white/20 px-4 py-1.5 mb-6">
-                {slide.tag_override}
-              </span>
-            )}
-            <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-light text-white leading-tight mb-4">
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-[3fr_2fr] items-center gap-10 py-16">
+          {/* ── Texto ─────────────────────────────────────────────────────── */}
+          <div className="text-center md:text-left max-w-xl">
+            <span className="inline-flex items-center gap-2 font-sans text-[0.62rem] tracking-[0.3em] uppercase text-kb-gold border border-kb-gold/50 rounded-full px-4 py-1.5 mb-6 bg-black/5">
+              <span className="w-1.5 h-1.5 rounded-full bg-kb-gold" />
+              {slideTag}
+            </span>
+
+            <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-light text-white leading-[1.05] mb-4">
               {slideTitle || 'Nueva Colección'}
-              {slide?.title_accent_override && (
-                <span className="italic text-kb-rose"> {slide.title_accent_override}</span>
-              )}
+              {slideAccent && <span className="italic text-kb-gold block"> {slideAccent}</span>}
             </h1>
+
             {slideSubtitle && (
-              <p className="font-sans text-sm md:text-base text-white/70 tracking-[0.2em] uppercase mb-6 font-light">
+              <p className="font-sans text-sm md:text-base text-white/80 tracking-[0.18em] uppercase mb-6 font-light">
                 {slideSubtitle}
               </p>
             )}
+
             {slidePrice && (
-              <p className="font-sans text-xl md:text-2xl text-kb-rose font-light tracking-wide mb-8">
-                S/ {Number(slidePrice).toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+              <p className="font-sans text-xl md:text-2xl text-kb-gold font-light tracking-wide mb-8">
+                Desde S/ {Number(slidePrice).toLocaleString('es-PE', { minimumFractionDigits: 2 })}
               </p>
             )}
-            {hasProductLink && (
+
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+              {hasProductLink && (
+                <Link
+                  to={`/producto/${slide.product_id}`}
+                  className="inline-block bg-white text-kb-rose-deep px-10 py-4 text-xs font-sans tracking-[0.2em] uppercase transition-all duration-300 hover:bg-kb-gold hover:text-white font-semibold"
+                >
+                  {ctaText || 'Ver Producto'}
+                </Link>
+              )}
               <Link
-                to={`/producto/${slide.product_id}`}
-                className="inline-block border border-white text-white bg-transparent px-10 py-4 text-xs font-sans tracking-[0.2em] uppercase transition-all duration-300 hover:bg-white hover:text-kb-obsidian"
+                to="/catalogo"
+                className="inline-block border border-white/60 text-white bg-transparent px-10 py-4 text-xs font-sans tracking-[0.2em] uppercase transition-all duration-300 hover:border-white hover:bg-white hover:text-kb-rose-deep"
               >
-                {ctaText || 'Ver Producto'}
+                Ver Catálogo
               </Link>
-            )}
+            </div>
           </div>
 
-          {slideImage && (
-            <div className="flex-shrink-0 w-64 h-64 md:w-96 md:h-96 relative">
-              {hasProductLink ? (
-                <Link to={`/producto/${slide.product_id}`}>
+          {/* ── Imagen con arco decorativo ────────────────────────────────── */}
+          <div className="flex items-center justify-center md:justify-end relative">
+            <div className="relative w-64 h-72 md:w-80 md:h-[22rem]">
+              <svg
+                viewBox="0 0 320 352"
+                className="absolute inset-0 w-full h-full"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M20 332V120 C20 40 120 8 160 8 C200 8 300 40 300 120 V332Z"
+                  fill="white"
+                  opacity="0.12"
+                  stroke="rgba(255,255,255,0.25)"
+                  strokeWidth="1.5"
+                />
+              </svg>
+              {slideImage ? (
+                hasProductLink ? (
+                  <Link to={`/producto/${slide.product_id}`} className="block h-full">
+                    <img
+                      src={slideImage}
+                      alt={slideTitle || ''}
+                      className="relative w-full h-full object-cover shadow-2xl"
+                    />
+                  </Link>
+                ) : (
                   <img
                     src={slideImage}
                     alt={slideTitle || ''}
-                    className="w-full h-full object-cover rounded-sm shadow-2xl"
+                    className="relative w-full h-full object-cover shadow-2xl"
                   />
-                </Link>
+                )
               ) : (
-                <img
-                  src={slideImage}
-                  alt={slideTitle || ''}
-                  className="w-full h-full object-cover rounded-sm shadow-2xl"
-                />
+                <div className="relative w-full h-full bg-white/10 flex items-center justify-center">
+                  <span className="font-display text-white/40 text-4xl">KB</span>
+                </div>
               )}
             </div>
-          )}
+          </div>
         </div>
 
+        {/* ── Indicadores de slide ────────────────────────────────────────── */}
         {hasSlides && (
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex gap-2">
             {slides.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setCurrent(i)}
-                className={`w-2 h-2 rounded-full transition-all duration-500 ${
-                  i === current ? 'bg-white w-8' : 'bg-white/40 hover:bg-white/60'
+                aria-label={`Slide ${i + 1}`}
+                className={`h-1.5 rounded-full transition-all duration-500 ${
+                  i === current ? 'w-8 bg-kb-gold' : 'w-3 bg-white/40 hover:bg-white/70'
                 }`}
               />
             ))}
           </div>
         )}
       </div>
-
-      {hasSlides && (
-        <div className="w-full bg-white border-t border-kb-rose/10">
-          <div className="max-w-7xl mx-auto px-6 py-6">
-            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
-              {slides.map((s, i) => {
-                const thumb = s.image_override || s.products?.images_urls?.[0] || s.products?.image_url || ''
-                const name = s.title_override || s.products?.name || ''
-
-                return (
-                  <button
-                    key={s.id}
-                    onClick={() => setCurrent(i)}
-                    className={`flex-shrink-0 w-20 md:w-24 transition-all duration-300 ${
-                      i === current ? 'opacity-100 ring-1 ring-kb-rose' : 'opacity-50 hover:opacity-80'
-                    }`}
-                  >
-                    <div className="aspect-[3/4] overflow-hidden rounded-sm bg-kb-blush">
-                      {thumb && (
-                        <img src={thumb} alt={name} className="w-full h-full object-cover" />
-                      )}
-                    </div>
-                    <p className="font-sans text-[0.6rem] text-kb-obsidian/60 mt-1 truncate tracking-wider uppercase">
-                      {name}
-                    </p>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-        </div>
-      )}
     </section>
   )
 }
