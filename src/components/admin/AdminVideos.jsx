@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { useRealtimeReload } from '../../hooks/useRealtimeReload'
 
 const AdminVideos = () => {
   const [videos, setVideos] = useState([])
@@ -21,8 +22,11 @@ const AdminVideos = () => {
     cargarVideos()
   }, [])
 
-  const cargarVideos = async () => {
-    setCargando(true)
+  // 🔄 REALTIME: recargar videos ante cambios externos
+  useRealtimeReload('social_videos', () => cargarVideos(true))
+
+  const cargarVideos = async (silent = false) => {
+    if (!silent) setCargando(true)
     const { data, error } = await supabase
       .from('social_videos')
       .select('*')
@@ -30,7 +34,7 @@ const AdminVideos = () => {
       .order('created_at', { ascending: false })
     
     if (!error && data) setVideos(data)
-    setCargando(false)
+    if (!silent) setCargando(false)
   }
 
   const handleChange = (e) => {

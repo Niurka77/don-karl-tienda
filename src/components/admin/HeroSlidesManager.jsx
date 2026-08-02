@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAdminNotifications } from '../../hooks/useAdminNotifications'
+import { useRealtimeReload } from '../../hooks/useRealtimeReload'
 
 const MAX_SLIDES = 5
 
@@ -37,9 +38,13 @@ const HeroSlidesManager = () => {
     fetchData()
   }, [])
 
-  const fetchData = async () => {
+  // 🔄 REALTIME: recargar slides y productos ante cambios externos
+  useRealtimeReload('hero_slides', () => fetchData(true))
+  useRealtimeReload('products', () => fetchData(true))
+
+  const fetchData = async (silent = false) => {
     try {
-      setLoading(true)
+      if (!silent) setLoading(true)
       const { data: slidesData, error: slidesError } = await supabase
         .from('hero_slides')
         .select(`*, products ( name, brand, category, images_urls, image_url )`)
@@ -60,7 +65,7 @@ const HeroSlidesManager = () => {
       console.error('Error fetching data:', error)
       agregarToast('Error al cargar datos', 'error')
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }
 

@@ -28,7 +28,7 @@ const NotificationBell = () => {
         )}
       </button>
       {open && (
-        <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-[70vh] flex flex-col">
+        <div className="absolute left-full top-0 ml-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-[70vh] flex flex-col">
           <div className="px-4 py-3 border-b border-gray-100">
             <p className="text-sm font-semibold text-gray-800">Notificaciones</p>
           </div>

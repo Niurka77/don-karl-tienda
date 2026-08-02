@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useSiteConfigStore from '../../store/siteConfigStore'
 import { supabase } from '../../lib/supabase'
+import { useRealtimeReload } from '../../hooks/useRealtimeReload'
 
 const SECTIONS = [
   { key: 'hero', label: 'Hero Principal', anchor: '/' },
@@ -93,10 +94,13 @@ function SaveBar({ tabKey, hasChanges, saving, onSave, onView }) {
 
 export default function VisualConfigPage() {
   const navigate = useNavigate()
-  const { config, saveConfig } = useSiteConfigStore()
+  const { config, saveConfig, loadConfig } = useSiteConfigStore()
   const [activeTab, setActiveTab] = useState('textures')
   const [uploading, setUploading] = useState(false)
   const [toast, setToast] = useState({ message: '', type: '', nav: null })
+
+  // 🔄 REALTIME: recargar config visual ante cambios externos
+  useRealtimeReload('site_config', () => loadConfig(true))
 
   // Estado local separado por tab
   const [localTextures, setLocalTextures] = useState({ ...config.textures })

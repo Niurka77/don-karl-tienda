@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 import ProductoForm from '../../components/admin/ProductoForm'
 import { useAdminNotifications } from '../../hooks/useAdminNotifications'
+import { useRealtimeReload } from '../../hooks/useRealtimeReload'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -432,8 +433,8 @@ const ProductosPage = () => {
 
   // ── Data fetching ──────────────────────────────────────────────────────────
 
-  const fetchProducts = useCallback(async () => {
-    setIsLoading(true)
+  const fetchProducts = useCallback(async (silent = false) => {
+    if (!silent) setIsLoading(true)
     setLoadError(null)
 
     const { data, error } = await supabase
@@ -448,12 +449,15 @@ const ProductosPage = () => {
       setProducts(data || [])
     }
 
-    setIsLoading(false)
+    if (!silent) setIsLoading(false)
   }, [])
 
   useEffect(() => {
     fetchProducts()
   }, [fetchProducts])
+
+  // 🔄 REALTIME: recargar inventario ante cambios externos
+  useRealtimeReload('products', () => fetchProducts(true))
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
