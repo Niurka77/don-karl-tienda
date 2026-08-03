@@ -104,7 +104,7 @@ const ImageUploader = ({
               <button
                 type="button"
                 onClick={() => onRemoveImage(index)}
-                className="absolute top-2 right-2 w-7 h-7 bg-[#1A1118] text-white rounded-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-[#B85268]"
+                className="absolute top-2 right-2 w-7 h-7 bg-[#1A1118] text-white rounded-sm flex items-center justify-center transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-[#B85268]"
               >
                 ×
               </button>

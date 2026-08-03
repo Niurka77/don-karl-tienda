@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { useAdminNotifications } from '../../hooks/useAdminNotifications'
 import { useNotificationCenter } from '../../context/NotificationContext'
 import { descargarOrdenPDF } from '../../lib/generarOrdenPDF'
+import { playNewOrderSound } from '../../lib/sound'
 
 const PedidosPage = () => {
   const [pedidos, setPedidos] = useState([])

@@ -227,7 +227,10 @@ const ProductGrid = () => {
         if (filtros.precioMin) query = query.gte('price_original', parseFloat(filtros.precioMin))
         if (filtros.precioMax) query = query.lte('price_original', parseFloat(filtros.precioMax))
         if (filtros.origen) query = query.eq('origin', filtros.origen)
-        if (filtros.busqueda) query = query.ilike('name', `%${filtros.busqueda}%`)
+        if (filtros.busqueda) {
+          const q = `*${filtros.busqueda}*`
+          query = query.or(`name.ilike.${q},brand.ilike.${q},sku.ilike.${q}`)
+        }
 
         query = query.gt('stock', 0)
 
@@ -286,18 +289,28 @@ const ProductGrid = () => {
     return () => { cancelled = true }
   }, [filtros, paginaActual])
 
-  // Scroll automático al grid
+  // Scroll automático al grid cuando hay búsqueda/filtros en la URL
   useEffect(() => {
-    if (!cargando && (productos.length > 0 || error) && searchParams.toString()) {
-      const t = setTimeout(() => {
-        if (gridRef.current) {
-          const offset = gridRef.current.getBoundingClientRect().top + window.pageYOffset - 140
-          window.scrollTo({ top: offset, behavior: 'smooth' })
+    if (!searchParams.toString() || cargando) return
+    let attempts = 0
+    let lastTop = null
+    const intento = setInterval(() => {
+      attempts++
+      const target = document.getElementById('product-grid-section')
+      if (target) {
+        const top = target.getBoundingClientRect().top + window.pageYOffset
+        // Deja de reintentar cuando la posición se estabiliza
+        if (lastTop !== null && Math.abs(top - lastTop) < 4) {
+          clearInterval(intento)
+          return
         }
-      }, 300)
-      return () => clearTimeout(t)
-    }
-  }, [productos, cargando, error, searchParams])
+        lastTop = top
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+      if (attempts >= 15) clearInterval(intento)
+    }, 300)
+    return () => clearInterval(intento)
+  }, [cargando, searchParams])
 
   const handleChangeFiltros = (nf) => {
     setFiltros(nf)
@@ -309,9 +322,9 @@ const ProductGrid = () => {
     if (nf.precioMin) p.set('precioMin', nf.precioMin)
     if (nf.precioMax) p.set('precioMax', nf.precioMax)
     if (nf.origen) p.set('origen', nf.origen)
+    if (nf.busqueda) p.set('busqueda', nf.busqueda)
     if (nf.orden && nf.orden !== 'created_at-desc') p.set('orden', nf.orden)
     setSearchParams(p)
-    if (nf.busqueda) p.set('busqueda', nf.busqueda)
   }
 
   const totalPages = Math.ceil(totalProductos / productosPorPagina)

@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAdminNotifications } from '../../hooks/useAdminNotifications'
+import { useNotificationCenter } from '../../context/NotificationContext'
+import { playNewOrderSound } from '../../lib/sound'
 import VentaRapidaModal from '../../components/admin/VentaRapidaModal'
 
 // ---------------------------------------------------------------------------
@@ -102,7 +104,7 @@ const SectionHeader = ({ title, subtitle, badge }) => (
 // Hook: carga de estadísticas del dashboard
 // ---------------------------------------------------------------------------
 
-const useDashboardStats = (onError) => {
+const useDashboardStats = (onError, onNewOrder) => {
   const [stats, setStats] = useState({
     totalProducts:      0,
     totalOrders:        0,
@@ -180,14 +182,17 @@ const useDashboardStats = (onError) => {
 
     const orderChannel = supabase
       .channel('dashboard-orders')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
+        if (payload.eventType === 'INSERT') onNewOrder?.(payload.new)
+        load()
+      })
       .subscribe()
 
     return () => {
       supabase.removeChannel(productChannel)
       supabase.removeChannel(orderChannel)
     }
-  }, [load])
+  }, [load, onNewOrder])
 
   return { stats, isLoading, reload: load }
 }
@@ -201,13 +206,26 @@ const DashboardPage = () => {
   const [ventaRapidaAbierto, setVentaRapidaAbierto] = useState(false)
 
   const { agregarToast, ToastContainer } = useAdminNotifications()
+  const { pushNotification } = useNotificationCenter()
 
   const onStatsError = useCallback(() => {
     setHasError(true)
     agregarToast('No se pudieron cargar las estadísticas', 'error')
   }, [agregarToast])
 
-  const { stats, isLoading, reload: reloadStats } = useDashboardStats(onStatsError)
+  // 🔔 Cuando llega un pedido nuevo al dashboard: sonido + toast + campana
+  const onNewOrder = useCallback((order) => {
+    playNewOrderSound()
+    agregarToast(`🔔 Nuevo pedido de ${order.customer_name ?? 'cliente'}`, 'success')
+    pushNotification({
+      title: 'Nuevo pedido',
+      body: `${order.customer_name ?? 'Cliente'} — pendiente`,
+      type: 'success',
+      link: '/admin/pedidos',
+    })
+  }, [agregarToast, pushNotification])
+
+  const { stats, isLoading, reload: reloadStats } = useDashboardStats(onStatsError, onNewOrder)
 
   const handleExportCSV = useCallback(() => {
     exportStatsToCSV(stats)
