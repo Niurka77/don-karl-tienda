@@ -24,3 +24,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Herramientas de captura automatizada y archivos del sistema
+.playwright-mcp/
+desktop.ini

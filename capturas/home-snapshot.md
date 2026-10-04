@@ -1,0 +1,427 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]: ✦ Envío gratis en compras mayores a S/ 200 — Recoge en tienda
+    - navigation [ref=e8]:
+      - link "KB Dresses and More" [ref=e9] [cursor=pointer]:
+        - /url: /
+        - img "KB Dresses and More" [ref=e10]
+      - textbox "Buscar productos" [ref=e14]:
+        - /placeholder: Buscar vestidos, carteras, accesorios...
+      - link "Carrito" [ref=e16] [cursor=pointer]:
+        - /url: /checkout
+    - generic [ref=e19]:
+      - button "Comprar por categoría" [ref=e20] [cursor=pointer]
+      - generic [ref=e23]:
+        - button "Tienda" [ref=e24] [cursor=pointer]
+        - button "Novedades" [ref=e25] [cursor=pointer]
+        - button "Importados" [ref=e26] [cursor=pointer]
+        - button "Nacionales" [ref=e27] [cursor=pointer]
+        - button "Catálogo" [ref=e28] [cursor=pointer]
+        - button "Nosotros" [ref=e29] [cursor=pointer]
+      - link "Soporte +51 906 877 812" [ref=e30] [cursor=pointer]:
+        - /url: https://wa.me/+51 906 877 812
+    - complementary [ref=e33]:
+      - generic [ref=e34]:
+        - generic [ref=e35]: Categorías
+        - button "Cerrar" [ref=e36] [cursor=pointer]
+      - button "Bolsos" [ref=e373] [cursor=pointer]
+  - main [ref=e77]:
+    - main [ref=e78]:
+      - generic [ref=e81]:
+        - generic [ref=e82]:
+          - generic [ref=e83]:
+            - generic [ref=e84]: Nueva Colección
+            - heading "Bolso crossbody Tommy Hilfiger color negro" [level=1] [ref=e379]
+            - paragraph [ref=e87]: Tommy Hilfiger
+            - paragraph [ref=e380]: Desde S/ 199.00
+            - generic [ref=e88]:
+              - link "Descubrir Colección" [ref=e381] [cursor=pointer]:
+                - /url: /producto/77365570-bf18-4c77-a731-a8910ef5b0a4
+              - link "Ver Catálogo" [ref=e89] [cursor=pointer]:
+                - /url: /catalogo
+          - link [ref=e382] [cursor=pointer]:
+            - /url: /producto/77365570-bf18-4c77-a731-a8910ef5b0a4
+            - img "Bolso crossbody Tommy Hilfiger color negro" [ref=e383]
+        - generic [ref=e384]:
+          - button "Slide 1" [ref=e385]
+          - button "Slide 2" [ref=e386]
+          - button "Slide 3" [ref=e387]
+          - button "Slide 4" [ref=e388]
+          - button "Slide 5" [ref=e389]
+      - generic [ref=e100]:
+        - generic [ref=e101]:
+          - paragraph [ref=e102]: Explora
+          - heading "Compra por categoría" [level=2] [ref=e103]
+        - button "bolsos bolsos" [ref=e390] [cursor=pointer]:
+          - img "bolsos" [ref=e392]
+          - generic [ref=e393]: bolsos
+      - generic [ref=e108]:
+        - generic [ref=e110]:
+          - generic [ref=e111]:
+            - paragraph [ref=e112]: Colección actual
+            - heading "Todos los productos" [level=2] [ref=e113]
+            - paragraph [ref=e114]: Moda importada directamente desde Estados Unidos
+          - button "Descargar Catálogo PDF" [ref=e116] [cursor=pointer]
+        - generic [ref=e121]:
+          - generic [ref=e122]:
+            - generic [ref=e123]:
+              - generic [ref=e124]: Filtrar
+              - combobox "Ordenar productos" [ref=e127] [cursor=pointer]:
+                - option "Recientes" [selected]
+                - 'option "Precio: menor"'
+                - 'option "Precio: mayor"'
+                - 'option "Nombre: A-Z"'
+            - generic [ref=e129]:
+              - generic [ref=e130]:
+                - generic [ref=e131]: Categoría
+                - combobox "Categoría" [ref=e132] [cursor=pointer]:
+                  - option "Todo" [selected]
+                  - option "Vestidos"
+                  - option "Billeteras"
+                  - option "Zapatos"
+                  - option "Bolsos"
+              - generic [ref=e133]:
+                - generic [ref=e134]: Marca
+                - combobox "Marca" [ref=e135] [cursor=pointer]:
+                  - option "Todas" [selected]
+                  - option "Guess"
+                  - option "Tommy Hilfiger"
+                  - option "Calvin Klein"
+                  - option "Michael Kors"
+                  - option "Victoria Secret"
+              - generic [ref=e136]:
+                - generic [ref=e137]: Género
+                - combobox "Género" [ref=e138] [cursor=pointer]:
+                  - option "Todos" [selected]
+                  - option "Mujer"
+                  - option "Hombre"
+              - generic [ref=e139]:
+                - generic [ref=e140]: Precio min
+                - spinbutton "Precio min" [ref=e141] [cursor=pointer]
+              - generic [ref=e142]:
+                - generic [ref=e143]: Precio max
+                - spinbutton "Precio max" [ref=e144] [cursor=pointer]
+              - generic [ref=e145]:
+                - generic [ref=e146]: Origen
+                - combobox "Origen" [ref=e147] [cursor=pointer]:
+                  - option "Todos" [selected]
+                  - option "Importados"
+                  - option "Nacionales"
+              - generic [ref=e148]:
+                - generic [ref=e149]: Buscar producto
+                - textbox "Escribe el nombre..." [ref=e150] [cursor=pointer]
+          - paragraph [ref=e396]: 17 piezas
+          - generic [ref=e397]:
+            - link "Ver Billetera Guess color negro" [ref=e400] [cursor=pointer]:
+              - /url: /producto/f83c8bd7-b0f5-4a8c-8501-10c8530171c6
+              - article [ref=e401]:
+                - generic [ref=e402]:
+                  - img "Billetera Guess color negro" [ref=e404]
+                  - img "Billetera Guess color negro" [ref=e406]
+                  - button "Agregar Billetera Guess color negro al carrito" [ref=e407]
+                  - generic [ref=e410]: 1 / 2
+                  - generic [ref=e411]: Nuevo
+                  - button "Compartir" [ref=e413]
+                - generic [ref=e416]:
+                  - paragraph [ref=e417]: GUESS
+                  - heading "Billetera Guess color negro" [level=3] [ref=e418]
+                  - generic [ref=e419]:
+                    - generic [ref=e420]: CÓDIGO
+                    - generic [ref=e421]: "10"
+                  - generic [ref=e423]: S/ 172.00
+                  - button "Agregar al carrito" [ref=e437]
+            - link "Ver Bolso crossbody Guess color marrón con correa ajustable" [ref=e440] [cursor=pointer]:
+              - /url: /producto/ef48e199-e022-4aef-ad20-1b4470570f23
+              - article [ref=e441]:
+                - generic [ref=e442]:
+                  - img "Bolso crossbody Guess color marrón con correa ajustable" [ref=e444]
+                  - img "Bolso crossbody Guess color marrón con correa ajustable" [ref=e446]
+                  - button "Agregar Bolso crossbody Guess color marrón con correa ajustable al carrito" [ref=e447]
+                  - generic [ref=e450]: 1 / 2
+                  - generic [ref=e451]: Nuevo
+                  - button "Compartir" [ref=e453]
+                - generic [ref=e456]:
+                  - paragraph [ref=e457]: GUESS
+                  - heading "Bolso crossbody Guess color marrón con correa ajustable" [level=3] [ref=e458]
+                  - generic [ref=e459]:
+                    - generic [ref=e460]: CÓDIGO
+                    - generic [ref=e461]: "69"
+                  - generic [ref=e463]: S/ 292.00
+                  - button "Agregar al carrito" [ref=e477]
+            - link "Ver Bolso Guess color negro con herrajes plateados y monograma grabado" [ref=e480] [cursor=pointer]:
+              - /url: /producto/f249e617-e586-46ab-b1cf-7759dd628664
+              - article [ref=e481]:
+                - generic [ref=e482]:
+                  - img "Bolso Guess color negro con herrajes plateados y monograma grabado" [ref=e484]
+                  - img "Bolso Guess color negro con herrajes plateados y monograma grabado" [ref=e486]
+                  - button "Agregar Bolso Guess color negro con herrajes plateados y monograma grabado al carrito" [ref=e487]
+                  - generic [ref=e490]: 1 / 3
+                  - generic [ref=e491]: Nuevo
+                  - button "Compartir" [ref=e493]
+                - generic [ref=e496]:
+                  - paragraph [ref=e497]: GUESS
+                  - heading "Bolso Guess color negro con herrajes plateados y monograma grabado" [level=3] [ref=e498]
+                  - generic [ref=e499]:
+                    - generic [ref=e500]: CÓDIGO
+                    - generic [ref=e501]: "71"
+                  - generic [ref=e503]: S/ 350.00
+                  - button "Agregar al carrito" [ref=e517]
+            - link "Ver Crossbody Tommy Hilfiger con monograma en color verde olivo y Correa ajustable color marrón" [ref=e520] [cursor=pointer]:
+              - /url: /producto/1f9e408b-8e41-4f54-9d9c-407f49510e66
+              - article [ref=e521]:
+                - generic [ref=e522]:
+                  - img "Crossbody Tommy Hilfiger con monograma en color verde olivo y Correa ajustable color marrón" [ref=e524]
+                  - img "Crossbody Tommy Hilfiger con monograma en color verde olivo y Correa ajustable color marrón" [ref=e526]
+                  - button "Agregar Crossbody Tommy Hilfiger con monograma en color verde olivo y Correa ajustable color marrón al carrito" [ref=e527]
+                  - generic [ref=e530]: 1 / 3
+                  - generic [ref=e531]: Nuevo
+                  - button "Compartir" [ref=e533]
+                - generic [ref=e536]:
+                  - paragraph [ref=e537]: TOMMY HILFIGER
+                  - heading "Crossbody Tommy Hilfiger con monograma en color verde olivo y Correa ajustable color marrón" [level=3] [ref=e538]
+                  - generic [ref=e539]:
+                    - generic [ref=e540]: CÓDIGO
+                    - generic [ref=e541]: "72"
+                  - generic [ref=e543]: S/ 188.00
+                  - button "Agregar al carrito" [ref=e557]
+            - link "Ver Crossbody Guess color negro con herrajes plateados y monograma en relieve" [ref=e560] [cursor=pointer]:
+              - /url: /producto/3937eb70-f7a8-4639-b038-7094445e7d15
+              - article [ref=e561]:
+                - generic [ref=e562]:
+                  - img "Crossbody Guess color negro con herrajes plateados y monograma en relieve" [ref=e564]
+                  - img "Crossbody Guess color negro con herrajes plateados y monograma en relieve" [ref=e566]
+                  - button "Agregar Crossbody Guess color negro con herrajes plateados y monograma en relieve al carrito" [ref=e567]
+                  - generic [ref=e570]: 1 / 3
+                  - generic [ref=e571]: Nuevo
+                  - button "Compartir" [ref=e573]
+                - generic [ref=e576]:
+                  - paragraph [ref=e577]: GUESS
+                  - heading "Crossbody Guess color negro con herrajes plateados y monograma en relieve" [level=3] [ref=e578]
+                  - generic [ref=e579]:
+                    - generic [ref=e580]: CÓDIGO
+                    - generic [ref=e581]: "68"
+                  - generic [ref=e583]: S/ 279.00
+                  - button "Agregar al carrito" [ref=e597]
+            - link "Ver Tote Tommy Hilfiger color negro con estampado de monograma" [ref=e600] [cursor=pointer]:
+              - /url: /producto/44a77270-32be-4bac-ba6b-cf631e9bf2c5
+              - article [ref=e601]:
+                - generic [ref=e602]:
+                  - img "Tote Tommy Hilfiger color negro con estampado de monograma" [ref=e604]
+                  - img "Tote Tommy Hilfiger color negro con estampado de monograma" [ref=e606]
+                  - button "Agregar Tote Tommy Hilfiger color negro con estampado de monograma al carrito" [ref=e607]
+                  - generic [ref=e610]: 1 / 3
+                  - generic [ref=e611]: Nuevo
+                  - button "Compartir" [ref=e613]
+                - generic [ref=e616]:
+                  - paragraph [ref=e617]: TOMMY HILFIGER
+                  - heading "Tote Tommy Hilfiger color negro con estampado de monograma" [level=3] [ref=e618]
+                  - generic [ref=e619]:
+                    - generic [ref=e620]: CÓDIGO
+                    - generic [ref=e621]: "67"
+                  - generic [ref=e623]: S/ 234.00
+                  - button "Agregar al carrito" [ref=e637]
+            - link "Ver Shoulder bag Guess color marron con charms monogrameado" [ref=e640] [cursor=pointer]:
+              - /url: /producto/6678543e-788d-4d64-a0bb-649ae0df01d5
+              - article [ref=e641]:
+                - generic [ref=e642]:
+                  - img "Shoulder bag Guess color marron con charms monogrameado" [ref=e644]
+                  - img "Shoulder bag Guess color marron con charms monogrameado" [ref=e646]
+                  - button "Agregar Shoulder bag Guess color marron con charms monogrameado al carrito" [ref=e647]
+                  - generic [ref=e650]: 1 / 3
+                  - generic [ref=e651]: Nuevo
+                  - button "Compartir" [ref=e653]
+                - generic [ref=e656]:
+                  - paragraph [ref=e657]: GUESS
+                  - heading "Shoulder bag Guess color marron con charms monogrameado" [level=3] [ref=e658]
+                  - generic [ref=e659]:
+                    - generic [ref=e660]: CÓDIGO
+                    - generic [ref=e661]: "47"
+                  - generic [ref=e663]: S/ 285.00
+                  - button "Agregar al carrito" [ref=e677]
+            - link "Ver Bolso crossbody Tommy Hilfiger color negro" [ref=e680] [cursor=pointer]:
+              - /url: /producto/77365570-bf18-4c77-a731-a8910ef5b0a4
+              - article [ref=e681]:
+                - generic [ref=e682]:
+                  - img "Bolso crossbody Tommy Hilfiger color negro" [ref=e684]
+                  - img "Bolso crossbody Tommy Hilfiger color negro" [ref=e686]
+                  - button "Agregar Bolso crossbody Tommy Hilfiger color negro al carrito" [ref=e687]
+                  - generic [ref=e690]: 1 / 3
+                  - generic [ref=e691]: Nuevo
+                  - button "Compartir" [ref=e693]
+                - generic [ref=e696]:
+                  - paragraph [ref=e697]: TOMMY HILFIGER
+                  - heading "Bolso crossbody Tommy Hilfiger color negro" [level=3] [ref=e698]
+                  - generic [ref=e699]:
+                    - generic [ref=e700]: CÓDIGO
+                    - generic [ref=e701]: "35"
+                  - generic [ref=e703]: S/ 199.00
+                  - button "Agregar al carrito" [ref=e717]
+          - navigation "Paginación" [ref=e718]:
+            - button "Anterior" [disabled] [ref=e719]: ← Anterior
+            - group [ref=e720]:
+              - button "Página 1" [ref=e721]: "1"
+              - button "Página 2" [ref=e722] [cursor=pointer]: "2"
+              - button "Página 3" [ref=e723] [cursor=pointer]: "3"
+            - button "Siguiente" [ref=e724] [cursor=pointer]: Siguiente →
+      - generic [ref=e221]:
+        - generic [ref=e222]:
+          - paragraph [ref=e225]: KB Dresses & More
+          - heading "Nuestra historia con estilo" [level=2] [ref=e226]
+          - paragraph [ref=e227]: "KB Dresses & More nació en Chiclayo con una idea simple: traer moda importada de Estados Unidos con calidad y estilo para la mujer peruana."
+          - paragraph [ref=e228]: "Seleccionamos cada pieza con ojo editorial: carteras, vestidos, billeteras y accesorios de marcas originales. Coordina tu compra por WhatsApp y recoge en tienda o recíbelo en casa."
+          - generic [ref=e229]:
+            - generic [ref=e230]:
+              - paragraph [ref=e234]: Calidad original
+              - paragraph [ref=e235]: Marcas importadas de USA, seleccionadas pieza por pieza
+            - generic [ref=e236]:
+              - paragraph [ref=e240]: Atención personal
+              - paragraph [ref=e241]: Coordina tu pedido por WhatsApp con asesoría real
+            - generic [ref=e242]:
+              - paragraph [ref=e246]: Recojo o envío
+              - paragraph [ref=e247]: Recoge en tienda en Chiclayo o recíbelo en tu casa
+          - generic [ref=e249]:
+            - generic [ref=e250]:
+              - paragraph [ref=e251]: USA
+              - paragraph [ref=e252]: moda importada
+            - generic [ref=e253]:
+              - paragraph [ref=e254]: "+500"
+              - paragraph [ref=e255]: clientas felices
+            - generic [ref=e256]:
+              - paragraph [ref=e257]: Perú
+              - paragraph [ref=e258]: envíos nacionales
+          - generic [ref=e259]:
+            - generic [ref=e260]: Chiclayo, Perú
+            - link "Hablemos por WhatsApp" [ref=e265] [cursor=pointer]:
+              - /url: https://wa.me/+51 906 877 812?text=Hola%2C%20quiero%20contactar%20contigo
+        - generic [ref=e266]:
+          - generic [ref=e267]: ✦
+          - generic [ref=e268]: ✦
+          - generic [ref=e269]: ✦
+          - generic [ref=e270]: ✦
+          - img "KB Dresses and More" [ref=e271]
+          - generic [ref=e272]:
+            - generic [ref=e274]: KB Dresses & More
+            - generic [ref=e275]: Chiclayo · Perú
+      - generic [ref=e725]:
+        - generic [ref=e728]:
+          - paragraph [ref=e730]: Lifestyle
+          - heading "Síguenos en redes" [level=2] [ref=e731]
+          - paragraph [ref=e732]: Descubre cómo nuestras clientas llevan cada pieza
+        - generic [ref=e735]:
+          - generic [ref=e736]:
+            - generic [ref=e737]:
+              - img "Carteras" [ref=e739]
+              - generic [ref=e750]:
+                - heading "Carteras" [level=3] [ref=e751]
+                - paragraph [ref=e752]: VISITANOS EN GALERÍA CHICLAYO (BALTA Y ARICA) 2DO PISO
+                - link "Ver en TikTok" [ref=e754] [cursor=pointer]:
+                  - /url: https://www.tiktok.com/@kb.dresses.more/video/7623113600076352788
+            - generic [ref=e758]:
+              - img "Carteras - Elige cual quieres" [ref=e760]
+              - generic [ref=e771]:
+                - heading "Carteras - Elige cual quieres" [level=3] [ref=e772]
+                - paragraph [ref=e773]: Variedad de carteras disponibles
+                - link "Ver en TikTok" [ref=e775] [cursor=pointer]:
+                  - /url: https://www.tiktok.com/@kb.dresses.more/video/7626893670230281492
+            - generic [ref=e779]:
+              - img "Vestido Tommy Hilfiger" [ref=e781]
+              - generic [ref=e792]:
+                - heading "Vestido Tommy Hilfiger" [level=3] [ref=e793]
+                - paragraph [ref=e794]: Vestido Tommy Hilfiger color azul con detalles en hombros Cod. 24 Talla M
+                - link "Ver en TikTok" [ref=e796] [cursor=pointer]:
+                  - /url: https://www.tiktok.com/@kb.dresses.more/video/7645727062602550548
+            - generic [ref=e800]:
+              - img "Mostrando Productos nuevos" [ref=e802]
+              - generic [ref=e813]:
+                - heading "Mostrando Productos nuevos" [level=3] [ref=e814]
+                - paragraph [ref=e815]: Mostrando nuevos productos en el live del Lunes
+                - link "Ver en TikTok" [ref=e817] [cursor=pointer]:
+                  - /url: https://www.tiktok.com/@kb.dresses.more/video/7646468001138560276?is_from_webapp=1&sender_device=pc&web_id=7639453008749823504
+          - link "Síguenos en TikTok @kb.dresses.more" [ref=e822] [cursor=pointer]:
+            - /url: https://www.tiktok.com/@kb.dresses.more
+            - generic [ref=e826]: Síguenos en TikTok
+            - generic [ref=e827]: "@kb.dresses.more"
+      - generic [ref=e833]:
+        - generic [ref=e834]:
+          - generic [ref=e835]: Testimonios
+          - heading "Lo que dicen nuestros clientes" [level=2] [ref=e839]
+          - paragraph [ref=e840]: Opiniones reales de quienes ya compraron con nosotros
+        - generic [ref=e842]:
+          - generic [ref=e843]:
+            - paragraph [ref=e846]: "\"La calidad es excelente\""
+            - generic [ref=e858]:
+              - img "Miki C." [ref=e860]
+              - generic [ref=e861]:
+                - paragraph [ref=e862]: Miki C.
+                - paragraph [ref=e863]: Chiclayo
+          - generic [ref=e864]:
+            - paragraph [ref=e867]: "\"Me gusto mucho y quede satisfecha con mis compras :)\""
+            - generic [ref=e879]:
+              - img "Melinda S." [ref=e881]
+              - generic [ref=e882]:
+                - paragraph [ref=e883]: Melinda S.
+                - paragraph [ref=e884]: Chimbote
+          - generic [ref=e885]:
+            - paragraph [ref=e888]: "\"La calidad es increíble además la ropa se siente muy cómoda de usar, sí volvería a comprar aquí\""
+            - generic [ref=e900]:
+              - img "Julio H." [ref=e902]
+              - generic [ref=e903]:
+                - paragraph [ref=e904]: Julio H.
+                - paragraph [ref=e905]: Chiclayo
+  - link "Contáctanos por WhatsApp" [ref=e302] [cursor=pointer]:
+    - /url: https://wa.me/51906877812?text=Hola%2C%20vi%20un%20producto%20en%20KB%20Dresses%20%26%20More%20y%20me%20gustar%C3%ADa%20m%C3%A1s%20informaci%C3%B3n.
+    - generic: ¿Te ayudamos?
+  - contentinfo [ref=e308]:
+    - generic [ref=e311]:
+      - generic [ref=e312]:
+        - img "KB Dresses and More" [ref=e314]
+        - paragraph [ref=e315]: Piezas únicas de moda importada desde Estados Unidos, seleccionadas con ojo editorial para la mujer que sabe quién es.
+        - generic [ref=e316]:
+          - link "Facebook" [ref=e317] [cursor=pointer]:
+            - /url: https://facebook.com/kbdresses
+          - link "Instagram" [ref=e320] [cursor=pointer]:
+            - /url: https://instagram.com/kbdresses
+          - link "Pinterest" [ref=e323] [cursor=pointer]:
+            - /url: https://pinterest.com/kbdresses
+      - generic [ref=e326]:
+        - paragraph [ref=e327]: Explora
+        - list [ref=e328]:
+          - listitem [ref=e329]:
+            - button "Mujer" [ref=e330] [cursor=pointer]
+          - listitem [ref=e331]:
+            - button "Hombre" [ref=e332] [cursor=pointer]
+          - listitem [ref=e333]:
+            - button "Importados" [ref=e334] [cursor=pointer]
+          - listitem [ref=e335]:
+            - button "Nacionales" [ref=e336] [cursor=pointer]
+          - listitem [ref=e337]:
+            - button "Novedades" [ref=e338] [cursor=pointer]
+      - generic [ref=e339]:
+        - paragraph [ref=e340]: Soporte
+        - list [ref=e341]:
+          - listitem [ref=e342]:
+            - link "Preguntas Frecuentes" [ref=e343] [cursor=pointer]:
+              - /url: https://wa.me/51906877812?text=Hola%2C%20tengo%20una%20pregunta
+          - listitem [ref=e344]:
+            - link "Contacto" [ref=e345] [cursor=pointer]:
+              - /url: https://wa.me/51906877812
+          - listitem [ref=e346]:
+            - link "Política de Envíos" [ref=e347] [cursor=pointer]:
+              - /url: https://wa.me/51906877812?text=Hola%2C%20%C2%BFcu%C3%A1l%20es%20su%20pol%C3%ADtica%20de%20env%C3%ADos%3F
+          - listitem [ref=e348]:
+            - link "Cambios y Devoluciones" [ref=e349] [cursor=pointer]:
+              - /url: https://wa.me/51906877812?text=Hola%2C%20quisiera%20informaci%C3%B3n%20sobre%20cambios%20y%20devoluciones.
+      - generic [ref=e350]:
+        - paragraph [ref=e351]: Contáctanos
+        - list [ref=e352]:
+          - listitem [ref=e353]:
+            - generic [ref=e356]: +51 906 877 812
+          - listitem [ref=e357]:
+            - generic [ref=e361]: info@kbdresses.com
+          - listitem [ref=e362]:
+            - generic [ref=e365]: Galería Chiclayo — Balta y Arica, 2do Piso
+        - link "Escríbenos ahora" [ref=e366] [cursor=pointer]:
+          - /url: https://wa.me/51906877812?text=Hola%2C%20quiero%20hacer%20un%20pedido
+    - generic [ref=e370]:
+      - paragraph [ref=e371]: © 2026 KB Dresses & More — Todos los derechos reservados
+      - paragraph [ref=e372]: Diseñado con corazón
