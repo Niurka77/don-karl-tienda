@@ -5,6 +5,7 @@ import logoKB from '/kb.svg'
 export default function AboutSection({ getText }) {
   const { config } = useSiteConfig()
   const phone = config.footerContact?.phone || WHATSAPP_PHONE
+  const phoneDigits = phone.replace(/[^\d]/g, '')
 
   const title = getText('about_title') || 'Nuestra historia'
   const description = getText('about_description') || 'KB Dresses & More nació en Chiclayo con una idea simple: traer moda importada de Estados Unidos con calidad y estilo para la mujer peruana.'
@@ -140,7 +141,7 @@ export default function AboutSection({ getText }) {
             </div>
 
             <a
-              href={`https://wa.me/${phone}?text=${encodeURIComponent(WHATSAPP_MESSAGES.contact)}`}
+              href={`https://wa.me/${phoneDigits}?text=${encodeURIComponent(WHATSAPP_MESSAGES.contact)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="self-start bg-kb-rose-deep text-white px-10 py-4 text-xs font-sans tracking-[0.2em] uppercase transition-all duration-300 hover:bg-kb-gold font-semibold"

@@ -55,7 +55,6 @@ const ProductoPage = () => {
   
   // Estado para el formulario de reseña
   const [mostrarFormularioReview, setMostrarFormularioReview] = useState(false)
-  const [mostrarTodasReviews, setMostrarTodasReviews] = useState(false)
   const [reviewForm, setReviewForm] = useState({
     customer_name: '',
     rating: 5,
@@ -127,7 +126,7 @@ useEffect(() => {
         .gt('stock', 0)
         .limit(4)
       if (!error && data) setRelatedProducts(data)
-    } catch (e) {
+    } catch {
       // Silencioso, no afecta la experiencia principal
     }
   }
@@ -271,8 +270,9 @@ useEffect(() => {
       ? [producto.image_url]
       : []
 
-  // Determinar que reseñas mostrar (primeras 4 o todas)
-  const reviewsToShow = mostrarTodasReviews ? reviews : reviews.slice(0, 4)
+  // Determinar que reseñas mostrar (máximo 4 opiniones)
+  const MAX_REVIEWS = 4
+  const reviewsToShow = reviews.slice(0, MAX_REVIEWS)
 
   return (
     <div style={{ background: 'var(--color-kb-ivory)', minHeight: '100vh' }}>
@@ -457,7 +457,7 @@ useEffect(() => {
               <div className="flex items-center gap-3 mb-5">
                 <Stars rating={parseFloat(avgRating)} size={15} />
                 <span style={{ fontSize: '0.75rem', fontWeight: 300, color: 'var(--color-kb-mauve)' }}>
-                  {avgRating} · {reviews.length} {reviews.length === 1 ? 'reseña' : 'reseñas'}
+                  {avgRating} · {Math.min(reviews.length, MAX_REVIEWS)} {Math.min(reviews.length, MAX_REVIEWS) === 1 ? 'reseña' : 'reseñas'}
                 </span>
               </div>
             )}
@@ -504,7 +504,7 @@ useEffect(() => {
     <div className="flex items-center gap-2 mb-2">
       <Stars rating={parseFloat(avgRating)} size={14} />
       <span style={{ fontSize: '0.75rem', color: 'var(--color-kb-mauve)', fontWeight: 300 }}>
-        {avgRating} · {reviews.length} reseña{reviews.length !== 1 ? 's' : ''}
+        {avgRating} · {Math.min(reviews.length, MAX_REVIEWS)} reseña{Math.min(reviews.length, MAX_REVIEWS) !== 1 ? 's' : ''}
         <span 
           onClick={() => {
             const el = document.getElementById('seccion-resenas')
@@ -519,7 +519,7 @@ useEffect(() => {
             borderBottom: '1px solid var(--color-kb-rose)'
           }}
         >
-          Ver todas →
+          Ver opiniones →
         </span>
       </span>
     </div>
@@ -891,18 +891,6 @@ useEffect(() => {
                   </div>
                 ))}
               </div>
-
-              {/* Boton VER MAS / VER MENOS */}
-              {reviews.length > 4 && (
-                <div className="text-center mt-8">
-                  <button
-                    onClick={() => setMostrarTodasReviews(!mostrarTodasReviews)}
-                    className="px-6 py-2 border border-[rgba(212,120,138,0.4)] text-[#2D2030] rounded-sm text-xs font-sans font-medium tracking-wide hover:bg-[#FDF0F3] hover:border-[#D4788A] transition-all duration-300"
-                  >
-                    {mostrarTodasReviews ? 'Ver menos' : `Ver todas las ${reviews.length} opiniones`}
-                  </button>
-                </div>
-              )}
             </>
           )}
         </div>

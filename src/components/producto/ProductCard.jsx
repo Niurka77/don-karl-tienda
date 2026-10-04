@@ -5,7 +5,7 @@ import useCartStore from '../../store/cartStore'
 import { p } from '../../lib/theme'
 import { CURRENCY } from '../../lib/constants'
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, avgRating, reviewCount }) => {
   const [hovered, setHovered] = useState(false)
   const navigate = useNavigate()
   const { addItem } = useCartStore()
@@ -297,37 +297,73 @@ const ProductCard = ({ product }) => {
               }}
             />
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.55rem' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.55rem', flexWrap: 'wrap' }}>
+              <span
+                style={{
+                  fontFamily: 'var(--font-sans)',
+                  fontSize: '1.15rem', fontWeight: 700,
+                  color: 'var(--color-kb-rose-deep, #B85268)', letterSpacing: '-0.02em',
+                }}
+              >
+                {CURRENCY} {precio?.toFixed(2)}
+              </span>
+              {tieneDescuento && (
                 <span
                   style={{
-                    fontFamily: 'var(--font-sans)',
-                    fontSize: '1.15rem', fontWeight: 700,
-                    color: 'var(--color-kb-rose-deep, #B85268)', letterSpacing: '-0.02em',
+                    fontSize: '0.7rem', color: p.textSoft,
+                    textDecoration: 'line-through', fontWeight: 300, opacity: 0.55,
                   }}
                 >
-                  {CURRENCY} {precio?.toFixed(2)}
+                  {CURRENCY} {price_original?.toFixed(2)}
                 </span>
-                {tieneDescuento && (
-                  <span
-                    style={{
-                      fontSize: '0.7rem', color: p.textSoft,
-                      textDecoration: 'line-through', fontWeight: 300, opacity: 0.55,
-                    }}
-                  >
-                    {CURRENCY} {price_original?.toFixed(2)}
-                  </span>
-                )}
-              </div>
-              {/* Estrellas gold */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.15rem', flexShrink: 0 }}>
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill="var(--color-kb-gold, #C9A84C)" aria-hidden="true">
-                    <path d="M12 2l2.9 6.26 6.6.72-4.9 4.55 1.3 6.52L12 17.27 6.1 20.05l1.3-6.52L2.5 8.98l6.6-.72L12 2z" />
-                  </svg>
-                ))}
-              </div>
+              )}
             </div>
+
+            {/* Rating real (solo si hay opiniones) */}
+            {reviewCount > 0 && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  marginTop: '0.5rem',
+                }}
+              >
+                <div style={{ position: 'relative', display: 'inline-flex', gap: '0.15rem', flexShrink: 0 }}>
+                  <div style={{ display: 'inline-flex', gap: '0.15rem' }}>
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill="rgba(180,160,170,0.25)" aria-hidden="true">
+                        <path d="M12 2l2.9 6.26 6.6.72-4.9 4.55 1.3 6.52L12 17.27 6.1 20.05l1.3-6.52L2.5 8.98l6.6-.72L12 2z" />
+                      </svg>
+                    ))}
+                  </div>
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      display: 'inline-flex',
+                      gap: '0.15rem',
+                      overflow: 'hidden',
+                      width: `${Math.min(100, (parseFloat(avgRating) / 5) * 100)}%`,
+                      whiteSpace: 'nowrap',
+                    }}
+                    aria-hidden="true"
+                  >
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill="var(--color-kb-gold, #C9A84C)">
+                        <path d="M12 2l2.9 6.26 6.6.72-4.9 4.55 1.3 6.52L12 17.27 6.1 20.05l1.3-6.52L2.5 8.98l6.6-.72L12 2z" />
+                      </svg>
+                    ))}
+                  </div>
+                </div>
+                <span style={{ fontSize: '0.62rem', color: p.textSoft, fontWeight: 600 }}>
+                  {avgRating}
+                </span>
+                <span style={{ fontSize: '0.6rem', color: p.textSoft, fontWeight: 300 }}>
+                  ({reviewCount} {reviewCount === 1 ? 'opinión' : 'opiniones'})
+                </span>
+              </div>
+            )}
 
             <button
               onClick={handleAgregar}

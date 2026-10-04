@@ -13,6 +13,7 @@ const Navbar = () => {
   const { config } = useSiteConfig()
   const topbarText = config.texts?.topbar_text || 'Envío gratis en compras mayores a S/ 200 — Recoge en tienda'
   const phone = config.footerContact?.phone || WHATSAPP_PHONE
+  const phoneDigits = phone.replace(/[^\d]/g, '')
 
   // ── Estado interno ──────────────────────────────────────────────────────
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -213,7 +214,7 @@ const Navbar = () => {
         </div>
 
         <a
-          href={`https://wa.me/${phone}`}
+          href={`https://wa.me/${phoneDigits}`}
           target="_blank"
           rel="noopener noreferrer"
           className="kb-catbar__support"
@@ -306,7 +307,7 @@ const Navbar = () => {
             <div className="kb-mobile__separator" />
 
             <a
-              href={`https://wa.me/${phone}?text=${encodeURIComponent(WHATSAPP_MESSAGES.help)}`}
+              href={`https://wa.me/${phoneDigits}?text=${encodeURIComponent(WHATSAPP_MESSAGES.help)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="kb-mobile__link kb-mobile__link--accent"
@@ -314,7 +315,7 @@ const Navbar = () => {
               Ayuda
             </a>
             <a
-              href={`https://wa.me/${phone}?text=${encodeURIComponent(WHATSAPP_MESSAGES.contact)}`}
+              href={`https://wa.me/${phoneDigits}?text=${encodeURIComponent(WHATSAPP_MESSAGES.contact)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="kb-mobile__link kb-mobile__link--accent"

@@ -62,9 +62,9 @@ const CheckoutPage = () => {
         `Teléfono: ${telefono.trim()}\n\n` +
         `Productos:\n${listaProductos}\n\n` +
         `Total: S/ ${total.toFixed(2)}\n\n` +
-        `💳 Pago: Yape · Plin · Tarjeta · Transferencia\n` +
+        `💳 Pago: Yape o Plin. Te paso mi número para que hagas el depósito y me envíes tu captura.\n` +
         `📍 Recojo en tienda (Chiclayo) o envío a todo el Perú.\n\n` +
-        `Adjunta el PDF de tu pedido para confirmarlo. ¡Gracias!`
+        `Adjunta el PDF de tu pedido. ¡Gracias!`
 
       const waUrl = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(textoDonKarl)}`
 
@@ -177,10 +177,42 @@ const CheckoutPage = () => {
           target="_blank"
           rel="noopener noreferrer"
           className="w-full block text-center py-3 rounded-sm text-sm font-semibold uppercase tracking-widest transition-all hover:-translate-y-0.5"
-          style={{ background: '#25D366', color: '#FFFFFF', fontFamily: 'var(--font-sans)', marginBottom: '0.75rem' }}
+          style={{ background: '#25D366', color: '#FFFFFF', fontFamily: 'var(--font-sans)', marginBottom: '1.5rem' }}
         >
           💬 Enviar por WhatsApp
         </a>
+
+        {/* Pasos para completar el pago */}
+        <div
+          className="text-left rounded-sm p-5 mb-5"
+          style={{ background: `${p.blush}66`, border: `1px solid ${p.roseBlush}45` }}
+        >
+          <p className="text-editorial mb-3" style={{ color: p.roseDeep, fontSize: '0.6rem', letterSpacing: '0.2em' }}>
+            ¿Cómo completar mi pedido?
+          </p>
+          {[
+            { n: '1', t: 'Envía tu pedido por WhatsApp con el PDF adjunto.' },
+            { n: '2', t: 'Don Karl te pasa el número de Yape/Plin.' },
+            { n: '3', t: 'Realiza el pago y envía la captura por WhatsApp.' },
+            { n: '4', t: 'Coordina el envío o recojo en tienda. ¡Listo!' },
+          ].map((s) => (
+            <div key={s.n} className="flex items-start gap-3 mb-2 last:mb-0">
+              <span
+                style={{
+                  width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0,
+                  background: p.roseDeep, color: '#FFFFFF', fontSize: '0.62rem',
+                  fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontFamily: 'var(--font-sans)',
+                }}
+              >
+                {s.n}
+              </span>
+              <span style={{ fontSize: '0.72rem', fontWeight: 300, color: p.charcoal, lineHeight: 1.5 }}>
+                {s.t}
+              </span>
+            </div>
+          ))}
+        </div>
 
         <p style={{ fontSize: '0.68rem', fontWeight: 300, color: `${p.textSoft}`, lineHeight: 1.5, marginBottom: '2rem' }}>
           Adjunta el PDF junto a tu mensaje para confirmar tu pedido más rápido.
@@ -247,6 +279,36 @@ const CheckoutPage = () => {
                 <button type="button" onClick={() => { setError(null); setEnviando(false) }} style={{ marginTop: '0.5rem', fontSize: '0.72rem', textDecoration: 'underline', color: '#C62828', background: 'none', border: 'none', cursor: 'pointer' }}>Reintentar</button>
               </div>
             )}
+
+            <div
+              style={{
+                padding: '1rem 1.2rem',
+                border: `1px solid ${p.champagne}60`,
+                background: `${p.champagneLt}55`,
+                borderRadius: '4px',
+              }}
+            >
+              <p className="text-editorial mb-2" style={{ color: p.roseDeep, fontSize: '0.58rem', letterSpacing: '0.2em' }}>
+                Pago seguro por WhatsApp
+              </p>
+              <p style={{ fontSize: '0.74rem', fontWeight: 300, color: p.textMain, lineHeight: 1.6 }}>
+                Al enviar tu pedido te contactamos por WhatsApp para coordinar el pago por <strong style={{ fontWeight: 600 }}>Yape o Plin</strong>. Solo envías tu captura y coordinamos el envío o recojo.
+              </p>
+              <div className="flex flex-wrap items-center gap-2 mt-3">
+                {['Yape', 'Plin', 'Recojo en tienda', 'Envío a todo el Perú'].map((t) => (
+                  <span
+                    key={t}
+                    style={{
+                      fontSize: '0.6rem', letterSpacing: '0.08em', padding: '0.3rem 0.7rem',
+                      borderRadius: '50px', border: `1px solid ${p.roseBlush}60`,
+                      color: p.roseDeep, background: '#FFFFFF', fontFamily: 'var(--font-sans)', fontWeight: 500,
+                    }}
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+            </div>
 
             <button
               type="submit"
