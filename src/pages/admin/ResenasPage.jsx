@@ -1,12 +1,9 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
 import useAuthStore from '../../store/authStore'
-import useSiteConfig from '../../hooks/useSiteConfig'
 import { supabase } from '../../lib/supabase'
-import { generateRemoveMutation } from '../../hooks/useRealtimeReload'
+import { Stars } from '../producto/ProductCard'  // Importar Stars
 
 const ResenasPage = () => {
-  const { siteConfig } = useSiteConfig()
   const { user } = useAuthStore()
 
   const [reviews, setReviews] = useState([])
@@ -54,13 +51,7 @@ const ResenasPage = () => {
         .eq('id', reviewId)
 
       if (error) throw error
-      // Recargar después de aprobar
-      const { data: user } = useAuthStore()
-      if (user.app_metadata?.role === 'admin') {
-        useEffect(() => {}, []) // trigger reload
-      }
-      setPendingReviews(prev => prev.filter(r => r.id !== reviewId))
-      setReviews(prev => [...prev, { id: reviewId, ...(prev.find(r) => r.id === reviewId)?.approved ? {} : {} }])
+      // Recargar lista después de aprobar (se hará fuera al llamar cargarResenas)
     } catch (err) {
       console.error('Error aprobando reseña:', err)
     }
