@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import useCartStore from '../store/cartStore'
 import { supabase } from '../lib/supabase'
-import { WHATSAPP_PHONE } from '../lib/constants'
+import { WHATSAPP_PHONE, YAPE_PHONE, YAPE_NAME } from '../lib/constants'
 import { descargarOrdenPDF } from '../lib/generarOrdenPDF'
 import ImageWithFallback from '../components/ui/ImageWithFallback'
 import { p } from '../lib/theme'
@@ -37,7 +37,7 @@ const CheckoutPage = () => {
       })
 
       if (e) {
-        if (e.message && e.message.contains('Stock insuficiente')) {
+        if (e.message && e.message?.includes('Stock insuficiente')) {
           setError('Stock insuficiente para algún producto. Por favor revisa tu carrito.')
         } else {
           setError('No pudimos registrar tu pedido. Inténtalo nuevamente.')
