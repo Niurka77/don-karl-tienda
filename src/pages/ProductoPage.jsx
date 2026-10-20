@@ -93,6 +93,7 @@ const ProductoPage = () => {
           .from('reviews')
           .select('*')
           .eq('product_id', id)
+          .eq('approved', true)
           .order('created_at', { ascending: false })
 
         if (cancelled) return
@@ -196,6 +197,7 @@ useEffect(() => {
         .from('reviews')
         .select('*')
         .eq('product_id', id)
+        .eq('approved', true)
         .order('created_at', { ascending: false })
       
       if (!re && rev) {
@@ -204,7 +206,7 @@ useEffect(() => {
           setAvgRating((rev.reduce((a, r) => a + r.rating, 0) / rev.length).toFixed(1))
       }
       
-      setReviewExito('Gracias por tu opinion. Tu reseña ya esta publicada.')
+      setReviewExito('Gracias por tu opinión. Tu reseña será revisada antes de publicarse.')
       setReviewForm({ customer_name: '', rating: 5, comment: '' })
       setMostrarFormularioReview(false)
       
