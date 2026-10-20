@@ -30,27 +30,24 @@ const CheckoutPage = () => {
 
     setEnviando(true)
     try {
-      const pedido = {
-        customer_name: nombre.trim(),
-        customer_phone: telefono.trim(),
-        products: items.map(i => ({
-          id: i.id, name: i.name, size: i.selectedSize,
-          quantity: i.quantity, price: i.price,
-          sku: i.sku,
-        })),
-        total,
-        status: 'pendiente',
-      }
+      const { data, error: e } = await supabase.rpc('crear_pedido', {
+        p_nombre: nombre.trim(),
+        p_telefono: telefono.trim(),
+        p_items: items.map(i => ({ id: i.id, size: i.selectedSize, quantity: i.quantity })),
+      })
 
-      console.log('📦 Insertando pedido:', JSON.stringify(pedido, null, 2))
-      const { data, error: e } = await supabase.from('orders').insert([pedido]).select('id').single()
-      console.log('📦 Respuesta data:', JSON.stringify(data))
       if (e) {
-        console.error('❌ Error de Supabase:', JSON.stringify(e, Object.getOwnPropertyNames(e)))
+        if (e.message && e.message.contains('Stock insuficiente')) {
+          setError('Stock insuficiente para algún producto. Por favor revisa tu carrito.')
+        } else {
+          setError('No pudimos registrar tu pedido. Inténtalo nuevamente.')
+        }
         throw e
       }
 
       const orderId = data.id
+      const totalServidor = data.total
+
       const listaProductos = items.map(item =>
         `• ${item.name} ${item.selectedSize ? `(Talla ${item.selectedSize})` : ''} x ${item.quantity} = S/ ${(item.price * item.quantity).toFixed(2)}`
       ).join('\n')
@@ -59,10 +56,7 @@ const CheckoutPage = () => {
         `🛍️ *NUEVO PEDIDO* 🛍️\n\n` +
         `Pedido #${orderId.slice(0, 8).toUpperCase()}\n\n` +
         `Cliente: ${nombre.trim()}\n` +
-        `Teléfono: ${telefono.trim()}\n\n` +
-        `Productos:\n${listaProductos}\n\n` +
-        `Total: S/ ${total.toFixed(2)}\n\n` +
-        `💳 Pago: Yape o Plin. Te paso mi número para que hagas el depósito y me envíes tu captura.\n` +
+        `📱 Pago: Yape o Plin. Te paso mi número para que hagas el depósito y me envíes tu captura.\n` +
         `📍 Recojo en tienda (Chiclayo) o envío a todo el Perú.\n\n` +
         `Adjunta el PDF de tu pedido. ¡Gracias!`
 
@@ -73,7 +67,7 @@ const CheckoutPage = () => {
         nombre: nombre.trim(),
         telefono: telefono.trim(),
         waUrl,
-        total,
+        total: totalServidor,
         items: items.map(i => ({
           name: i.name,
           sku: i.sku,
@@ -84,7 +78,6 @@ const CheckoutPage = () => {
       })
       clearCart()
     } catch (err) {
-      console.error('❌ Error completo:', err)
       setError('No pudimos registrar tu pedido. Inténtalo nuevamente.')
     } finally {
       setEnviando(false)
