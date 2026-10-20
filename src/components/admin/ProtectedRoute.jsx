@@ -1,17 +1,6 @@
 import { Navigate } from 'react-router-dom'
 import useAuthStore from '../../store/authStore'
 
-const ADMIN_EMAILS = ['karl@tienda.com']
-
-const isAdmin = (user) => {
-  if (!user) return false
-  return (
-    ADMIN_EMAILS.includes(user.email) ||
-    user.app_metadata?.role === 'admin' ||
-    user.user_metadata?.role === 'admin'
-  )
-}
-
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuthStore()
 
@@ -27,7 +16,7 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/admin/login" replace />
   }
 
-  if (!isAdmin(user)) {
+  if (user.app_metadata?.role !== 'admin') {
     return <Navigate to="/" replace />
   }
 
