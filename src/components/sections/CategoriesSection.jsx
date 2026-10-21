@@ -80,7 +80,7 @@ export default function CategoriesSection({ getText }) {
         </h2>
       </div>
 
-<div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
         {categories.map((cat) => (
           <button
             key={cat.name}

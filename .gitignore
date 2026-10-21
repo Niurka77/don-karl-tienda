@@ -28,3 +28,8 @@ dist-ssr
 # Herramientas de captura automatizada y archivos del sistema
 .playwright-mcp/
 desktop.ini
+
+# Archivos temporales de trabajo
+lint-*.txt
+build-*.txt
+*.patch
