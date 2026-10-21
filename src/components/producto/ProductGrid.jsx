@@ -340,7 +340,7 @@ const ProductGrid = () => {
         <div className="relative z-10 max-w-screen-xl mx-auto px-6 lg:px-10 py-12">
           <FilterBar filtros={filtros} onChangeFiltros={handleChangeFiltros} />
           <style>{`@keyframes shimmerBg { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }`}</style>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 md:gap-x-5 gap-y-8 md:gap-y-10">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {Array.from({ length: 8 }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
@@ -457,12 +457,12 @@ const ProductGrid = () => {
 
             {/* Conteo */}
             <div
-              className="flex items-center justify-between mb-8 pb-6"
-              style={{ borderBottom: `1px solid ${p.roseBlush}25` }}
+              className="flex items-center justify-between mb-6 pb-4"
+              style={{ borderBottom: `1px solid ${p.roseBlush}20` }}
             >
               <span
                 style={{
-                  width: '28px',
+                  width: '24px',
                   height: '1px',
                   background: `linear-gradient(90deg, ${p.roseVivid}, ${p.gold})`,
                   display: 'inline-block',
@@ -472,7 +472,7 @@ const ProductGrid = () => {
               <p
                 style={{
                   color: p.textSoft,
-                  fontSize: '0.62rem',
+                  fontSize: '0.58rem',
                   letterSpacing: '0.25em',
                   textTransform: 'uppercase',
                   fontWeight: 600,

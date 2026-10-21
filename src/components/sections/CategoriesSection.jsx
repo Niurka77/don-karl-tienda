@@ -80,7 +80,7 @@ export default function CategoriesSection({ getText }) {
         </h2>
       </div>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1.75rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+<div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
         {categories.map((cat) => (
           <button
             key={cat.name}
@@ -88,14 +88,14 @@ export default function CategoriesSection({ getText }) {
             className="kb-cat-chip"
             style={{
               background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.65rem',
-              flexShrink: 0, width: '92px',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem',
+              flexShrink: 0, minWidth: '80px', width: 'auto',
             }}
           >
             <span
               className="kb-cat-chip__ring"
               style={{
-                width: '88px', height: '88px', borderRadius: '50%',
+                width: '72px', height: '72px', borderRadius: '50%',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 background: '#FDF0F3', overflow: 'hidden', position: 'relative',
                 border: '1px solid rgba(212,120,138,0.18)',
@@ -111,13 +111,13 @@ export default function CategoriesSection({ getText }) {
                   loading="lazy"
                 />
               ) : (
-                <span style={{ fontSize: '1.8rem' }}>{FALLBACK_CATEGORIES.find((f) => f.name === cat.name)?.icon || '🛍️'}</span>
+                <span style={{ fontSize: '1.5rem' }}>{FALLBACK_CATEGORIES.find((f) => f.name === cat.name)?.icon || '🛍️'}</span>
               )}
             </span>
             <span
               className="kb-cat-chip__label"
               style={{
-                fontFamily: 'var(--font-sans)', fontSize: '0.72rem', letterSpacing: '0.06em',
+                fontFamily: 'var(--font-sans)', fontSize: '0.62rem', letterSpacing: '0.08em',
                 color: 'var(--color-kb-mauve)', textTransform: 'uppercase',
                 transition: 'color 0.3s ease', fontWeight: 500,
               }}
@@ -126,7 +126,7 @@ export default function CategoriesSection({ getText }) {
             </span>
           </button>
         ))}
-      </div>
+</div>
 
       <style>{`
         .kb-cat-chip:hover .kb-cat-chip__ring {

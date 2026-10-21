@@ -1,0 +1,78 @@
+From 958e4fadd16577163e902ca0e5044dcf3e96858c Mon Sep 17 00:00:00 2001
+From: rescue <a@b.c>
+Date: Wed, 21 Oct 2026 22:37:08 +0000
+Subject: [PATCH 1/2] fix: mensaje de WhatsApp del pedido (productos, total,
+ texto claro) y no pisar el error de stock
+
+---
+ src/pages/CheckoutPage.jsx | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
+
+diff --git a/src/pages/CheckoutPage.jsx b/src/pages/CheckoutPage.jsx
+index da43799..2e4957d 100644
+--- a/src/pages/CheckoutPage.jsx
++++ b/src/pages/CheckoutPage.jsx
+@@ -53,12 +53,13 @@ const CheckoutPage = () => {
+       ).join('\n')
+ 
+       const textoDonKarl =
+-        `🛍️ *NUEVO PEDIDO* 🛍️\n\n` +
+-        `Pedido #${orderId.slice(0, 8).toUpperCase()}\n\n` +
+-        `Cliente: ${nombre.trim()}\n` +
+-        `📱 Pago: Yape o Plin. Te paso mi número para que hagas el depósito y me envíes tu captura.\n` +
+-        `📍 Recojo en tienda (Chiclayo) o envío a todo el Perú.\n\n` +
+-        `Adjunta el PDF de tu pedido. ¡Gracias!`
++        `Hola Don Karl 👋 Acabo de hacer un pedido en la tienda web.\n\n` +
++        `*Pedido #${orderId.slice(0, 8).toUpperCase()}*\n` +
++        `Cliente: ${nombre.trim()}\n\n` +
++        `${listaProductos}\n\n` +
++        `*Total: S/ ${Number(totalServidor).toFixed(2)}*\n\n` +
++        `Pagaré por Yape o Plin. ¿Me confirmas la disponibilidad y el número para hacer el pago?\n` +
++        `Entrega: recojo en tienda (Chiclayo) o envío a todo el Perú.`
+ 
+       const waUrl = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(textoDonKarl)}`
+ 
+@@ -77,8 +78,8 @@ const CheckoutPage = () => {
+         })),
+       })
+       clearCart()
+-    } catch (err) {
+-      setError('No pudimos registrar tu pedido. Inténtalo nuevamente.')
++    } catch {
++      setError(prev => prev || 'No pudimos registrar tu pedido. Inténtalo nuevamente.')
+     } finally {
+       setEnviando(false)
+     }
+-- 
+2.43.0
+
+
+From b00c695839a617d27277a05273a70f87bb006fdf Mon Sep 17 00:00:00 2001
+From: rescue <a@b.c>
+Date: Wed, 21 Oct 2026 22:37:15 +0000
+Subject: [PATCH 2/2] =?UTF-8?q?texto=20de=20confirmaci=C3=B3n=20de=20rese?=
+ =?UTF-8?q?=C3=B1a=20acorde=20a=20la=20publicaci=C3=B3n=20autom=C3=A1tica?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ src/pages/ProductoPage.jsx | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/pages/ProductoPage.jsx b/src/pages/ProductoPage.jsx
+index 91905e1..78ddb71 100644
+--- a/src/pages/ProductoPage.jsx
++++ b/src/pages/ProductoPage.jsx
+@@ -206,7 +206,7 @@ useEffect(() => {
+           setAvgRating((rev.reduce((a, r) => a + r.rating, 0) / rev.length).toFixed(1))
+       }
+       
+-      setReviewExito('Gracias por tu opinión. Tu reseña será revisada antes de publicarse.')
++      setReviewExito('¡Gracias por tu opinión! Si cumple las normas de la tienda, se publica enseguida; si no, Don Karl la revisará primero.')
+       setReviewForm({ customer_name: '', rating: 5, comment: '' })
+       setMostrarFormularioReview(false)
+       
+-- 
+2.43.0
+
