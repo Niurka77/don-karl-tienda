@@ -709,7 +709,7 @@ useEffect(() => {
         También te puede gustar
       </h2>
     </div>
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-x-3 md:gap-x-5 gap-y-8">
       {relatedProducts.map((p) => (
         <ProductCard key={p.id} product={p} />
       ))}

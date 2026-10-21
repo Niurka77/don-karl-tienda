@@ -340,7 +340,7 @@ const ProductGrid = () => {
         <div className="relative z-10 max-w-screen-xl mx-auto px-6 lg:px-10 py-12">
           <FilterBar filtros={filtros} onChangeFiltros={handleChangeFiltros} />
           <style>{`@keyframes shimmerBg { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }`}</style>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-12">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 md:gap-x-5 gap-y-8 md:gap-y-10">
             {Array.from({ length: 8 }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
