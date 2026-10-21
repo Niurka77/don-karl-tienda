@@ -182,6 +182,28 @@ const ProductGrid = () => {
   const [paginaActual, setPaginaActual] = useState(1)
   const [totalProductos, setTotalProductos] = useState(0)
   const productosPorPagina = 8
+  const [opciones, setOpciones] = useState({ categorias: [], marcas: [] })
+
+  // Opciones reales de filtro (categorías y marcas que existen en la tienda)
+  useEffect(() => {
+    let activo = true
+    ;(async () => {
+      try {
+        const { data, error: e } = await supabase.from('products').select('category, brand').limit(2000)
+        if (e || !data || !activo) return
+        const uniq = (arr) => {
+          const vistos = new Map()
+          for (const v of arr) {
+            const t = (v || '').trim()
+            if (t && !vistos.has(t.toLowerCase())) vistos.set(t.toLowerCase(), t)
+          }
+          return [...vistos.values()].sort((a, b) => a.localeCompare(b))
+        }
+        setOpciones({ categorias: uniq(data.map((r) => r.category)), marcas: uniq(data.map((r) => r.brand)) })
+      } catch { /* si falla, FilterBar usa su lista de respaldo */ }
+    })()
+    return () => { activo = false }
+  }, [])
 
   const [filtros, setFiltros] = useState(() => ({
     categoria: searchParams.get('categoria') || '',
@@ -338,7 +360,7 @@ const ProductGrid = () => {
     return (
       <div ref={gridRef} id="product-grid-section" className="scroll-mt-32" style={sectionStyle}>
         <div className="relative z-10 max-w-screen-xl mx-auto px-6 lg:px-10 py-12">
-          <FilterBar filtros={filtros} onChangeFiltros={handleChangeFiltros} />
+          <FilterBar filtros={filtros} onChangeFiltros={handleChangeFiltros} opciones={opciones} />
           <style>{`@keyframes shimmerBg { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }`}</style>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {Array.from({ length: 8 }).map((_, i) => (
@@ -407,7 +429,7 @@ const ProductGrid = () => {
     <div ref={gridRef} id="product-grid-section" className="scroll-mt-32" style={sectionStyle}>
 
       <div className="relative z-10 max-w-screen-xl mx-auto px-6 lg:px-10 py-12">
-        <FilterBar filtros={filtros} onChangeFiltros={handleChangeFiltros} />
+        <FilterBar filtros={filtros} onChangeFiltros={handleChangeFiltros} opciones={opciones} />
 
         {productos.length === 0 ? (
           /* Vacío */
@@ -456,32 +478,16 @@ const ProductGrid = () => {
             )}
 
             {/* Conteo */}
-            <div
-              className="flex items-center justify-between mb-6 pb-4"
-              style={{ borderBottom: `1px solid ${p.roseBlush}20` }}
+            <p
+              style={{
+                color: p.textSoft,
+                fontSize: '0.85rem',
+                fontFamily: 'var(--font-sans)',
+                margin: '0 0 1rem',
+              }}
             >
-              <span
-                style={{
-                  width: '24px',
-                  height: '1px',
-                  background: `linear-gradient(90deg, ${p.roseVivid}, ${p.gold})`,
-                  display: 'inline-block',
-                  flexShrink: 0,
-                }}
-              />
-              <p
-                style={{
-                  color: p.textSoft,
-                  fontSize: '0.58rem',
-                  letterSpacing: '0.25em',
-                  textTransform: 'uppercase',
-                  fontWeight: 600,
-                  fontFamily: 'var(--font-sans)',
-                }}
-              >
-                {totalProductos} {totalProductos === 1 ? 'pieza' : 'piezas'}
-              </p>
-            </div>
+              Resultados <span style={{ fontWeight: 600 }}>({totalProductos})</span>
+            </p>
 
             {/* Grid */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-12">

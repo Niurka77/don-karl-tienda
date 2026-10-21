@@ -80,7 +80,7 @@ export default function CategoriesSection({ getText }) {
         </h2>
       </div>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+      <div className="kb-scroll-x" style={{ display: 'flex', flexWrap: 'nowrap', justifyContent: 'safe center', gap: '1.1rem', overflowX: 'auto', padding: '0 0.5rem 0.75rem' }}>
         {categories.map((cat) => (
           <button
             key={cat.name}
@@ -129,6 +129,8 @@ export default function CategoriesSection({ getText }) {
 </div>
 
       <style>{`
+        .kb-scroll-x { scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+        .kb-scroll-x::-webkit-scrollbar { display: none; }
         .kb-cat-chip:hover .kb-cat-chip__ring {
           transform: translateY(-4px);
           border-color: var(--color-kb-rose, #D4788A);
