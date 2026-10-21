@@ -53,12 +53,13 @@ const CheckoutPage = () => {
       ).join('\n')
 
       const textoDonKarl =
-        `🛍️ *NUEVO PEDIDO* 🛍️\n\n` +
-        `Pedido #${orderId.slice(0, 8).toUpperCase()}\n\n` +
-        `Cliente: ${nombre.trim()}\n` +
-        `📱 Pago: Yape o Plin. Te paso mi número para que hagas el depósito y me envíes tu captura.\n` +
-        `📍 Recojo en tienda (Chiclayo) o envío a todo el Perú.\n\n` +
-        `Adjunta el PDF de tu pedido. ¡Gracias!`
+        `Hola Don Karl 👋 Acabo de hacer un pedido en la tienda web.\n\n` +
+        `*Pedido #${orderId.slice(0, 8).toUpperCase()}*\n` +
+        `Cliente: ${nombre.trim()}\n\n` +
+        `${listaProductos}\n\n` +
+        `*Total: S/ ${Number(totalServidor).toFixed(2)}*\n\n` +
+        `Pagaré por Yape o Plin. ¿Me confirmas la disponibilidad y el número para hacer el pago?\n` +
+        `Entrega: recojo en tienda (Chiclayo) o envío a todo el Perú.`
 
       const waUrl = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(textoDonKarl)}`
 
@@ -77,8 +78,8 @@ const CheckoutPage = () => {
         })),
       })
       clearCart()
-    } catch (err) {
-      setError('No pudimos registrar tu pedido. Inténtalo nuevamente.')
+    } catch {
+      setError(prev => prev || 'No pudimos registrar tu pedido. Inténtalo nuevamente.')
     } finally {
       setEnviando(false)
     }
