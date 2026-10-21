@@ -206,7 +206,7 @@ useEffect(() => {
           setAvgRating((rev.reduce((a, r) => a + r.rating, 0) / rev.length).toFixed(1))
       }
       
-      setReviewExito('Gracias por tu opinión. Tu reseña será revisada antes de publicarse.')
+      setReviewExito('¡Gracias por tu opinión! Si cumple las normas de la tienda, se publica enseguida; si no, Don Karl la revisará primero.')
       setReviewForm({ customer_name: '', rating: 5, comment: '' })
       setMostrarFormularioReview(false)
       
