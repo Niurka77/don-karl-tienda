@@ -9,8 +9,15 @@ import AdvisorySection from '../components/sections/AdvisorySection'
 import TestimonialsSection from '../components/ui/TestimonialsSection'
 import RevealSection from '../components/shared/RevealSection'
 import SectionTexture from '../components/shared/SectionTexture'
+import SectionDivider from '../components/shared/SectionDivider'
 import ProductCard from '../components/producto/ProductCard'
 import { p } from '../lib/theme'
+
+const SectionDivider = () => (
+  <div aria-hidden style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1.5rem' }}>
+    <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent 0%, rgba(212,120,138,0.2) 30%, rgba(212,120,138,0.2) 70%, transparent 100%)' }} />
+  </div>
+)
 
 const HomePage = () => {
   const navigate = useNavigate()
