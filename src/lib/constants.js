@@ -8,3 +8,8 @@ export const WHATSAPP_MESSAGES = {
 }
 
 export const CURRENCY = 'S/'
+
+// Número y nombre de Yape/Plin de Don Karl. COMPLETAR con los datos reales.
+// Si YAPE_PHONE queda vacío, la pantalla de pedido no muestra el bloque de Yape.
+export const YAPE_PHONE = ''
+export const YAPE_NAME = 'Don Karl'

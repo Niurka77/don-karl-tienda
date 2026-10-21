@@ -16,6 +16,7 @@ const AdminVideos = lazy(() => import('./components/admin/AdminVideos'))
 const HeroSlidesManager = lazy(() => import('./components/admin/HeroSlidesManager'))
 const VisualConfigPage = lazy(() => import('./pages/admin/VisualConfigPage'))
 const TestimoniosPage = lazy(() => import('./pages/admin/TestimoniosPage'))
+const ResenasPage = lazy(() => import('./pages/admin/ResenasPage'))
 const CatalogoPage = lazy(() => import('./pages/CatalogoPage'))
 
 const PageLoader = () => (
@@ -101,6 +102,7 @@ function App() {
         <Route path="/admin/slides" element={<HeroSlidesManager />} />
         <Route path="visual" element={<VisualConfigPage />} />
         <Route path="testimonios" element={<TestimoniosPage />} />
+        <Route path="resenas" element={<ResenasPage />} />
       </Route>
 
       {/* 404 */}

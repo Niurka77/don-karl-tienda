@@ -132,6 +132,14 @@ const CheckoutPage = () => {
           Pedido registrado
         </p>
 
+        {YAPE_PHONE && (
+          <div style={{ margin: '0 auto 1.5rem', padding: '1rem', border: `1px solid ${p.roseBlush}60`, borderRadius: '2px', background: '#fff' }}>
+            <p style={{ fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: p.rose, marginBottom: '0.4rem' }}>Paga por Yape o Plin</p>
+            <p style={{ fontSize: '1.3rem', color: p.charcoal }}>{YAPE_PHONE}</p>
+            <p style={{ fontSize: '0.8rem', color: p.charcoal }}>{YAPE_NAME}</p>
+          </div>
+        )}
+
         <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 300, letterSpacing: '-0.02em', color: p.charcoal, marginBottom: '0.5rem' }}>
           ¡Gracias, {exito.nombre.split(' ')[0]}!
         </h2>

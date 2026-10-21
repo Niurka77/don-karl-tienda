@@ -369,8 +369,7 @@ const ProductGrid = () => {
           </p>
           <button
             onClick={() => {
-              setError(null)
-              cargarProductos()
+              window.location.reload()
             }}
             style={{
               fontSize: '0.7rem',

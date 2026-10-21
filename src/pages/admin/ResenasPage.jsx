@@ -1,7 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import useAuthStore from '../../store/authStore'
 import { supabase } from '../../lib/supabase'
-import { Stars } from '../producto/ProductCard'  // Importar Stars
+
+const Stars = ({ rating = 0, size = 12 }) => (
+  <span aria-label={`${rating} de 5`} style={{ color: '#C9A84C', fontSize: `${size}px`, letterSpacing: '2px' }}>
+    {'★'.repeat(rating)}{'☆'.repeat(5 - rating)}
+  </span>
+)
 
 const ResenasPage = () => {
   const { user } = useAuthStore()
@@ -11,37 +16,27 @@ const ResenasPage = () => {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('pending') // 'pending' o 'published'
 
+  const cargarResenas = useCallback(async () => {
+    try {
+      const { data: pending, error: pe } = await supabase
+        .from('reviews').select('*').eq('approved', false).order('created_at', { ascending: false })
+      if (pe) throw pe
+      setPendingReviews(pending || [])
+      const { data: published, error: ce } = await supabase
+        .from('reviews').select('*').eq('approved', true).order('created_at', { ascending: false })
+      if (ce) throw ce
+      setReviews(published || [])
+    } catch (err) {
+      console.error('Error cargando reseñas:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     if (!user || user.app_metadata?.role !== 'admin') return
-
-    const cargarResenas = async () => {
-      try {
-        // Cargar reseñas pendientes (approved = false o nulo)
-        const { data: pending, error: pendingError } = await supabase
-          .from('reviews')
-          .select('*')
-          .eq('approved', false)
-
-        if (pendingError) throw pendingError
-        setPendingReviews(pending || [])
-
-        // Cargar reseñas publicadas (approved = true)
-        const { data: published, error: publishedError } = await supabase
-          .from('reviews')
-          .select('*')
-          .eq('approved', true)
-
-        if (publishedError) throw publishedError
-        setReviews(published || [])
-      } catch (err) {
-        console.error('Error cargando reseñas:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
     cargarResenas()
-  }, [user])
+  }, [user, cargarResenas])
 
   const aprobarResena = async (reviewId) => {
     try {
@@ -51,7 +46,7 @@ const ResenasPage = () => {
         .eq('id', reviewId)
 
       if (error) throw error
-      // Recargar lista después de aprobar (se hará fuera al llamar cargarResenas)
+      await cargarResenas()
     } catch (err) {
       console.error('Error aprobando reseña:', err)
     }
